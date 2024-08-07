@@ -1,3 +1,4 @@
+# Set Up
 import numpy as np
 import pandas as pd
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
@@ -237,3 +238,250 @@ def process_and_calculate_similarity(dataset_path, column_names, threshold, Stop
     df['Overall Consistency Score'] = overall_consistency_score
 
     return df 
+
+# Consistency Test Type 2
+# Function 1: Get names used for a single column  
+def get_names_used_for_column(df, column_name):  
+    unique_observations = pd.unique(df[column_name].dropna().values.ravel())  
+    return unique_observations  
+
+# Function 2: Calculate Cosine Similarity  
+def calculate_cosine_similarity(text_list, ref_list, Stop_Words):  
+    count_vectorizer = CountVectorizer(stop_words= Stop_Words)  
+    ref_vec = count_vectorizer.fit_transform(ref_list).todense()  
+    ref_vec_array = np.array(ref_vec) 
+    text_vec = count_vectorizer.transform(text_list).todense()  
+    text_vec_array = np.array(text_vec) 
+    cosine_sim = np.round((cosine_similarity(text_vec_array, ref_vec_array)), 2)  
+    return cosine_sim  
+
+# Function 3: Average Consistency Score  
+def average_consistency_score(cosine_sim_df, threshold=0.91):
+    num_rows, num_columns = cosine_sim_df.shape
+    total_count = 0  # This will count all values above or equal to the threshold  
+    
+    for i in range(num_rows):
+        if np.max(cosine_sim_df[i]) >= threshold: #Include all comparisons 
+            total_count += 1
+    total_observations = num_rows  # Total number of observations  
+    average_consistency_score = total_count / total_observations  
+    return average_consistency_score 
+   
+def process_and_calculate_similarity_ref(dataset_path, column_mapping, ref_dataset_path = None, threshold = 0.91, Stop_Words = 'activity'):    
+    #Read the data file  
+    df = read_data(dataset_path)  
+  
+    # Initialize ref_df if a ref dataset is provided  
+    if ref_dataset_path:  
+        df_ref = read_data(ref_dataset_path)  
+        ref_data = True #Flag to indicate we are using a ref dataset  
+    else:  
+        ref_data = False #No ref dataset, compare within the same dataset  
+  
+    all_consistency_scores = []    
+      
+    for selected_column, m_selected_column in column_mapping.items():    
+        if ref_data:  
+             # Compare to ref dataset    
+            unique_observations = get_names_used_for_column(df_ref, m_selected_column)    
+        else:    
+            # Use own column for comparison    
+            unique_observations = get_names_used_for_column(df, selected_column)  
+              
+        cosine_sim_matrix = calculate_cosine_similarity(df[selected_column].dropna(), unique_observations, Stop_Words=Stop_Words)    
+        column_consistency_score = average_consistency_score(cosine_sim_matrix, threshold)    
+        all_consistency_scores.append(column_consistency_score)    
+  
+    # Calculate the average of all consistency scores    
+    overall_avg_consistency = sum(all_consistency_scores) / len(all_consistency_scores) if all_consistency_scores else None    
+  
+    return overall_avg_consistency
+
+# Accuracy Type 1
+
+# Function 1: Using isdigit to find non-numerical entries
+def find_non_digits(s):  
+    # Ensure the value is treated as a string  
+    s = str(s)  
+    return [char for char in s if not (char.isdigit() or char == '.')]  
+
+# Function 2 : Calculate the score
+def accuracy_score(dataset_path, selected_columns):
+    adf = read_data(dataset_path)
+    selected_columns = [col for col in adf.columns if col in selected_columns] 
+
+    all_accuracy_scores = []
+    
+    for column_name in selected_columns:  
+        # Drop NA, null, or blank values from column  
+        column_data = adf[column_name].dropna()  
+          
+        total_rows = len(column_data)  
+          
+        if total_rows > 0:  # to avoid division by zero  
+            non_digit_chars_per_row = column_data.apply(find_non_digits)  
+            non_numerical_count = non_digit_chars_per_row.apply(lambda x: len(x) > 0).sum()   
+            accuracy_score = (total_rows - non_numerical_count) / total_rows  
+            all_accuracy_scores.append(accuracy_score)    
+  
+    overall_accuracy_score = sum(all_accuracy_scores) / len(all_accuracy_scores) if all_accuracy_scores else None   
+
+    return overall_accuracy_score
+
+# Accuracy Type 2
+
+def find_outliers_iqr(dataset_path, selected_columns, groupby_column = None, threshold = 1.5, minimum_score= 0.85):  
+    df = read_data(dataset_path)
+    outliers_dict = {}
+
+   # If a groupby column is specified, perform the IQR calculation within each group  
+    if groupby_column:  
+        grouped = df.groupby(groupby_column)  
+        for column in selected_columns:  
+            # Apply the outlier detection for each group  
+            outliers = grouped[column].apply(lambda x: ((x < x.quantile(0.25) - threshold * (x.quantile(0.75) - x.quantile(0.25))) |  
+                                                        (x > x.quantile(0.75) + threshold * (x.quantile(0.75) - x.quantile(0.25))))) 
+            # Combine the outlier Series into a single Series that corresponds to the original DataFrame index  
+            outliers_dict[column] = (1 - outliers.groupby(groupby_column).mean())
+    else:  
+        # Perform the IQR calculation on the whole column if no groupby column is specified  
+        for column in selected_columns:  
+            Q1 = df[column].quantile(0.25)  
+            Q3 = df[column].quantile(0.75)  
+            IQR = Q3 - Q1  
+  
+            lower_bound = Q1 - threshold * IQR  
+            upper_bound = Q3 + threshold * IQR  
+  
+            outliers = (df[column] < lower_bound) | (df[column] > upper_bound)  
+            outliers_dict[column] = (1 - outliers.mean())
+    
+    # compute final score  
+    #total_groups = len(outliers_dict)  
+    #groups_above = sum(1 for score in outliers_dict.values() if score > minimum_score)  
+    #final_score = groups_above / total_groups if total_groups > 0 else 0  
+    
+    final_score = {}
+    
+    for key in outliers_dict.keys():
+        arr = outliers_dict[key].values
+        value_out = np.sum(arr > minimum_score)/len(arr)
+        final_score[key] = value_out
+  
+    return outliers_dict, final_score   
+
+# Accuracy Type 3
+
+# function 1: finding duplicates
+def find_duplicates_and_percentage(dataset_path):
+
+    df = read_data(dataset_path)
+
+    # Find duplicate rows
+    duplicate_rows = df[df.duplicated(keep=False)]
+    
+    # Calculate percentage of duplicate rows
+    total_rows = len(df)
+    total_duplicate_rows = len(duplicate_rows)
+    percentage_duplicate = 1-(total_duplicate_rows / total_rows)
+    
+    # Print duplicate rows
+    print("Duplicate Rows:")
+    print(duplicate_rows)
+    
+    # Print percentage of duplicate rows
+    print(f"\nDuplication Score: {percentage_duplicate*100}%")
+    
+# Completeness
+
+def completeness_test(dataset_path, exclude_columns = [], threshold=0.75):  
+    dataset = read_data(dataset_path)
+
+    # Exclude the 'Comment' column if it exists in the dataset  
+    if 'Comment' in dataset.columns:  
+        dataset = dataset.drop(columns=['Comment'])  
+  
+    # Exclude columns in exclude_columns if they exist in the dataset    
+    dataset = dataset.drop(columns=[col for col in exclude_columns if col in dataset.columns])
+    
+    # Calculate the percentage of non-null (non-missing) values in each column  
+    is_null_percentage = dataset.isna().mean()  
+      
+    # Identify columns with non-null percentage less than or equal to the threshold  
+    columns_to_keep = is_null_percentage[is_null_percentage <= threshold].index  
+      
+    # Keep columns that exceed the threshold of non-null values  
+    dataset2 = dataset[columns_to_keep]  
+      
+    # Calculate the actual percentage of non-missing values in the dataset  
+    total_non_missing = dataset2.notna().sum().sum()  
+    total_obs = dataset2.shape[0] * dataset2.shape[1]  
+    completeness_score = total_non_missing / total_obs  
+      
+    return completeness_score
+
+# Timeliness
+
+from datetime import datetime
+
+def calc_timeliness(refresh_date, cycle_day):
+    refresh_date = pd.to_datetime(refresh_date)
+    unupdate_cycle = np.max([((datetime.now() - refresh_date).days/cycle_day)-1, 0])
+
+    #unupdate_cycle = np.floor((datetime.now() - refresh_date).days/cycle_day)
+    #print((datetime.now() - refresh_date).days/cycle_day)
+    return np.max([0, 100 - (unupdate_cycle * (100/3))])
+
+# Output reports
+# Consistency Type 2
+
+def compare_datasets(dataset_path, column_mapping, ref_dataset_path = None):      
+    # Read the data file      
+    df = read_data(dataset_path)      
+      
+    # Initialize ref_df if a ref dataset is provided      
+    if ref_dataset_path:      
+        df_ref = read_data(ref_dataset_path)      
+        ref_data = True #Flag to indicate we are using a ref dataset      
+    else:      
+        ref_data = False #No ref dataset, compare within the same dataset      
+      
+    for selected_column, m_selected_column in column_mapping.items():        
+        if ref_data:      
+             # Compare to ref dataset        
+            unique_observations = get_names_used_for_column(df_ref, m_selected_column)    
+        else:        
+            # Use own column for comparison        
+            unique_observations = get_names_used_for_column(df, selected_column)    
+              
+        # Iterate over each row in the selected column    
+        column_results = []  
+        for value in df[selected_column]:    
+            # Check if the value exists in unique_observations and append the result to column_results  
+            if pd.isnull(value):  
+                column_results.append(False) # or True, depending on how you want to handle NaN values  
+            else:  
+                column_results.append(value in unique_observations)  
+          
+        # Add the results as a new column in the DataFrame  
+        df[selected_column + '_comparison'] = column_results  
+        
+    return df  
+
+# Accuracy Type 1
+
+# Function 1: Using isdigit to find non-numerical entries  
+def find_non_digits(s):    
+    # Ensure the value is treated as a string    
+    s = str(s)    
+    return [char for char in s if not (char.isdigit() or char == '.')]  
+  
+# Function 2 : Check if each row has only numbers in each selected column and add results as new columns  
+def add_only_numbers_columns(dataset_path, selected_columns):  
+    adf = read_data(dataset_path)  
+    selected_columns = [col for col in adf.columns if col in selected_columns]   
+  
+    for column_name in selected_columns:    
+        adf[column_name+'_Only_Numbers'] = adf[column_name].apply(lambda x: len(find_non_digits(x)) == 0)  
+  
+    return adf  
