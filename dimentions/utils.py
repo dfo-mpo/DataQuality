@@ -1,0 +1,166 @@
+import re  
+import numpy as np  
+import os
+import pandas as pd  
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer  
+from sklearn.metrics.pairwise import cosine_similarity  
+from difflib import SequenceMatcher  
+
+# ----------------------- Consistancy Dimension Utils -------------------------------
+province_abbreviations = {  
+    "BC": "British Columbia",  
+    "ON": "Ontario",  
+    "QC": "Quebec",  
+    "AB": "Alberta",  
+    "MB": "Manitoba",  
+    "SK": "Saskatchewan",  
+    "NS": "Nova Scotia",  
+    "NB": "New Brunswick",  
+    "NL": "Newfoundland and Labrador",  
+    "PE": "Prince Edward Island",  
+    "NT": "Northwest Territories",  
+    "YT": "Yukon",  
+    "NU": "Nunavut",  
+}  
+
+"""
+Normalize input text by converting to lowercase, stripping whitespace,
+replacing province abbreviations with full names, and removing non-alphanumeric characters.
+Optionally remove numbers based on the flag.
+""" 
+def normalize_text(text, remove_numbers=False):  
+    text = str(text).lower().strip()  
+    for abbr, full in province_abbreviations.items():  
+        text = re.sub(r"\b" + abbr.lower() + r"\b", full.lower(), text)  
+    if remove_numbers:  
+        text = re.sub(r"\d+", "", text)  
+    text = "".join(char for char in text if char.isalnum() or char.isspace())  
+    return " ".join(text.split())  
+
+"""
+Extract all numbers from the input text and return them as a list of strings.
+"""
+def extract_numbers(text):  
+    return re.findall(r"\d+", text)  
+
+"""
+Remove numbers with 1 or 2 digits from the input text.
+"""
+def remove_short_numbers(text):  
+    return re.sub(r"\b\d{1,4}\b", "", text)  
+  
+"""
+Calculate the similarity between two lists of numbers by comparing each digit.
+Return the proportion of matching digits.
+"""
+def numeric_similarity(num1_list, num2_list):  
+    num1, num2 = " ".join(num1_list), " ".join(num2_list)  
+    matches = sum(1 for a, b in zip(num1, num2) if a == b)  
+    max_length = max(len(num1), len(num2))  
+    return matches / max_length if max_length > 0 else 0  
+
+"""
+Calculate the similarity between two strings using the SequenceMatcher from difflib.
+Return the similarity ratio.
+"""
+def string_similarity(str1, str2):  
+    return SequenceMatcher(None, str1, str2).ratio()  
+    
+def get_names_used_for_column(df, column_name):  
+    unique_observations = pd.unique(df[column_name].dropna().values.ravel())  
+    return unique_observations  
+
+"""
+Calculate the cosine similarity between lists of texts using TF-IDF vectorization.
+"""
+def calculate_cosine_similarity(text_list, ref_list, stop_words):  
+    vectorizer = TfidfVectorizer(stop_words=stop_words, analyzer="word", ngram_range=(1, 2))  
+    ref_vec = vectorizer.fit_transform(ref_list)  
+    text_vec = vectorizer.transform(text_list)  
+    return cosine_similarity(text_vec, ref_vec)  
+
+"""
+Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
+"""
+def average_consistency_score(cosine_sim_matrix, threshold=0.91):  
+    num_rows, num_columns = cosine_sim_matrix.shape  
+    inconsistency = 0  
+    for i in range(num_rows):  
+        if np.any((cosine_sim_matrix[i] > threshold) & (cosine_sim_matrix[i] <= 1.0000000)):  
+            inconsistency += 1  
+    return (num_rows - inconsistency) / num_rows  
+
+"""
+Check if any number in the list has 1 or 2 digits.
+"""
+def contains_short_number(num_list):
+    return any(len(num) <= 4 for num in num_list)
+
+"""
+Check if any number in the first list is present in the second list.
+"""
+def numbers_match(num_list1, num_list2):
+    return any(num in num_list2 for num in num_list1)
+
+"""
+Combine text and numeric similarities into a single similarity matrix.
+"""
+def calculate_combined_similarity(unique_observations, text_similarity_matrix):
+    # Make a copy of the text similarity matrix to modify it
+    combined_sim_matrix = np.copy(text_similarity_matrix)
+
+    # Extract numeric parts from each unique observation
+    numeric_parts = [extract_numbers(obs) for obs in unique_observations]
+
+    # Iterate over each pair of unique observations to calculate numeric similarity
+    for i, num_i in enumerate(numeric_parts):
+        for j, num_j in enumerate(numeric_parts):
+            if i != j:
+                # Calculate the numeric similarity for the current pair
+                num_sim = numeric_similarity(num_i, num_j)
+
+                # Update the combined similarity matrix with the maximum value between text and numeric similarity
+                combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], num_sim)
+
+    # Iterate over each pair of unique observations to calculate string similarity
+    for i, obs_i in enumerate(unique_observations):
+        for j, obs_j in enumerate(unique_observations):
+            if i != j:
+                # Calculate the string similarity for the current pair
+                seq_sim = string_similarity(obs_i, obs_j)
+
+                # Update the combined similarity matrix with the maximum value between existing and sequence matcher
+                combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], seq_sim)
+
+    return combined_sim_matrix
+
+# ----------------------- Accuracy Dimension Utils -------------------------------
+
+
+# ----------------------- All Dimension Utils -------------------------------
+# ANSI escape code for red text  
+RED = "\033[31m"  
+RESET = "\033[0m" 
+
+""" Reading the dataset file """
+def read_data(dataset_path):
+    _, file_extension = os.path.splitext(dataset_path)
+    if file_extension == ".csv":
+        try:  
+            df = pd.read_csv(dataset_path, encoding="utf-8-sig")  
+        except UnicodeDecodeError:  
+            df = pd.read_csv(dataset_path, encoding="cp1252") 
+    elif file_extension == ".xlsx":
+        df = pd.read_excel(dataset_path)
+    else:
+        print("Unsupported file type")
+        df = None
+    return df
+
+def log_score(test_name, dataset_name, selected_columns, threshold, score):  
+    # Implement logging as required  
+    pass  
+
+def get_dataset_name(dataset_path):  
+    # Implement dataset name extraction as required  
+    pass  
