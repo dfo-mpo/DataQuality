@@ -2,7 +2,8 @@ import re
 import numpy as np  
 import os
 import pandas as pd  
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer  
+from datetime import datetime
+from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.metrics.pairwise import cosine_similarity  
 from difflib import SequenceMatcher  
 
@@ -157,10 +158,57 @@ def read_data(dataset_path):
         df = None
     return df
 
-def log_score(test_name, dataset_name, selected_columns, threshold, score):  
-    # Implement logging as required  
-    pass  
+def log_score(test_name, dataset_name, selected_columns, score, threshold=None):  
+    # Convert score to a percentage
+    percentage_score = score
+
+    # Load the Excel file into a DataFrame
+    log_file = "DQS_Log_Beta.xlsx"
+
+    # Set threshold to "No threshold" if it is not provided
+    if threshold is None:
+        threshold_value = "no threshold"
+    else:
+        threshold_value = threshold
+
+    # If selected_columns is None, assume "All" was tested
+    if selected_columns is None:
+        columns_tested = "All columns"
+    else:
+        # Convert selected_columns list to a string if specific columns are provided
+        columns_tested = ", ".join(selected_columns)
+
+    # Try loading the existing Excel file
+    try:
+        df = read_data(log_file)
+    except FileNotFoundError:
+        # Create an empty DataFrame if file doesn't exist (shouldn't be the case if you already created it)
+        df = pd.DataFrame(
+            columns=["Dataset", "Test", "Threshold", "Date_Calculated", "Score"]
+        )
+
+    # Prepare the new row as a DataFrame
+    new_row = pd.DataFrame(
+        {
+            "Dataset": [dataset_name],
+            "Columns_Tested": [columns_tested],  # Add the list of columns tested
+            "Test": [test_name],
+            "Date_Calculated": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
+            "Threshold": [threshold_value],
+            "Score": [percentage_score],
+            "User": GLOBAL_USER
+        }
+    )
+
+    # Append the new row to the DataFrame
+    df = pd.concat([df, new_row], ignore_index=True)
+
+    # Save the updated DataFrame back to the Excel file
+    df.to_excel(log_file, index=False)
 
 def get_dataset_name(dataset_path):  
-    # Implement dataset name extraction as required  
-    pass  
+    # Extract the file name from the path (e.g., 'Dataset_A.csv')
+    file_name = os.path.basename(dataset_path)
+    # Split the file name to remove the extension (e.g., 'Dataset_A')
+    dataset_name = os.path.splitext(file_name)[0]
+    return dataset_name

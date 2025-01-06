@@ -201,16 +201,20 @@ class Consistancy:
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')
                     print(f'Error: {e}')
+                    outputs.append('Dataset is too large for this test, out of memory!')
                 except KeyError as e:
                     print(f'{utils.RED}Issue with column names, are you sure you entered them correctly?{utils.RESET}')
                     print(f'Column name that fails: {e}')
                     print(f'List of all detected column names: {list(utils.read_data(self.dataset_path).columns)}')
+                    outputs.append('Issue with column names, are you sure you entered them correctly?')
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
                     print(f'Error: {e}')
+                    outputs.append('Did not find dataset.')
                 except Exception as e:
-                    print(f'{utils.RED}Test failed!{utils.RESET}')
+                    print(f'{utils.RED}Test failed to run!{utils.RESET}')
                     print(f'Error: {e}')
+                    outputs.append('Test failed to run!')
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
