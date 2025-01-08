@@ -4,7 +4,7 @@ from . import utils
 
 ALL_METRICS = ['c1', 'c2']
 
-""" Class to represent all metric tests for the conssitancy dimention """
+""" Class to represent all metric tests for the Consistancy dimension """
 class Consistancy:
     def __init__(self, dataset_path, column_names, column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None):
         self.dataset_path = dataset_path  

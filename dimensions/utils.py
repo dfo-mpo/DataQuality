@@ -136,7 +136,14 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
     return combined_sim_matrix
 
 # ----------------------- Accuracy Dimension Utils -------------------------------
-
+"""
+Find non-numerical characters in a string.
+"""
+# Function 1: Using isdigit to find non-numerical entries
+def find_non_digits(s):
+    # Ensure the value is treated as a string
+    s = str(s)
+    return [char for char in s if not (char.isdigit() or char == ".")]
 
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text  
