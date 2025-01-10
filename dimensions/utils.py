@@ -7,7 +7,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
 from difflib import SequenceMatcher  
 
-# ----------------------- Consistancy Dimension Utils -------------------------------
+# ----------------------- Consistency Dimension Utils -------------------------------
 province_abbreviations = {  
     "BC": "British Columbia",  
     "ON": "Ontario",  
@@ -49,7 +49,7 @@ Remove numbers with 1 or 2 digits from the input text.
 """
 def remove_short_numbers(text):  
     return re.sub(r"\b\d{1,4}\b", "", text)  
-  
+
 """
 Calculate the similarity between two lists of numbers by comparing each digit.
 Return the proportion of matching digits.
@@ -137,13 +137,17 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
 
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
-Find non-numerical characters in a string.
+For Accuracy A1, find non-numerical characters in a string.
 """
 # Function 1: Using isdigit to find non-numerical entries
 def find_non_digits(s):
     # Ensure the value is treated as a string
     s = str(s)
     return [char for char in s if not (char.isdigit() or char == ".")]
+
+"""
+For Accuracy A3, .
+"""
 
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text  

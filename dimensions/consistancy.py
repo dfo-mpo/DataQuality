@@ -4,8 +4,8 @@ from . import utils
 
 ALL_METRICS = ['c1', 'c2']
 
-""" Class to represent all metric tests for the Consistancy dimension """
-class Consistancy:
+""" Class to represent all metric tests for the Consistency dimension """
+class Consistency:
     def __init__(self, dataset_path, column_names, column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None):
         self.dataset_path = dataset_path  
         self.column_names = column_names 
@@ -16,7 +16,7 @@ class Consistancy:
         self.c2_stop_words = c2_stop_words
         self.ref_dataset_path = ref_dataset_path 
 
-    """ Consistency Type 1 (C1): Determines the simularity between string values in specified columns.
+    """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
     """    
     def c1_metric(self):
