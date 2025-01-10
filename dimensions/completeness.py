@@ -38,7 +38,7 @@ class Completeness:
         completeness_score = total_non_missing / total_obs
 
         # log the results
-        utils.log_score(test_name = "Completeness (C1)", dataset_name = utils.get_dataset_name(self.dataset_path), selected_columns = None, threshold = self.pi_threshold, score = completeness_score) 
+        utils.log_score(test_name = "Completeness (P1)", dataset_name = utils.get_dataset_name(self.dataset_path), selected_columns = None, threshold = self.pi_threshold, score = completeness_score) 
 
         return completeness_score 
         
