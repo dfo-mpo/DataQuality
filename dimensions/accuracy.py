@@ -1,5 +1,4 @@
 import numpy as np  
-import pandas as pd 
 from . import utils
 
 ALL_METRICS = ['a1', 'a2', 'a3']
@@ -18,49 +17,49 @@ class Accuracy:
     """    
     def a1_metric(self):    
         # Read the dataset from the provided Excel file path
-            adf = utils.read_data(self.dataset_path)
+        adf = utils.read_data(self.dataset_path)
 
-            # Check if all specified columns were extracted, if not raise Key error
-            for column in self.selected_columns:
-                if column not in adf.columns:
-                    raise KeyError(column)
-                
-            self.selected_columns = [col for col in adf.columns if col in self.selected_columns]
+        # Check if all specified columns were extracted, if not raise Key error
+        for column in self.selected_columns:
+            if column not in adf.columns:
+                raise KeyError(column)
+            
+        self.selected_columns = [col for col in adf.columns if col in self.selected_columns]
 
-            all_accuracy_scores = []
+        all_accuracy_scores = []
 
-            for column_name in self.selected_columns:
-                # Drop NA, null, or blank values from column
-                column_data = adf[column_name].dropna()
+        for column_name in self.selected_columns:
+            # Drop NA, null, or blank values from column
+            column_data = adf[column_name].dropna()
 
-                total_rows = len(column_data)
+            total_rows = len(column_data)
 
-                if total_rows > 0:  # to avoid division by zero
-                    non_digit_chars_per_row = column_data.apply(utils.find_non_digits)
-                    non_numerical_count = non_digit_chars_per_row.apply(
-                        lambda x: len(x) > 0
-                    ).sum()
-                    accuracy_score = (total_rows - non_numerical_count) / total_rows
-                    all_accuracy_scores.append(accuracy_score)
+            if total_rows > 0:  # to avoid division by zero
+                non_digit_chars_per_row = column_data.apply(utils.find_non_digits)
+                non_numerical_count = non_digit_chars_per_row.apply(
+                    lambda x: len(x) > 0
+                ).sum()
+                accuracy_score = (total_rows - non_numerical_count) / total_rows
+                all_accuracy_scores.append(accuracy_score)
 
-            overall_accuracy_score = (
-                sum(all_accuracy_scores) / len(all_accuracy_scores)
-                if all_accuracy_scores
-                else None
-            )
+        overall_accuracy_score = (
+            sum(all_accuracy_scores) / len(all_accuracy_scores)
+            if all_accuracy_scores
+            else None
+        )
 
-            # log the results
-            utils.log_score(
-                test_name="Accuracy (A1)",
-                dataset_name=utils.get_dataset_name(self.dataset_path),
-                selected_columns=self.selected_columns,
-                threshold=None,
-                score=overall_accuracy_score,
-            )
+        # log the results
+        utils.log_score(
+            test_name="Accuracy (A1)",
+            dataset_name=utils.get_dataset_name(self.dataset_path),
+            selected_columns=self.selected_columns,
+            threshold=None,
+            score=overall_accuracy_score,
+        )
 
-            return overall_accuracy_score   
+        return overall_accuracy_score   
 
-    """ Accuracy Type 2 (C2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
+    """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
     """
     def a2_metric(self):  
@@ -105,7 +104,7 @@ class Accuracy:
     
         return outliers_dict, final_score
     
-    """Accuracy Type 3 (C3): Find duplicated rows
+    """Accuracy Type 3 (A3): Find duplicated rows
     """
     def a3_metric(self):
 
@@ -140,7 +139,7 @@ class Accuracy:
                 try:
                     if metric == 'a1':
                         outputs.append(self.a1_metric())
-                    if metric == 'a2':
+                    elif metric == 'a2':
                         outputs.append(self.a2_metric())
                     elif metric =='a3':
                         outputs.append(self.a3_metric())
