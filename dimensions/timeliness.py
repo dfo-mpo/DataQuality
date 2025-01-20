@@ -8,12 +8,15 @@ ALL_METRICS = ['t1']
 class Timeliness:
     def __init__(self, dataset_path):
         self.dataset_path = dataset_path
-        self. # will need to complete this 
+        # TODO: Set all the other variables
 
-    """ Timeliness Type 1 (T1): Checks for whether there are blanks in the entire dataset.
+    """ Timeliness Type 1 (T1):
+    TODO: provide a description of what this script does. 
+    Example: Determines the similarity between string values in specified columns.
     """    
+    # TODO: Replace with the logic for this metric, where the final score should be called timeliness_score 
     def t1_metric(self):  
-        dataset = utils.read_data(self.dataset_path) # will need to continue this function 
+        dataset = utils.read_data(self.dataset_path)
 
 
         # log the results
@@ -24,14 +27,14 @@ class Timeliness:
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
     def run_metrics(self, metrics=ALL_METRICS):
-        # Verify that inputed metrics is valid
+        # TODO: verify that inputted metrics is valid
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
             for metric in metrics:
                 try:
                     if metric == 't1':
-                        outputs.append(self.p1_metric())
+                        outputs.append(self.t1_metric())
                 except Exception as e:
                     print(f'{utils.RED}Test failed!{utils.RESET}')
                     print(f'Error: {e}')
