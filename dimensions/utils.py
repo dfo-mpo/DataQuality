@@ -150,11 +150,13 @@ For Accuracy A3, .
 """
 
 # ----------------------- All Dimension Utils -------------------------------
-# ANSI escape code for red text  
+# ANSI escape code for red text for console output 
 RED = "\033[31m"  
 RESET = "\033[0m" 
 
-""" Reading the dataset file """
+""" Reading the dataset file 
+ - Function to read either csv or xlsx data
+"""
 def read_data(dataset_path):
     _, file_extension = os.path.splitext(dataset_path)
     if file_extension == ".csv":
@@ -169,13 +171,14 @@ def read_data(dataset_path):
         df = None
     return df
 
-def log_score(test_name, dataset_name, selected_columns, score, threshold=None):  
+# Function to log a new row into the DQS_Output_Log_xx.xlsx file
+def output_log_score(test_name, dataset_name, score, selected_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None):
     # Convert score to a percentage
     percentage_score = score
-
+    
     # Load the Excel file into a DataFrame
-    log_file = "DQS_Log_Beta.xlsx"
-
+    log_file = "DQS_Output_Log_Test.xlsx"
+    
     # Set threshold to "No threshold" if it is not provided
     if threshold is None:
         threshold_value = "no threshold"
@@ -188,28 +191,33 @@ def log_score(test_name, dataset_name, selected_columns, score, threshold=None):
     else:
         # Convert selected_columns list to a string if specific columns are provided
         columns_tested = ", ".join(selected_columns)
-
+    
+    # If isStandard then the test is a standard metric test, otherwise it is a custom test (not created by the SDPA team)
+    standard_or_custom_value = "Standard" if isStandardTest else "Custom"
+    
+    # Including dimension (which may have to be defined by what class this data is in, but for testing purposes, it's hardcoded for now)
+    # TODO 
+    
     # Try loading the existing Excel file
     try:
         df = read_data(log_file)
     except FileNotFoundError:
         # Create an empty DataFrame if file doesn't exist (shouldn't be the case if you already created it)
-        df = pd.DataFrame(
-            columns=["Dataset", "Test", "Threshold", "Date_Calculated", "Score"]
-        )
+        df = pd.DataFrame(columns=["Dataset", "Dimension", "Test", "Selected_Columns", "Threshold", "Score", "Run_Time_and_Date", "New_or_Existing_Test", "Why_Did_the_Test_Fail", "Errors"])
 
     # Prepare the new row as a DataFrame
-    new_row = pd.DataFrame(
-        {
-            "Dataset": [dataset_name],
-            "Columns_Tested": [columns_tested],  # Add the list of columns tested
-            "Test": [test_name],
-            "Date_Calculated": [datetime.now().strftime("%Y-%m-%d %H:%M:%S")],
-            "Threshold": [threshold_value],
-            "Score": [percentage_score],
-            "User": GLOBAL_USER
-        }
-    )
+    new_row = pd.DataFrame({
+        "Dataset": [dataset_name],
+        "Dimension": [dimension], 
+        "Test": [test_name],
+        "Selected_Columns": [columns_tested],  # Add the list of columns tested
+        "Threshold":[threshold_value],
+        "Score": [percentage_score],
+        "Run_Time_and_Date": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
+        "New_or_Existing_Test": [standard_or_custom_value],
+        "Why_Did_the_Test_Fail": [test_fail_comment], # TODO: expand
+        "Errors": [errors] # TODO: expand
+    })
 
     # Append the new row to the DataFrame
     df = pd.concat([df, new_row], ignore_index=True)
@@ -217,6 +225,9 @@ def log_score(test_name, dataset_name, selected_columns, score, threshold=None):
     # Save the updated DataFrame back to the Excel file
     df.to_excel(log_file, index=False)
 
+"""
+- Function to extract dataset name from a path
+"""
 def get_dataset_name(dataset_path):  
     # Extract the file name from the path (e.g., 'Dataset_A.csv')
     file_name = os.path.basename(dataset_path)

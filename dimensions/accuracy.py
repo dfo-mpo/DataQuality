@@ -1,7 +1,7 @@
 import numpy as np  
 from . import utils
 
-ALL_METRICS = ['a1', 'a2', 'a3']
+ALL_METRICS = ['A1', 'A2', 'A3']
 
 """ Class to represent all metric tests for the Accuracy dimension """
 class Accuracy:
@@ -15,7 +15,7 @@ class Accuracy:
     """ Accuracy Type 1 (A1): Determines whether there are symbols in numerics.
     Make the column a string, find symbols, and calculate the accuracy scores for multiple columns.
     """    
-    def a1_metric(self):    
+    def _a1_metric(self):    
         # Read the dataset from the provided Excel file path
         adf = utils.read_data(self.dataset_path)
 
@@ -48,21 +48,12 @@ class Accuracy:
             else None
         )
 
-        # log the results
-        utils.log_score(
-            test_name="Accuracy (A1)",
-            dataset_name=utils.get_dataset_name(self.dataset_path),
-            selected_columns=self.selected_columns,
-            threshold=None,
-            score=overall_accuracy_score,
-        )
-
         return overall_accuracy_score   
 
     """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
     """
-    def a2_metric(self):  
+    def _a2_metric(self):  
         df = utils.read_data(self.dataset_path)
         outliers_dict = {}
 
@@ -88,25 +79,16 @@ class Accuracy:
                 outliers = (df[column] < lower_bound) | (df[column] > upper_bound)  
                 outliers_dict[column] = (1 - outliers.mean()) 
         
-        final_score = {}
-        
-        for key in outliers_dict.keys():
-            arr = outliers_dict[key].values
-            value_out = np.sum(arr > self.a2_minimum_score)/len(arr)
-            final_score[key] = value_out
-        
-        # log the results
-        utils.log_score(test_name = "Accuracy (A2)", 
-                        dataset_name = utils.get_dataset_name(self.dataset_path), 
-                        selected_columns = self.selected_columns, 
-                        threshold =self.a2_threshold, 
-                        score = final_score[key])  
+        #compute final score
+        total_groups = len(outliers_dict)
+        groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)
+        final_score = groups_above / total_groups if total_groups > 0 else 0
     
         return outliers_dict, final_score
     
     """Accuracy Type 3 (A3): Find duplicated rows
     """
-    def a3_metric(self):
+    def _a3_metric(self):
 
         df = utils.read_data(self.dataset_path)
 
@@ -122,9 +104,6 @@ class Accuracy:
         print("Duplicate Rows:")
         print(duplicate_rows)
         
-        # log the results
-        utils.log_score(test_name = "Accuracy (A3)", dataset_name = utils.get_dataset_name(self.dataset_path), selected_columns = None, threshold = None, score = percentage_duplicate)  
-        
         # Print percentage of duplicate rows
         print(f"\nDuplication Score: {percentage_duplicate*100}%")
     
@@ -135,21 +114,47 @@ class Accuracy:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            thresholds = {"A1": None, "A2": self.a2_threshold, "A3": None}
+            columns = {"A1": self.selected_columns, "A2": self.selected_columns, "A3": None}
+
             for metric in metrics:
+                # Variables that prepare for output reports
+                errors = None
+                test_fail_comment = None
+                overall_accuracy_score = None  # Ensure it exists even if errors occur
                 try:
-                    if metric == 'a1':
-                        outputs.append(self.a1_metric())
-                    elif metric == 'a2':
-                        outputs.append(self.a2_metric())
-                    elif metric =='a3':
-                        outputs.append(self.a3_metric())
+                    if metric == 'A1':
+                        overall_accuracy_score = self._a1_metric()
+                    elif metric == 'A2':
+                        outliers, overall_accuracy_score = self._a2_metric()
+                        outputs.append(outliers)
+                    elif metric =='A3':
+                        overall_accuracy_score = self._a3_metric()
                 except KeyError as e:
                     print(f'{utils.RED}Issue with column names, are you sure you entered them correctly?{utils.RESET}')
                     print(f'Column name that fails: {e}')
                     print(f'List of all detected column names: {list(utils.read_data(self.dataset_path).columns)}')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e) + ' column not found in dataset.'
                 except Exception as e:
-                    print(f'{utils.RED}Test failed!{utils.RESET}')
-                    print(f'Error: {e}')
+                    print(f'{utils.RED} {type(e).__name__} error has occured!{utils.RESET}')
+                    print(e)
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e)
+
+                outputs.append(overall_accuracy_score)
+
+                # output report of results
+                utils.output_log_score(
+                    test_name = metric, 
+                    dataset_name = utils.get_dataset_name(self.dataset_path), 
+                    score = overall_accuracy_score, 
+                    selected_columns = columns[metric], 
+                    isStandardTest = True, 
+                    test_fail_comment = test_fail_comment, 
+                    errors = errors, 
+                    dimension = "Accuracy", 
+                    threshold= thresholds[metric])
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

@@ -1,17 +1,17 @@
 from . import utils
 
-ALL_METRICS = ['p1']
+ALL_METRICS = ['P1']
 
 """ Class to represent all metric tests for the Completeness dimension """
 class Completeness:
-    def __init__(self, dataset_path, exclude_columns=None, p1_threshold=1.5):
+    def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75):
         self.dataset_path = dataset_path  
         self.exclude_columns = exclude_columns
         self.p1_threshold = p1_threshold
 
     """ Completeness Type 1 (P1): Checks for whether there are blanks in the entire dataset.
     """    
-    def p1_metric(self):  
+    def _p1_metric(self):  
         dataset = utils.read_data(self.dataset_path)
 
         # Exclude the 'Comment' column if it exists in the dataset  
@@ -35,9 +35,6 @@ class Completeness:
         total_obs = dataset2.shape[0] * dataset2.shape[1]  
         completeness_score = total_non_missing / total_obs
 
-        # log the results
-        utils.log_score(test_name = "Completeness (P1)", dataset_name = utils.get_dataset_name(self.dataset_path), selected_columns = None, threshold = self.p1_threshold, score = completeness_score) 
-
         return completeness_score 
         
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
@@ -47,13 +44,40 @@ class Completeness:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            thresholds = {"P1": self.p1_threshold}
+
             for metric in metrics:
+                # Variables that prepare for output reports
+                errors = None
+                test_fail_comment = None
+                overall_completeness_score = None  # Ensure it exists even if errors occur
+
                 try:
-                    if metric == 'p1':
-                        outputs.append(self.p1_metric())
+                    if metric == 'P1':
+                        overall_completeness_score = self._p1_metric()
+
+                except FileNotFoundError as e:
+                    print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e)
                 except Exception as e:
-                    print(f'{utils.RED}Test failed!{utils.RESET}')
-                    print(f'Error: {e}')
+                    print(f'{utils.RED} {type(e).__name__} error has occured!{utils.RESET}')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e)
+                
+                outputs.append(overall_completeness_score)
+
+                # output report of results
+                utils.output_log_score(
+                    test_name = metric, 
+                    dataset_name = utils.get_dataset_name(self.dataset_path), 
+                    score = overall_completeness_score, 
+                    selected_columns = None, 
+                    isStandardTest = True, 
+                    test_fail_comment = test_fail_comment, 
+                    errors = errors, 
+                    dimension = "Completeness", 
+                    threshold= thresholds[metric])
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

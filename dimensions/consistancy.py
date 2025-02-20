@@ -2,14 +2,14 @@ import numpy as np
 import pandas as pd 
 from . import utils
 
-ALL_METRICS = ['c1', 'c2']
+ALL_METRICS = ['C1', 'C2']
 
 """ Class to represent all metric tests for the Consistency dimension """
 class Consistency:
-    def __init__(self, dataset_path, column_names, column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None):
         self.dataset_path = dataset_path  
-        self.column_names = column_names 
-        self.column_mapping = column_mapping 
+        self.c1_column_names = c1_column_names 
+        self.c2_column_mapping = c2_column_mapping 
         self.c1_threshold = c1_threshold
         self.c2_threshold = c2_threshold
         self.c1_stop_words = c1_stop_words 
@@ -19,13 +19,13 @@ class Consistency:
     """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
     """    
-    def c1_metric(self):
+    def _c1_metric(self):
         # Read the dataset from the provided Excel file path
         df = utils.read_data(self.dataset_path)
         overall_consistency_scores = []
 
         # Iterate over each specified column
-        for column_name in self.column_names:
+        for column_name in self.c1_column_names:
             # Normalize the text in the specified column and store the results in a new column
             df[f"Normalized {column_name}"] = df[column_name].apply(utils.normalize_text)
 
@@ -123,22 +123,13 @@ class Consistency:
         overall_consistency_score = np.mean(overall_consistency_scores)
         df["Overall Consistency Score"] = overall_consistency_score
 
-        # log the results
-        utils.log_score(
-            test_name="Consistency (C1)",
-            dataset_name=utils.get_dataset_name(self.dataset_path),
-            selected_columns=self.column_names,
-            threshold=self.c1_threshold,
-            score=overall_consistency_score,
-        )
-
         return overall_consistency_score  # to return the score
         # return df #to return the dataset      
 
     """ Consistancy Type 2 (C2): Compares reference data and string values in specified columns.
     The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.
     """
-    def c2_metric(self):
+    def _c2_metric(self):
         # Read the data file
         df = utils.read_data(self.dataset_path)
 
@@ -151,7 +142,7 @@ class Consistency:
 
         all_consistency_scores = []
 
-        for selected_column, m_selected_column in self.column_mapping.items():
+        for selected_column, m_selected_column in self.c2_column_mapping.items():
             if ref_data:
                 # Compare to ref dataset
                 unique_observations = utils.get_names_used_for_column(df_ref, m_selected_column)
@@ -174,15 +165,6 @@ class Consistency:
             else None
         )
 
-        # log the results
-        utils.log_score(
-            test_name="Consistency (C2)",
-            dataset_name=utils.get_dataset_name(self.dataset_path),
-            selected_columns=self.column_mapping,
-            threshold=self.c2_threshold,
-            score=overall_avg_consistency,
-        )
-
         return overall_avg_consistency
     
     """ Run metrics: Will run specified metrics or all consistancy metrics by default
@@ -192,29 +174,53 @@ class Consistency:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            thresholds = {"C1": self.c1_threshold, "C2": self.c2_threshold}
+            columns = {"C1": self.c1_column_names, "C2": self.c2_column_mapping}
+
             for metric in metrics:
+                # Variables that prepare for output reports
+                errors = None
+                test_fail_comment = None
+                overall_consistency_score = None  # Ensure it exists even if errors occur
+
                 try:
-                    if metric == 'c1':
-                        outputs.append(self.c1_metric())
-                    elif metric == 'c2':
-                        outputs.append(self.c2_metric())
+                    if metric == 'C1':
+                        overall_consistency_score = self._c1_metric()
+                    elif metric == 'C2':
+                        overall_consistency_score = self._c2_metric()     
+
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')
-                    print(f'Error: {e}')
-                    outputs.append('Dataset is too large for this test, out of memory!')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e) + '. Dataset is too large for this test.'
                 except KeyError as e:
                     print(f'{utils.RED}Issue with column names, are you sure you entered them correctly?{utils.RESET}')
                     print(f'Column name that fails: {e}')
                     print(f'List of all detected column names: {list(utils.read_data(self.dataset_path).columns)}')
-                    outputs.append('Issue with column names, are you sure you entered them correctly?')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e) + ' column not found in dataset.'
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
-                    print(f'Error: {e}')
-                    outputs.append('Did not find dataset.')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e)
                 except Exception as e:
-                    print(f'{utils.RED}Test failed to run!{utils.RESET}')
-                    print(f'Error: {e}')
-                    outputs.append('Test failed to run!')
+                    print(f'{utils.RED} {type(e).__name__} error has occured!{utils.RESET}')
+                    errors = type(e).__name__  
+                    test_fail_comment = str(e)
+                
+                outputs.append(overall_consistency_score)
+
+                # output report of results
+                utils.output_log_score(
+                    test_name = metric, 
+                    dataset_name = utils.get_dataset_name(self.dataset_path), 
+                    score = overall_consistency_score, 
+                    selected_columns = columns[metric], 
+                    isStandardTest = True, 
+                    test_fail_comment = test_fail_comment, 
+                    errors = errors, 
+                    dimension = "Consistency", 
+                    threshold= thresholds[metric])
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
