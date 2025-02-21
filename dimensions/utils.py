@@ -117,11 +117,12 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
     for i, num_i in enumerate(numeric_parts):
         for j, num_j in enumerate(numeric_parts):
             if i != j:
-                # Calculate the numeric similarity for the current pair
-                num_sim = numeric_similarity(num_i, num_j)
+                if not contains_short_number(numeric_parts):
+                    # Calculate the numeric similarity for the current pair
+                    num_sim = numeric_similarity(num_i, num_j)
 
-                # Update the combined similarity matrix with the maximum value between text and numeric similarity
-                combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], num_sim)
+                    # Update the combined similarity matrix with the maximum value between text and numeric similarity
+                    combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], num_sim)
 
     # Iterate over each pair of unique observations to calculate string similarity
     for i, obs_i in enumerate(unique_observations):
@@ -134,6 +135,38 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
                 combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], seq_sim)
 
     return combined_sim_matrix
+
+"""
+Extract maximum similarity values, and corresponding project names
+and create a DataFrame with this information.
+"""
+def get_max_similarity_values(combined_sim_matrix, unique_observations, column_names):
+    # Store max values and names
+    max_values = []
+    max_names = []
+    unique_project_names = np.array(unique_observations)
+    
+    # Iterate over each row to find max similarity values and corresponding project names
+    for i, row in enumerate(combined_sim_matrix):
+        # Ignore self-similarity by setting the diagonal to -1
+        row[i] = -1
+        
+        # Get the index of the maximum similarity
+        top_indices = np.argsort(row)[::-1]  # Sort in descending order
+        
+        # Get the maximum value, name, and ratio
+        max_values.append(row[top_indices[0]])
+        max_names.append(unique_project_names[top_indices[0]])
+    
+    # Create a DataFrame with the max values and corresponding project names
+    max_values_df = pd.DataFrame({
+        "Column Source": column_names,
+        "Names Tested": unique_project_names,
+        "Highest Similarity Names": max_names,
+        "Similarity Score": max_values
+    })
+    
+    return max_values_df
 
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
@@ -155,7 +188,7 @@ RED = "\033[31m"
 RESET = "\033[0m" 
 
 """ Reading the dataset file 
- - Function to read either csv or xlsx data
+- Function to read either csv or xlsx data
 """
 def read_data(dataset_path):
     _, file_extension = os.path.splitext(dataset_path)

@@ -1,12 +1,13 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
+import os
 
 ALL_METRICS = ['C1', 'C2']
 
 """ Class to represent all metric tests for the Consistency dimension """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score"):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping 
@@ -14,11 +15,14 @@ class Consistency:
         self.c2_threshold = c2_threshold
         self.c1_stop_words = c1_stop_words 
         self.c2_stop_words = c2_stop_words
-        self.ref_dataset_path = ref_dataset_path 
+        self.ref_dataset_path = ref_dataset_path
+        self.return_type = return_type 
 
     """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
     """    
+    consistency_score_list=[]
+    
     def _c1_metric(self):
         # Read the dataset from the provided Excel file path
         df = utils.read_data(self.dataset_path)
@@ -123,10 +127,28 @@ class Consistency:
         overall_consistency_score = np.mean(overall_consistency_scores)
         df["Overall Consistency Score"] = overall_consistency_score
 
-        return overall_consistency_score  # to return the score
-        # return df #to return the dataset      
+        base_filename="c1_output.csv" # not sure if this is necessary but it works when I ran it in my notebook
+        version = 1
+        while os.path.exists(f"c1_output_v{version}.csv"):
+            version += 1
+        
+        # add conditional return logic
+        #return overall_consistency_score # to return the score
+        #return df #to return the dataset
+        if self.return_type == "score":
+            return overall_consistency_score
+        elif self.return_type == "dataset":
+            if not overall_consistency_scores:
+                return "No valid similarity results generated"
+            
+            final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
+            output_file = f"c1_output_v{version}.csv"
+            final_df.to_csv(output_file, index=False)
+            return output_file  # Return the file name
+        else:
+            return df  # Default return value (DataFrame)    
 
-    """ Consistancy Type 2 (C2): Compares reference data and string values in specified columns.
+    """ Consistency Type 2 (C2): Compares reference data and string values in specified columns.
     The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.
     """
     def _c2_metric(self):
@@ -167,7 +189,7 @@ class Consistency:
 
         return overall_avg_consistency
     
-    """ Run metrics: Will run specified metrics or all consistancy metrics by default
+    """ Run metrics: Will run specified metrics or all consistency metrics by default
     """
     def run_metrics(self, metrics=ALL_METRICS):
         # Verify that inputed metrics is valid
