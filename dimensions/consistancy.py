@@ -187,7 +187,24 @@ class Consistency:
             else None
         )
 
-        return overall_avg_consistency
+        base_filename="c2_output.csv"
+        version = 1
+        while os.path.exists(f"c2_output_v{version}.csv"):
+            version += 1
+        
+        # add conditional return logic
+        if self.return_type == "score":
+            return overall_avg_consistency
+        elif self.return_type == "dataset":
+            if not overall_avg_consistency :
+                return "No valid similarity results generated"
+            
+            final_df = utils.compare_datasets(df, selected_column, unique_observations)  
+            output_file = f"c2_output_v{version}.csv"
+            final_df.to_csv(output_file, index=False)
+            return output_file  # Return the file name
+        else:
+            return df  # Default return value (DataFrame)
     
     """ Run metrics: Will run specified metrics or all consistency metrics by default
     """

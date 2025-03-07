@@ -168,6 +168,25 @@ def get_max_similarity_values(combined_sim_matrix, unique_observations, column_n
     
     return max_values_df
 
+"""
+Compare whether the column being tested resembles the reference data column
+and create a DataFrame with new column(s) added
+"""
+def compare_datasets(df,selected_column, unique_observations):     
+    # Iterate over each row in the selected column    
+    column_results = []  
+    for value in df[selected_column]:    
+        # Check if the value exists in unique_observations and append the result to column_results  
+        if pd.isnull(value):  
+            column_results.append(False) # or True, depending on how you want to handle NaN values  
+        else:  
+            column_results.append(value in unique_observations)  
+
+    # Add the results as a new column in the DataFrame  
+    df[selected_column + '_comparison'] = column_results  
+    
+    return df  
+
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
 For Accuracy A1, find non-numerical characters in a string.
