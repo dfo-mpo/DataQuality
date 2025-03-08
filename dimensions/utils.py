@@ -198,6 +198,18 @@ def find_non_digits(s):
     return [char for char in s if not (char.isdigit() or char == ".")]
 
 """
+For Accuracy A1, append columns that indicate true or false for whether there are symbols in numerics
+and create a new DataFrame with new column(s)
+"""
+def add_only_numbers_columns(df, selected_columns):    
+    selected_columns = [col for col in df.columns if col in selected_columns]   
+
+    for column_name in selected_columns:    
+        df[column_name+'_Only_Numbers'] = df[column_name].apply(lambda x: len(find_non_digits(x)) == 0)  
+
+    return df
+
+"""
 For Accuracy A3, .
 """
 
