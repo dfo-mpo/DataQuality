@@ -51,9 +51,9 @@ class Accuracy:
             else None
         )
 
-        base_filename="a2_output.csv"
+        base_filename="a1_output.csv"
         version = 1
-        while os.path.exists(f"a2_output_v{version}.csv"):
+        while os.path.exists(f"a1_output_v{version}.csv"):
             version += 1
         
         # add conditional return logic
@@ -66,7 +66,7 @@ class Accuracy:
                 return "No valid similarity results generated"
             
             final_df = utils.add_only_numbers_columns(adf, self.selected_columns)  
-            output_file = f"a2_output_v{version}.csv"
+            output_file = f"a1_output_v{version}.csv"
             final_df.to_csv(output_file, index=False)
             return output_file  # Return the file name
             
@@ -102,12 +102,33 @@ class Accuracy:
                 outliers = (df[column] < lower_bound) | (df[column] > upper_bound)  
                 outliers_dict[column] = (1 - outliers.mean()) 
         
-        #compute final score
+        # compute final score
         total_groups = len(outliers_dict)
         groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)
         final_score = groups_above / total_groups if total_groups > 0 else 0
     
-        return outliers_dict, final_score
+        #return outliers_dict, final_score
+        base_filename="a2_output.csv"
+        version = 1
+        while os.path.exists(f"a2_output_v{version}.csv"):
+            version += 1
+        
+        # add conditional return logic
+        #return overall_consistency_score # to return the score
+        #return df #to return the dataset
+        if self.return_type == "score":
+            return final_score
+        elif self.return_type == "dataset":
+            if not outliers_dict :
+                return "No valid similarity results generated"
+            
+            final_df = outliers_dict[self.selected_columns[0]].reset_index()  
+            output_file = f"a2_output_v{version}.csv"
+            final_df.to_csv(output_file, index=False)
+            return output_file  # Return the file name
+            
+        else:
+            return df  # Default return value (DataFrame)  
     
     """Accuracy Type 3 (A3): Find duplicated rows
     """
