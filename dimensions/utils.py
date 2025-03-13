@@ -1,6 +1,7 @@
 import re  
 import numpy as np  
 import os
+import glob 
 import pandas as pd  
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer 
@@ -109,10 +110,10 @@ Combine text and numeric similarities into a single similarity matrix.
 def calculate_combined_similarity(unique_observations, text_similarity_matrix):
     # Make a copy of the text similarity matrix to modify it
     combined_sim_matrix = np.copy(text_similarity_matrix)
-
-    # Extract numeric parts from each unique observation
+    
+    # Extract numeric parts from each unique observation, but remove short numbers
     numeric_parts = [extract_numbers(obs) for obs in unique_observations]
-
+    
     # Iterate over each pair of unique observations to calculate numeric similarity
     for i, num_i in enumerate(numeric_parts):
         for j, num_j in enumerate(numeric_parts):
@@ -120,7 +121,7 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
                 if not contains_short_number(numeric_parts):
                     # Calculate the numeric similarity for the current pair
                     num_sim = numeric_similarity(num_i, num_j)
-
+                    
                     # Update the combined similarity matrix with the maximum value between text and numeric similarity
                     combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], num_sim)
 
@@ -130,10 +131,10 @@ def calculate_combined_similarity(unique_observations, text_similarity_matrix):
             if i != j:
                 # Calculate the string similarity for the current pair
                 seq_sim = string_similarity(obs_i, obs_j)
-
-                # Update the combined similarity matrix with the maximum value between existing and sequence matcher
+                
+                # Update the combined similarity matrix with the maximum value between existing and sequence matcher 
                 combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], seq_sim)
-
+    
     return combined_sim_matrix
 
 """
@@ -236,7 +237,7 @@ def read_data(dataset_path):
     return df
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
-def output_log_score(test_name, dataset_name, score, selected_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None):
+def output_log_score(test_name, dataset_name, score, selected_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None, logging_path=""):
     # Convert score to a percentage
     percentage_score = score
     
@@ -267,7 +268,7 @@ def output_log_score(test_name, dataset_name, score, selected_columns, isStandar
         df = read_data(log_file)
     except FileNotFoundError:
         # Create an empty DataFrame if file doesn't exist (shouldn't be the case if you already created it)
-        df = pd.DataFrame(columns=["Dataset", "Dimension", "Test", "Selected_Columns", "Threshold", "Score", "Run_Time_and_Date", "New_or_Existing_Test", "Why_Did_the_Test_Fail", "Errors"])
+        df = pd.DataFrame(columns=["Dataset", "Dimension", "Test", "Selected_Columns", "Threshold", "Score", "Run_Time_and_Date", "New_or_Existing_Test", "One_Line_Summary", "Errors", "Why_Did_the_Test_Fail"])
 
     # Prepare the new row as a DataFrame
     new_row = pd.DataFrame({
@@ -279,8 +280,9 @@ def output_log_score(test_name, dataset_name, score, selected_columns, isStandar
         "Score": [percentage_score],
         "Run_Time_and_Date": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         "New_or_Existing_Test": [standard_or_custom_value],
-        "Why_Did_the_Test_Fail": [test_fail_comment], # TODO: expand
-        "Errors": [errors] # TODO: expand
+        "One_Line_Summary": [get_onesentence_summary(test_name, logging_path, threshold=threshold_value)],
+        "Errors": [errors], # TODO: expand
+        "Why_Did_the_Test_Fail": [test_fail_comment] # TODO: expand
     })
 
     # Append the new row to the DataFrame
@@ -298,3 +300,37 @@ def get_dataset_name(dataset_path):
     # Split the file name to remove the extension (e.g., 'Dataset_A')
     dataset_name = os.path.splitext(file_name)[0]
     return dataset_name
+
+"""
+- Function to read metric log if it exists
+"""
+def get_onesentence_summary(metric: str, logging_path: str, threshold: int | None) -> str:
+    # Find all CSV files with matching base name
+    base_filename=f"{metric.lower()}_output" 
+    pattern = os.path.join(logging_path, f"{base_filename}_v*.csv") 
+    csv_files = glob.glob(pattern)
+
+    if not csv_files:
+        return None
+    
+    # Get CSV with latest iterator
+    regex = re.compile(rf"{re.escape(base_filename)}_v(\d+)\.csv")   
+    highest_iterator = -1  
+    newest_file = None  
+      
+    for file in csv_files:  
+        match = regex.search(os.path.basename(file))  
+        if match:  
+            iterator = int(match.group(1))  
+            if iterator > highest_iterator:  
+                highest_iterator = iterator  
+                newest_file = file
+    
+    print(newest_file)
+    
+    # Create 1 sentence summary
+    if (metric == 'C1'):
+        # Current method broken, fixed one will be added soon
+        return "test"
+    else: 
+        return None

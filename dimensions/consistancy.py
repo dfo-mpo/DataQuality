@@ -7,7 +7,7 @@ ALL_METRICS = ['C1', 'C2']
 
 """ Class to represent all metric tests for the Consistency dimension """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score"):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score", logging_path=""):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping 
@@ -17,16 +17,18 @@ class Consistency:
         self.c2_stop_words = c2_stop_words
         self.ref_dataset_path = ref_dataset_path
         self.return_type = return_type 
+        self.logging_path = logging_path
 
     """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
     """    
     consistency_score_list=[]
     
-    def _c1_metric(self):
+    def _c1_metric(self, metric):
         # Read the dataset from the provided Excel file path
         df = utils.read_data(self.dataset_path)
         overall_consistency_scores = []
+        consistency_score_list =[]
 
         # Iterate over each specified column
         for column_name in self.c1_column_names:
@@ -34,9 +36,7 @@ class Consistency:
             df[f"Normalized {column_name}"] = df[column_name].apply(utils.normalize_text)
 
             # Get unique normalized observations by removing duplicates and NaN values
-            unique_observations = pd.unique(
-                df[f"Normalized {column_name}"].dropna().values.ravel()
-            )
+            unique_observations = pd.unique(df[f"Normalized {column_name}"].dropna().values.ravel())
 
             # Calculate the cosine similarity matrix for the unique normalized observations
             text_sim_matrix = utils.calculate_cosine_similarity(
@@ -46,9 +46,11 @@ class Consistency:
             np.fill_diagonal(text_sim_matrix, 0)
 
             # Combine text similarity with numeric similarity to get a final similarity matrix
-            combined_sim_matrix = utils.calculate_combined_similarity(
-                df, unique_observations, text_sim_matrix
-            )
+            combined_sim_matrix = utils.calculate_combined_similarity(unique_observations, text_sim_matrix)
+            
+            # Output the results of combined_sim_matrix into a dataframe with column names, and the next most similar column names
+            max_values_df = utils.get_max_similarity_values(combined_sim_matrix, unique_observations, column_name)
+            overall_consistency_scores.append(max_values_df)
 
             # Initialize columns in the dataframe to store the recommended organization matches and all matches
             df[f"Recommended {column_name}"] = None
@@ -121,15 +123,15 @@ class Consistency:
 
             # Calculate the overall consistency score for the current column
             consistency_score = utils.average_consistency_score(text_sim_matrix, self.c1_threshold)
-            overall_consistency_scores.append(consistency_score)
+            consistency_score_list.append(consistency_score)
 
         # Calculate the overall consistency score as the average of individual consistency scores
-        overall_consistency_score = np.mean(overall_consistency_scores)
-        df["Overall Consistency Score"] = overall_consistency_score
+        overall_consistency_score = np.mean(consistency_score_list)
+        df['Overall Consistency Score'] = overall_consistency_score
 
-        base_filename="c1_output.csv" # not sure if this is necessary but it works when I ran it in my notebook
+        base_filename=f"{self.logging_path}{metric}_output"
         version = 1
-        while os.path.exists(f"c1_output_v{version}.csv"):
+        while os.path.exists(f"{base_filename}_v{version}.csv"):
             version += 1
         
         # add conditional return logic
@@ -144,14 +146,14 @@ class Consistency:
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
             output_file = f"c1_output_v{version}.csv"
             final_df.to_csv(output_file, index=False)
-            return output_file  # Return the file name
+            return output_file  # Return the file name, add return for score
         else:
             return df  # Default return value (DataFrame)    
 
     """ Consistency Type 2 (C2): Compares reference data and string values in specified columns.
     The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.
     """
-    def _c2_metric(self):
+    def _c2_metric(self, metric):
         # Read the data file
         df = utils.read_data(self.dataset_path)
 
@@ -224,9 +226,9 @@ class Consistency:
 
                 try:
                     if metric == 'C1':
-                        overall_consistency_score = self._c1_metric()
+                        overall_consistency_score = self._c1_metric(metric.lower())
                     elif metric == 'C2':
-                        overall_consistency_score = self._c2_metric()     
+                        overall_consistency_score = self._c2_metric(metric.lower())     
 
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')
@@ -259,7 +261,8 @@ class Consistency:
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
                     dimension = "Consistency", 
-                    threshold= thresholds[metric])
+                    threshold= thresholds[metric],
+                    logging_path = self.logging_path)
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
