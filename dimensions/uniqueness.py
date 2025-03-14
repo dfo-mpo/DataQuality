@@ -1,19 +1,59 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
+import os
 
 ALL_METRICS = ['U1']
 
 """ Class to represent all metric tests for the Uniqueness dimension """
 class Uniqueness:
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path, return_type="score"):
         self.dataset_path = dataset_path
-        # TODO: Set all the other variables
+        self.return_type = return_type
 
     """ Uniqueness Type 1 (U1):
-    TODO: provide a description of what this script does. There can be multiple types (Type 1, Type 2, etc.), add more as needed
-    Example: Determines the similarity between string values in specified columns.
+    Find duplicated rows (what used to be known as Accuracy Type 3)
     """    
+    def _u1_metric(self):
+
+        df = utils.read_data(self.dataset_path)
+
+        # Find duplicate rows
+        duplicate_rows = df[df.duplicated(keep=False)]
+        
+        # Calculate percentage of duplicate rows
+        total_rows = len(df)
+        total_duplicate_rows = len(duplicate_rows)
+        percentage_duplicate = 1-(total_duplicate_rows / total_rows)
+        
+        # Print duplicate rows
+        print("Duplicate Rows:")
+        print(duplicate_rows)
+        
+        # Print percentage of duplicate rows
+        print(f"\nDuplication Score: {percentage_duplicate*100}%")
+
+        #return outliers_dict, final_score
+        base_filename="u1_output.csv"
+        version = 1
+        while os.path.exists(f"u1_output_v{version}.csv"):
+            version += 1
+        
+        # add conditional return logic
+        if self.return_type == "score":
+            return percentage_duplicate
+        elif self.return_type == "dataset":
+            if not total_rows :
+                return "No valid u1 results generated"
+            
+            final_df = duplicate_rows  
+            output_file = f"u1_output_v{version}.csv"
+            final_df.to_csv(output_file, index=False)
+            return output_file  # Return the file name
+            
+        else:
+            return df  # Default return value (DataFrame)
+    
     # TODO: Replace with the logic for this metric, where the final score should be called uniqueness_score
     def _u1_metric(self):  
         dataset = utils.read_data(self.dataset_path)
@@ -29,8 +69,8 @@ class Uniqueness:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
-            thresholds = {"U1": None} # TODO: Update with thresholds use for each test
-            columns = {"U1": None} # TODO: Update with columns use for each test
+            thresholds = {"U1": None} 
+            columns = {"U1": None}
 
             for metric in metrics:
                 # Variables that prepare for output reports

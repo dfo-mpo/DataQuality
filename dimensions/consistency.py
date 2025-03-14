@@ -141,7 +141,7 @@ class Consistency:
             return overall_consistency_score
         elif self.return_type == "dataset":
             if not overall_consistency_scores:
-                return "No valid similarity results generated"
+                return "No valid c1 results generated"
             
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
             output_file = f"c1_output_v{version}.csv"
@@ -199,7 +199,7 @@ class Consistency:
             return overall_avg_consistency
         elif self.return_type == "dataset":
             if not overall_avg_consistency :
-                return "No valid similarity results generated"
+                return "No valid c2 results generated"
             
             final_df = utils.compare_datasets(df, selected_column, unique_observations)  
             output_file = f"c2_output_v{version}.csv"

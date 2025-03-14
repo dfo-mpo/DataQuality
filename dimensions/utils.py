@@ -177,12 +177,8 @@ def compare_datasets(df,selected_column, unique_observations):
     # Iterate over each row in the selected column    
     column_results = []  
     for value in df[selected_column]:    
-        # Check if the value exists in unique_observations and append the result to column_results  
-        if pd.isnull(value):  
-            column_results.append(False) # or True, depending on how you want to handle NaN values  
-        else:  
-            column_results.append(value in unique_observations)  
-
+        column_results.append(np.where(pd.isnull(value), True, value in unique_observations))    
+    
     # Add the results as a new column in the DataFrame  
     df[selected_column + '_comparison'] = column_results  
     
@@ -206,7 +202,9 @@ def add_only_numbers_columns(df, selected_columns):
     selected_columns = [col for col in df.columns if col in selected_columns]   
 
     for column_name in selected_columns:    
-        df[column_name+'_Only_Numbers'] = df[column_name].apply(lambda x: len(find_non_digits(x)) == 0)  
+        df[column_name + '_Only_Numbers'] = df[column_name].apply(
+            lambda x: np.where(pd.isnull(x), True, len(find_non_digits(x)) == 0)
+        )    
 
     return df
 

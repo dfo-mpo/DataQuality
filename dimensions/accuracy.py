@@ -3,7 +3,7 @@ import pandas as pd
 from . import utils
 import os
 
-ALL_METRICS = ['A1', 'A2', 'A3']
+ALL_METRICS = ['A1', 'A2']
 
 """ Class to represent all metric tests for the Accuracy dimension """
 class Accuracy:
@@ -63,7 +63,7 @@ class Accuracy:
             return overall_accuracy_score
         elif self.return_type == "dataset":
             if not overall_accuracy_score :
-                return "No valid similarity results generated"
+                return "No valid a1 results generated"
             
             final_df = utils.add_only_numbers_columns(adf, self.selected_columns)  
             output_file = f"a1_output_v{version}.csv"
@@ -120,7 +120,7 @@ class Accuracy:
             return final_score
         elif self.return_type == "dataset":
             if not outliers_dict :
-                return "No valid similarity results generated"
+                return "No valid a2 results generated"
             
             final_df = outliers_dict[self.selected_columns[0]].reset_index()  
             output_file = f"a2_output_v{version}.csv"
@@ -129,28 +129,7 @@ class Accuracy:
             
         else:
             return df  # Default return value (DataFrame)  
-    
-    """Accuracy Type 3 (A3): Find duplicated rows
-    """
-    def _a3_metric(self):
 
-        df = utils.read_data(self.dataset_path)
-
-        # Find duplicate rows
-        duplicate_rows = df[df.duplicated(keep=False)]
-        
-        # Calculate percentage of duplicate rows
-        total_rows = len(df)
-        total_duplicate_rows = len(duplicate_rows)
-        percentage_duplicate = 1-(total_duplicate_rows / total_rows)
-        
-        # Print duplicate rows
-        print("Duplicate Rows:")
-        print(duplicate_rows)
-        
-        # Print percentage of duplicate rows
-        print(f"\nDuplication Score: {percentage_duplicate*100}%")
-    
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
     def run_metrics(self, metrics=ALL_METRICS):
