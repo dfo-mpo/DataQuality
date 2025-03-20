@@ -192,7 +192,25 @@ For Accuracy A1, find non-numerical characters in a string.
 def find_non_digits(s):
     # Ensure the value is treated as a string
     s = str(s)
-    return [char for char in s if not (char.isdigit() or char == ".")]
+
+    # Track whether we've seen the first "-" or the first "." for negative values or decimals
+    first_dash_skipped = False
+    first_period_skipped = False
+
+    result = []
+    for i, char in enumerate(s):
+        if char in ["-", "."] :
+            if (char == "-" and first_dash_skipped) or (char == "." and first_period_skipped):
+                result.append(char)  # Keep dashes and periods that are not the first ones 
+            elif char == "-":
+                first_dash_skipped = True
+            elif char == ".":
+                first_period_skipped = True
+        
+        elif not char.isalnum():  # Keep only the symbols
+            result.append(char)
+
+    return "".join(result)  # Convert list back to a string
 
 """
 For Accuracy A1, append columns that indicate true or false for whether there are symbols in numerics
@@ -235,7 +253,7 @@ def read_data(dataset_path):
     return df
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
-def output_log_score(test_name, dataset_name, score, selected_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None, logging_path=""):
+def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None, logging_path=""):
     # Convert score to a percentage
     percentage_score = score
     
@@ -249,7 +267,9 @@ def output_log_score(test_name, dataset_name, score, selected_columns, isStandar
         threshold_value = threshold
 
     # If selected_columns is None, assume "All" was tested
-    if selected_columns is None:
+    if excluded_columns:
+        columns_tested = "All columns excluding " + ", ".join(excluded_columns)
+    elif selected_columns is None:
         columns_tested = "All columns"
     else:
         # Convert selected_columns list to a string if specific columns are provided
