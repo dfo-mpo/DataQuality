@@ -135,20 +135,18 @@ class Consistency:
             version += 1
         
         # add conditional return logic
-        #return overall_consistency_score # to return the score
-        #return df #to return the dataset
         if self.return_type == "score":
-            return overall_consistency_score
+            return overall_consistency_score, None
         elif self.return_type == "dataset":
             if not overall_consistency_scores:
                 return "No valid c1 results generated"
             
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
-            output_file = f"c1_output_v{version}.csv"
+            output_file = f"{base_filename}_v{version}.csv"
             final_df.to_csv(output_file, index=False)
-            return output_file  # Return the file name, add return for score
+            return overall_consistency_score, output_file  # Return the file name, add return for score
         else:
-            return df  # Default return value (DataFrame)    
+            return df, None  # Default return value (DataFrame)    
 
     """ Consistency Type 2 (C2): Compares reference data and string values in specified columns.
     The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.
@@ -189,24 +187,24 @@ class Consistency:
             else None
         )
 
-        base_filename="c2_output.csv"
+        base_filename=f"{self.logging_path}{metric}_output"
         version = 1
-        while os.path.exists(f"c2_output_v{version}.csv"):
+        while os.path.exists(f"{base_filename}_v{version}.csv"):
             version += 1
         
         # add conditional return logic
         if self.return_type == "score":
-            return overall_avg_consistency
+            return overall_avg_consistency, None
         elif self.return_type == "dataset":
             if not overall_avg_consistency :
                 return "No valid c2 results generated"
             
             final_df = utils.compare_datasets(df, selected_column, unique_observations)  
-            output_file = f"c2_output_v{version}.csv"
+            output_file = f"{base_filename}_v{version}.csv"
             final_df.to_csv(output_file, index=False)
-            return output_file  # Return the file name
+            return overall_avg_consistency, output_file  # Return the file name
         else:
-            return df  # Default return value (DataFrame)
+            return df, None  # Default return value (DataFrame)
     
     """ Run metrics: Will run specified metrics or all consistency metrics by default
     """
@@ -226,9 +224,9 @@ class Consistency:
 
                 try:
                     if metric == 'C1':
-                        overall_consistency_score = self._c1_metric(metric.lower())
+                        overall_consistency_score, metric_log_csv = self._c1_metric(metric.lower())
                     elif metric == 'C2':
-                        overall_consistency_score = self._c2_metric(metric.lower())     
+                        overall_consistency_score, metric_log_csv = self._c2_metric(metric.lower())     
 
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')
@@ -256,13 +254,14 @@ class Consistency:
                     test_name = metric, 
                     dataset_name = utils.get_dataset_name(self.dataset_path), 
                     score = overall_consistency_score, 
-                    selected_columns = columns[metric], 
+                    selected_columns = columns[metric],
+                    excluded_columns=[''], 
                     isStandardTest = True, 
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
                     dimension = "Consistency", 
                     threshold= thresholds[metric],
-                    logging_path = self.logging_path)
+                    metric_log_csv = metric_log_csv)
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

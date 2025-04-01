@@ -253,7 +253,7 @@ def read_data(dataset_path):
     return df
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
-def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, threshold=None, logging_path=""):
+def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, metric_log_csv, threshold=None, minimum_score=None):
     # Convert score to a percentage
     percentage_score = score
     
@@ -291,14 +291,14 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
     # Prepare the new row as a DataFrame
     new_row = pd.DataFrame({
         "Dataset": [dataset_name],
-        "Dimension": [dimension], 
+        "Dimension": [dimension],
         "Test": [test_name],
         "Selected_Columns": [columns_tested],  # Add the list of columns tested
         "Threshold":[threshold_value],
         "Score": [percentage_score],
         "Run_Time_and_Date": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         "New_or_Existing_Test": [standard_or_custom_value],
-        "One_Line_Summary": [get_onesentence_summary(test_name, logging_path, threshold=threshold_value)],
+        "One_Line_Summary": [get_onesentence_summary(test_name, metric_log_csv, threshold=minimum_score if minimum_score != None else threshold_value)] if metric_log_csv else None,
         "Errors": [errors], # TODO: expand
         "Why_Did_the_Test_Fail": [test_fail_comment] # TODO: expand
     })
@@ -323,32 +323,56 @@ def get_dataset_name(dataset_path):
 - Function to read metric log if it exists
 """
 def get_onesentence_summary(metric: str, logging_path: str, threshold: int | None) -> str:
-    # Find all CSV files with matching base name
-    base_filename=f"{metric.lower()}_output" 
-    pattern = os.path.join(logging_path, f"{base_filename}_v*.csv") 
-    csv_files = glob.glob(pattern)
+    try:
+        df = pd.read_csv(logging_path)
 
-    if not csv_files:
-        return None
-    
-    # Get CSV with latest iterator
-    regex = re.compile(rf"{re.escape(base_filename)}_v(\d+)\.csv")   
-    highest_iterator = -1  
-    newest_file = None  
-      
-    for file in csv_files:  
-        match = regex.search(os.path.basename(file))  
-        if match:  
-            iterator = int(match.group(1))  
-            if iterator > highest_iterator:  
-                highest_iterator = iterator  
-                newest_file = file
-    
-    print(newest_file)
-    
-    # Create 1 sentence summary
-    if (metric == 'C1'):
-        # Current method broken, fixed one will be added soon
-        return "test"
-    else: 
+        # Create 1 sentence summary
+        if (metric == 'C1'):
+            max_scores = df.groupby('Column Source')['Similarity Score'].max()
+            filtered_sources = max_scores[max_scores > threshold]
+            filtered_sources_str = ', '.join(filtered_sources.index.tolist()) 
+
+            return "The following columns contain a score above the threshold " + filtered_sources_str + "."
+        elif (metric == 'C2'):
+            columns = df.columns
+
+            # Find columns with _comparison  
+            simular_columns = []  
+            for column in columns:
+                if f"{column}_comparison" in columns:  
+                    simular_columns.append(column)
+            simular_columns_str = ', '.join(simular_columns)
+
+            return "The following columns resembles a reference data column: " + simular_columns_str + "."
+        elif (metric == 'A1'):
+            columns = df.columns
+
+            # Find columns with _ONLY_NUMBERS equivalents  
+            columns_with_equivalents = []  
+            for column in columns:
+                if f"{column}_Only_Numbers" in columns:  
+                    columns_with_equivalents.append(column)
+            columns_with_equivalents_str = ', '.join(columns_with_equivalents)
+
+            return "Columns that contain only numbers " + columns_with_equivalents_str + "."
+        elif (metric == 'A2'):
+            # Find columns (headers) where any value in the column is above the threshold  
+            columns_above_threshold = df.loc[:, (df > threshold).any()]  
+            
+            # Get the column names (headers) that meet the condition  
+            headers_with_outliers = columns_above_threshold.columns.tolist()  
+            
+            # Output the results  
+            return "Coloumns with outliers:"+ headers_with_outliers + "."
+        elif (metric == 'P1'):
+            columns = ', '.join(df.columns)
+
+            return "Columns that exceed the threshold of non-null values: " + columns + "."
+        elif (metric == 'U1'):
+
+            return "Duplicate rows found in the dataset." if df.columns > 0 else "No duplicate rows found in the dataset."
+        else: 
+            return None
+    except Exception as e:
+        print(f"When trying to create one line summary for {metric}, the following error occured: {e}")
         return None

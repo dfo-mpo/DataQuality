@@ -7,14 +7,15 @@ ALL_METRICS = ['U1']
 
 """ Class to represent all metric tests for the Uniqueness dimension """
 class Uniqueness:
-    def __init__(self, dataset_path, return_type="score"):
+    def __init__(self, dataset_path, return_type="score", logging_path=""):
         self.dataset_path = dataset_path
         self.return_type = return_type
+        self.logging_path = logging_path
 
     """ Uniqueness Type 1 (U1):
     Find duplicated rows (what used to be known as Accuracy Type 3)
     """    
-    def _u1_metric(self):
+    def _u1_metric(self, metric):
 
         df = utils.read_data(self.dataset_path)
 
@@ -34,33 +35,25 @@ class Uniqueness:
         print(f"\nDuplication Score: {percentage_duplicate*100}%")
 
         #return outliers_dict, final_score
-        base_filename="u1_output.csv"
+        base_filename=f"{self.logging_path}{metric}_output"
         version = 1
-        while os.path.exists(f"u1_output_v{version}.csv"):
+        while os.path.exists(f"{base_filename}_v{version}.csv"):
             version += 1
         
         # add conditional return logic
         if self.return_type == "score":
-            return percentage_duplicate
+            return percentage_duplicate, None
         elif self.return_type == "dataset":
             if not total_rows :
                 return "No valid u1 results generated"
             
             final_df = duplicate_rows  
-            output_file = f"u1_output_v{version}.csv"
+            output_file = f"{base_filename}_v{version}.csv"
             final_df.to_csv(output_file, index=False)
-            return output_file  # Return the file name
+            return percentage_duplicate, output_file  # Return the file name
             
         else:
-            return df  # Default return value (DataFrame)
-    
-    # TODO: Replace with the logic for this metric, where the final score should be called uniqueness_score
-    def _u1_metric(self):  
-        dataset = utils.read_data(self.dataset_path)
-
-        uniqueness_score = None
-
-        return uniqueness_score 
+            return df, None  # Default return value (DataFrame)
         
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
@@ -80,7 +73,7 @@ class Uniqueness:
 
                 try:
                     if metric == 'U1':
-                        overall_uniqueness_score = self._u1_metric()
+                        overall_uniqueness_score, metric_log_csv = self._u1_metric(metric.lower())
                 
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
@@ -99,11 +92,13 @@ class Uniqueness:
                     dataset_name = utils.get_dataset_name(self.dataset_path), 
                     score = overall_uniqueness_score, 
                     selected_columns = columns[metric], 
+                    excluded_columns = [''],
                     isStandardTest = True, 
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
                     dimension = "Uniqueness", 
-                    threshold= thresholds[metric])
+                    threshold= thresholds[metric],
+                    metric_log_csv = metric_log_csv)
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
