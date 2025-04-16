@@ -1,7 +1,7 @@
 import re  
 import numpy as np  
 import os
-import glob 
+import statistics
 import pandas as pd  
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer 
@@ -336,34 +336,35 @@ def get_onesentence_summary(metric: str, logging_path: str, threshold: int | Non
         elif (metric == 'C2'):
             columns = df.columns
 
-            # Find columns with _comparison  
+            # Find columns with _comparison and a first entry value of 'False'
             simular_columns = []  
             for column in columns:
-                if f"{column}_comparison" in columns:  
+                print(df[f"{column}_comparison"].iloc[0]) #TODO: Remove after testing is done
+                if f"{column}_comparison" in columns and df[f"{column}_comparison"].iloc[0] == 'False':  
                     simular_columns.append(column)
             simular_columns_str = ', '.join(simular_columns)
 
-            return "The following columns resembles a reference data column: " + simular_columns_str + "."
+            return "The following columns may have names that do not resemble a reference data column: " + simular_columns_str + "."
         elif (metric == 'A1'):
             columns = df.columns
 
-            # Find columns with _ONLY_NUMBERS equivalents  
+            # Find columns with _ONLY_NUMBERS equivalents that contains a 'False' value 
             columns_with_equivalents = []  
             for column in columns:
-                if f"{column}_Only_Numbers" in columns:  
+                if f"{column}_Only_Numbers" in columns and df[f"{column}_Only_Numbers"].iloc[0] == 'False':  
                     columns_with_equivalents.append(column)
             columns_with_equivalents_str = ', '.join(columns_with_equivalents)
 
-            return "Columns that contain only numbers " + columns_with_equivalents_str + "."
+            return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
         elif (metric == 'A2'):
-            # Find columns (headers) where any value in the column is above the threshold  
-            columns_above_threshold = df.loc[:, (df > threshold).any()]  
+            # Find columns (headers) where any value in the column is below the threshold  
+            columns_above_threshold = df.loc[:, (df < threshold).any()]  
             
             # Get the column names (headers) that meet the condition  
             headers_with_outliers = columns_above_threshold.columns.tolist()  
             
             # Output the results  
-            return "Coloumns with outliers:"+ headers_with_outliers + "."
+            return "There are at least 15% outliers existing in the following columns: "+ headers_with_outliers + "."
         elif (metric == 'P1'):
             columns = ', '.join(df.columns)
 
@@ -374,5 +375,27 @@ def get_onesentence_summary(metric: str, logging_path: str, threshold: int | Non
         else: 
             return None
     except Exception as e:
-        print(f"When trying to create one line summary for {metric}, the following error occured: {e}")
+        print(f"When trying to create one line summary for {metric}, the following error occurred: {e}")
         return None
+    
+# Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
+# Returns object the the dimension name and total score
+def calculate_dimension_score(dimension_type: str, scores: list[float]) -> object:
+    return {"dimension": dimension_type, "score": statistics.mean(scores)}
+
+# Takes a list of scores (containing dimension name and total score) for each dimension.
+# Determines a grade for the DQ based on the inputted score.
+def calculate_DQ_grade(scores: list[object]) -> str:
+    total_score = 0
+    for score in scores:
+        total_score += score["score"]
+    
+    # Based on conditions (raw score, ) return letter grade
+    if score > 0.9:
+        return "A"
+    elif score > 0.8:
+        return "B"
+    elif score > 0.7:
+        return "C"
+    else:
+        return "D"
