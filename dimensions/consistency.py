@@ -1,8 +1,6 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
-import os
-import io
 
 ALL_METRICS = ['C1', 'C2']
 

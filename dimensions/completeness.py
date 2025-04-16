@@ -1,6 +1,4 @@
 from . import utils
-import os
-import io
 
 ALL_METRICS = ['P1']
 

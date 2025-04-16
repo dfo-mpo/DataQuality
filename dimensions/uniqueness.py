@@ -1,7 +1,6 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
-import os
 
 ALL_METRICS = ['U1']
 
