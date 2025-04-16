@@ -7,6 +7,7 @@ from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.metrics.pairwise import cosine_similarity  
 from difflib import SequenceMatcher  
+import io
 
 # ----------------------- Consistency Dimension Utils -------------------------------
 province_abbreviations = {  
@@ -320,10 +321,31 @@ def get_dataset_name(dataset_path):
     return dataset_name
 
 """
+- Function to convert dataframe in CSV, 
+    if a logging path is defined: Return is the name of the csv file created
+    if no loggin path defined: Return the csv in memory
+"""
+def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
+    # Define csv file name
+    base_filename=f"{logging_path}{metric}_output"
+    version = 1
+    while os.path.exists(f"{base_filename}_v{version}.csv"):
+        version += 1
+    
+    # Create CSV file
+    output_file = io.StringIO() if logging_path == None else f"{base_filename}_v{version}.csv"
+    final_df.to_csv(output_file, index=False)
+
+    return output_file
+
+"""
 - Function to read metric log if it exists
 """
-def get_onesentence_summary(metric: str, logging_path: str, threshold: int | None) -> str:
+def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, threshold: int | None) -> str:
     try:
+        # Incase logging_path is an in memory file, reset its internal pointer first
+        if not isinstance(logging_path, str):
+            logging_path.seek(0)
         df = pd.read_csv(logging_path)
 
         # Create 1 sentence summary
@@ -381,7 +403,8 @@ def get_onesentence_summary(metric: str, logging_path: str, threshold: int | Non
 # Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
 # Returns object the the dimension name and total score
 def calculate_dimension_score(dimension_type: str, scores: list[float]) -> object:
-    return {"dimension": dimension_type, "score": statistics.mean(scores)}
+    # Convert all None entries (from failed tests) to 0 before calculating average
+    return {"dimension": dimension_type, "score": statistics.mean([0 if score is None else score for score in scores])}
 
 # Takes a list of scores (containing dimension name and total score) for each dimension.
 # Determines a grade for the DQ based on the inputted score.
@@ -390,12 +413,14 @@ def calculate_DQ_grade(scores: list[object]) -> str:
     for score in scores:
         total_score += score["score"]
     
+    average_score = total_score / len(scores)
+
     # Based on conditions (raw score, ) return letter grade
-    if score > 0.9:
+    if average_score > 0.9:
         return "A"
-    elif score > 0.8:
+    elif average_score > 0.8:
         return "B"
-    elif score > 0.7:
+    elif average_score > 0.7:
         return "C"
     else:
         return "D"
