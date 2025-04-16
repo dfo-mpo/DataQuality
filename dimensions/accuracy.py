@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pd
 from . import utils
 import os
+import io
 
 ALL_METRICS = ['A1', 'A2']
 
 """ Class to represent all metric tests for the Accuracy dimension """
 class Accuracy:
-    def __init__(self, dataset_path, selected_columns, groupby_column=None, a2_threshold=1.5, a2_minimum_score = 0.85, return_type="score", logging_path=""):
+    def __init__(self, dataset_path, selected_columns, groupby_column=None, a2_threshold=1.5, a2_minimum_score = 0.85, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.selected_columns = selected_columns
         self.groupby_column = groupby_column
@@ -51,11 +52,6 @@ class Accuracy:
             if all_accuracy_scores
             else None
         )
-
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
         
         # add conditional return logic
         if self.return_type == "score":
@@ -65,8 +61,7 @@ class Accuracy:
                 return "No valid a1 results generated"
             
             final_df = utils.add_only_numbers_columns(adf, self.selected_columns)  
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return overall_accuracy_score, output_file  # Return the file name
             
         else:
@@ -106,21 +101,15 @@ class Accuracy:
                 outliers_dict[column] = (1 - outliers.mean()) 
 
         # compute final score  
-        #total_groups = len(outliers_dict)  
-        #groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)  
-        #final_score = groups_above / total_groups if total_groups > 0 else 0  
+        total_groups = len(outliers_dict)  
+        groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)  
+        final_score = groups_above / total_groups if total_groups > 0 else 0  
         
-        final_score = {}
+        # final_score = {}
         
-        for key, value in outliers_dict.items():
-            value_out = value > self.a2_minimum_score
-            final_score[key] = value_out
-
-        #return outliers_dict, final_score
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
+        # for key, value in outliers_dict.items():
+        #     value_out = value > self.a2_minimum_score
+        #     final_score[key] = value_out
 
         # add conditional return logic
         if self.return_type == "score":
@@ -131,8 +120,7 @@ class Accuracy:
 
             final_df = pd.DataFrame([outliers_dict])
             # final_df = pd.DataFrame([outliers_dict])
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return final_score, output_file  # Return the file name
             
         else:

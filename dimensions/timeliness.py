@@ -6,8 +6,9 @@ ALL_METRICS = ['T1']
 
 """ Class to represent all metric tests for the Timeliness dimension """
 class Timeliness:
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path, logging_path=None):
         self.dataset_path = dataset_path
+        self.logging_path = logging_path
         # TODO: Set all the other variables
 
     """ Timeliness Type 1 (T1):

@@ -7,7 +7,7 @@ ALL_METRICS = ['U1']
 
 """ Class to represent all metric tests for the Uniqueness dimension """
 class Uniqueness:
-    def __init__(self, dataset_path, return_type="score", logging_path=""):
+    def __init__(self, dataset_path, return_type="score", logging_path=None):
         self.dataset_path = dataset_path
         self.return_type = return_type
         self.logging_path = logging_path
@@ -33,12 +33,6 @@ class Uniqueness:
         
         # Print percentage of duplicate rows
         print(f"\nDuplication Score: {percentage_duplicate*100}%")
-
-        #return outliers_dict, final_score
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
         
         # add conditional return logic
         if self.return_type == "score":
@@ -48,8 +42,7 @@ class Uniqueness:
                 return "No valid u1 results generated"
             
             final_df = duplicate_rows  
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return percentage_duplicate, output_file  # Return the file name
             
         else:

@@ -2,12 +2,13 @@ import numpy as np
 import pandas as pd 
 from . import utils
 import os
+import io
 
 ALL_METRICS = ['C1', 'C2']
 
 """ Class to represent all metric tests for the Consistency dimension """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score", logging_path=""):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping 
@@ -128,11 +129,6 @@ class Consistency:
         # Calculate the overall consistency score as the average of individual consistency scores
         overall_consistency_score = np.mean(consistency_score_list)
         df['Overall Consistency Score'] = overall_consistency_score
-
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
         
         # add conditional return logic
         if self.return_type == "score":
@@ -142,8 +138,7 @@ class Consistency:
                 return "No valid c1 results generated"
             
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return overall_consistency_score, output_file  # Return the file name, add return for score
         else:
             return df, None  # Default return value (DataFrame)    
@@ -186,11 +181,6 @@ class Consistency:
             if all_consistency_scores
             else None
         )
-
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
         
         # add conditional return logic
         if self.return_type == "score":
@@ -200,8 +190,7 @@ class Consistency:
                 return "No valid c2 results generated"
             
             final_df = utils.compare_datasets(df, selected_column, unique_observations)  
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return overall_avg_consistency, output_file  # Return the file name
         else:
             return df, None  # Default return value (DataFrame)

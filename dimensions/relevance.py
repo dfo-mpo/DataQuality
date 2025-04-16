@@ -6,8 +6,9 @@ ALL_METRICS = ['R1']
 
 """ Class to represent all metric tests for the relevance dimension """
 class Relevance:
-    def __init__(self, dataset_path):
+    def __init__(self, dataset_path, logging_path=None):
         self.dataset_path = dataset_path
+        self.logging_path = logging_path
         # TODO: Set all the other variables
 
     """ Relevance Type 1 (R1):

@@ -1,11 +1,12 @@
 from . import utils
 import os
+import io
 
 ALL_METRICS = ['P1']
 
 """ Class to represent all metric tests for the Completeness dimension """
 class Completeness:
-    def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75, return_type="score", logging_path=""):
+    def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.exclude_columns = exclude_columns
         self.p1_threshold = p1_threshold
@@ -38,12 +39,6 @@ class Completeness:
         total_obs = dataset2.shape[0] * dataset2.shape[1]  
         completeness_score = total_non_missing / total_obs
         
-        #return outliers_dict, final_score
-        base_filename=f"{self.logging_path}{metric}_output"
-        version = 1
-        while os.path.exists(f"{base_filename}_v{version}.csv"):
-            version += 1
-        
         # add conditional return logic
         if self.return_type == "score":
             return completeness_score, None
@@ -52,8 +47,7 @@ class Completeness:
                 return "No valid p1 results generated"
             
             final_df = dataset2  
-            output_file = f"{base_filename}_v{version}.csv"
-            final_df.to_csv(output_file, index=False)
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
             return completeness_score, output_file  # Return the file name
             
         else:
