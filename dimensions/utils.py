@@ -404,8 +404,18 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
 # Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
 # Returns object the the dimension name and total score
 def calculate_dimension_score(dimension_type: str, scores: list[object], weights: object) -> object:
-    # TODO: ensure weights add to 1 and match number of scores 
-    # in case of error return message stating problem and calculate using default weights
+    # Ensure number of weights is the name as the number of metric run (else use default weights)
+    if len(weights) != len(scores):
+        weights = {}
+        print(f'{RED}Number of weights does not match number of metrics run, using default weights instead!{RESET}')
+    
+    # Ensure weights add to 1
+    total_weight = 0
+    for metric, weight in weights.items():
+        total_weight += weight
+    if total_weight < 1.0:
+        weights = {}
+        print(f'{RED}Weights do not add up to 1.0, using default weights instead!{RESET}')
 
     score_value = 0
     for score in scores:
