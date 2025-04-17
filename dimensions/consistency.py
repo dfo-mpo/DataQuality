@@ -207,13 +207,18 @@ class Consistency:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_consistency_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_consistency_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
                 try:
                     if metric == 'C1':
-                        overall_consistency_score, metric_log_csv = self._c1_metric(metric.lower())
+                        overall_consistency_score["metric"] = metric
+                        consistency_score, metric_log_csv = self._c1_metric(metric.lower())
+                        overall_consistency_score["value"] = consistency_score
                     elif metric == 'C2':
-                        overall_consistency_score, metric_log_csv = self._c2_metric(metric.lower())     
+                        overall_consistency_score["metric"] = metric
+                        consistency_score, metric_log_csv = self._c2_metric(metric.lower())
+                        overall_consistency_score["value"] = consistency_score    
 
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')

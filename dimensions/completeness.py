@@ -65,11 +65,14 @@ class Completeness:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_completeness_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_completeness_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
                 try:
                     if metric == 'P1':
-                        overall_completeness_score, metric_log_csv = self._p1_metric(metric.lower())
+                        overall_completeness_score["metric"] = metric
+                        completeness_score, metric_log_csv = self._p1_metric(metric.lower())
+                        overall_completeness_score["value"] = completeness_score
 
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')

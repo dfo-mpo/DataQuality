@@ -21,7 +21,7 @@ class Interdependency:
 
         interdependency_score = None
 
-        return interdependency_score 
+        return interdependency_score, None
         
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
@@ -37,11 +37,14 @@ class Interdependency:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_interdependency_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_interdependency_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
                 try:
                     if metric == 'I1':
-                        overall_interdependency_score = self._i1_metric()
+                        overall_interdependency_score["metric"] = metric
+                        interdependency_score, metric_log_csv = self._i1_metric()
+                        overall_interdependency_score["value"] = interdependency_score
                 
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
@@ -60,11 +63,13 @@ class Interdependency:
                     dataset_name = utils.get_dataset_name(self.dataset_path), 
                     score = overall_interdependency_score, 
                     selected_columns = columns[metric], 
+                    excluded_columns = [''],
                     isStandardTest = True, 
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
                     dimension = "Interdependency", 
-                    threshold= thresholds[metric])
+                    threshold= thresholds[metric],
+                    metric_log_csv = metric_log_csv)
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

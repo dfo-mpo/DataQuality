@@ -299,7 +299,7 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
         "Score": [percentage_score],
         "Run_Time_and_Date": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         "New_or_Existing_Test": [standard_or_custom_value],
-        "One_Line_Summary": [get_onesentence_summary(test_name, metric_log_csv, threshold=minimum_score if minimum_score != None else threshold_value)] if metric_log_csv else None,
+        "One_Line_Summary": [get_onesentence_summary(test_name, metric_log_csv, selected_columns, threshold=minimum_score if minimum_score != None else threshold_value)] if metric_log_csv else None,
         "Errors": [errors], # TODO: expand
         "Why_Did_the_Test_Fail": [test_fail_comment] # TODO: expand
     })
@@ -341,7 +341,7 @@ def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
 """
 - Function to read metric log if it exists
 """
-def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, threshold: int | None) -> str:
+def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_columns: list[str], threshold: int | None) -> str:
     try:
         # Incase logging_path is an in memory file, reset its internal pointer first
         if not isinstance(logging_path, str):
@@ -361,7 +361,6 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, threshold
             # Find columns with _comparison and a first entry value of 'False'
             simular_columns = []  
             for column in columns:
-                print(df[f"{column}_comparison"].iloc[0]) #TODO: Remove after testing is done
                 if f"{column}_comparison" in columns and df[f"{column}_comparison"].iloc[0] == 'False':  
                     simular_columns.append(column)
             simular_columns_str = ', '.join(simular_columns)
@@ -378,7 +377,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, threshold
             columns_with_equivalents_str = ', '.join(columns_with_equivalents)
 
             return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
-        elif (metric == 'A2'):
+        elif (metric == 'A2'): # TODO: check each selected column, find its lowest score, then check with threshold
             # Find columns (headers) where any value in the column is below the threshold  
             columns_above_threshold = df.loc[:, (df < threshold).any()]  
             
@@ -402,21 +401,30 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, threshold
     
 # Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
 # Returns object the the dimension name and total score
-def calculate_dimension_score(dimension_type: str, scores: list[float]) -> object:
-    # Convert all None entries (from failed tests) to 0 before calculating average
-    return {"dimension": dimension_type, "score": statistics.mean([0 if score is None else score for score in scores])}
+def calculate_dimension_score(dimension_type: str, scores: list[object], weights: object) -> object:
+    # TODO: ensure weights add to 1 and match number of scores 
+    # in case of error return message stating problem and calculate using default weights
+
+    score_value = 0
+    for score in scores:
+        numeric_score = 0 if score['value'] is None else score['value'] # If test failed make the score 0
+        weight = weights[score['metric']] if score['metric'] in weights else 1 / len(scores)
+        score_value += numeric_score * weight
+    
+    return {"dimension": dimension_type, "score": score_value}
 
 # Takes a list of scores (containing dimension name and total score) for each dimension.
 # Determines a grade for the DQ based on the inputted score.
 def calculate_DQ_grade(scores: list[object]) -> str:
     total_score = 0
     for score in scores:
+        # TODO: Check if Uniqueness and completeness are in score list
         total_score += score["score"]
     
     average_score = total_score / len(scores)
 
     # Based on conditions (raw score, ) return letter grade
-    if average_score > 0.9:
+    if average_score > 0.9: # TODO: add limit if required dimensions are not there
         return "A"
     elif average_score > 0.8:
         return "B"

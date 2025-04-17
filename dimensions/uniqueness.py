@@ -61,11 +61,14 @@ class Uniqueness:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_uniqueness_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_uniqueness_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
                 try:
                     if metric == 'U1':
-                        overall_uniqueness_score, metric_log_csv = self._u1_metric(metric.lower())
+                        overall_uniqueness_score["metric"] = metric
+                        uniqueness_score, metric_log_csv = self._u1_metric(metric.lower())
+                        overall_uniqueness_score["value"] = uniqueness_score
                 
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')

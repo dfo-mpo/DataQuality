@@ -21,7 +21,7 @@ class Relevance:
 
         relevance_score = None
 
-        return relevance_score 
+        return relevance_score, None
         
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
@@ -37,11 +37,14 @@ class Relevance:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_relevance_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_relevance_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
                 try:
                     if metric == 'R1':
-                        overall_relevance_score = self._r1_metric()
+                        overall_relevance_score["metric"] = metric
+                        relevance_score, metric_log_csv = self._r1_metric()
+                        overall_relevance_score["value"] = relevance_score
 
                 except FileNotFoundError as e:
                     print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
@@ -60,11 +63,13 @@ class Relevance:
                     dataset_name = utils.get_dataset_name(self.dataset_path), 
                     score = overall_relevance_score, 
                     selected_columns = columns[metric], 
+                    excluded_columns = [''],
                     isStandardTest = True, 
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
                     dimension = "Relevance", 
-                    threshold= thresholds[metric])
+                    threshold= thresholds[metric],
+                    metric_log_csv = metric_log_csv)
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

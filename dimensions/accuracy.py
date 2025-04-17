@@ -102,12 +102,6 @@ class Accuracy:
         total_groups = len(outliers_dict)  
         groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)  
         final_score = groups_above / total_groups if total_groups > 0 else 0  
-        
-        # final_score = {}
-        
-        # for key, value in outliers_dict.items():
-        #     value_out = value > self.a2_minimum_score
-        #     final_score[key] = value_out
 
         # add conditional return logic
         if self.return_type == "score":
@@ -138,12 +132,18 @@ class Accuracy:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                overall_accuracy_score = None  # Ensure it exists even if errors occur
+                metric_log_csv = None # Ensure it exists even if errors occur
+                overall_accuracy_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
+
                 try:
                     if metric == 'A1':
-                        overall_accuracy_score, metric_log_csv = self._a1_metric(metric.lower())
+                        overall_accuracy_score["metric"] = metric
+                        accuracy_score, metric_log_csv = self._a1_metric(metric.lower())
+                        overall_accuracy_score["value"] = accuracy_score
                     elif metric == 'A2':
-                        overall_accuracy_score, metric_log_csv = self._a2_metric(metric.lower())
+                        overall_accuracy_score["metric"] = metric
+                        accuracy_score, metric_log_csv = self._a2_metric(metric.lower())
+                        overall_accuracy_score["value"] = accuracy_score
                 except KeyError as e:
                     print(f'{utils.RED}Issue with column names, are you sure you entered them correctly?{utils.RESET}')
                     print(f'Column name that fails: {e}')
