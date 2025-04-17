@@ -377,15 +377,17 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             columns_with_equivalents_str = ', '.join(columns_with_equivalents)
 
             return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
-        elif (metric == 'A2'): # TODO: check each selected column, find its lowest score, then check with threshold
-            # Find columns (headers) where any value in the column is below the threshold  
-            columns_above_threshold = df.loc[:, (df < threshold).any()]  
-            
-            # Get the column names (headers) that meet the condition  
-            headers_with_outliers = columns_above_threshold.columns.tolist()  
+        elif (metric == 'A2'):
+            columns_below_threshold = []
+
+            # Check if each selected column has a value below the threshold
+            for column in selected_columns:
+                min_value = df[column].min()
+                if min_value < threshold:
+                    columns_below_threshold.append(column)
             
             # Output the results  
-            return "There are at least 15% outliers existing in the following columns: "+ headers_with_outliers + "."
+            return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold + "."
         elif (metric == 'P1'):
             columns = ', '.join(df.columns)
 
