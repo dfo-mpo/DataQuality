@@ -19,51 +19,46 @@ class Accuracy:
     Make the column a string, find symbols, and calculate the accuracy scores for multiple columns.
     """    
     def _a1_metric(self, metric):    
-        # Read the dataset from the provided Excel file path
-        adf = utils.read_data(self.dataset_path)
-
-        # Check if all specified columns were extracted, if not raise Key error
-        for column in self.selected_columns:
-            if column not in adf.columns:
-                raise KeyError(column)
-            
-        self.selected_columns = [col for col in adf.columns if col in self.selected_columns]
+        # dataframes for output report reports
+        original_df = utils.read_data(self.dataset_path) # this first original dataframe is used to compute a column of NaNs that are used for the accuracy calculations in the output report
+        original_df_2 = utils.read_data(self.dataset_path) # this second original dataframe is used to write the output that needs to show what the original dataframe looked like
+        
+        # dataframe for computing accuracy score
+        adf = utils.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
+        selected_columns = [col for col in adf.columns if col in selected_columns] 
 
         all_accuracy_scores = []
+        
+        for column_name in selected_columns:  
+            
+            non_digit_chars_per_row = utils.find_non_digits(adf, column_name)
+            # Drop NA, null, or blank values from column  
+            column_data = adf.loc[adf[f"{column_name}_new"]==0]   
+            total_rows = len(column_data)  
+            
+            if total_rows > 0:  # to avoid division by zero  
+                non_numerical_count = non_digit_chars_per_row[column_name].apply(lambda x: np.where(pd.isna(x), 1, 0)).sum()   
+                accuracy_score = (total_rows - non_numerical_count) / total_rows  
+                all_accuracy_scores.append(accuracy_score)   
 
-        for column_name in self.selected_columns:
-            # Drop NA, null, or blank values from column
-            column_data = adf[column_name].dropna()
-
-            total_rows = len(column_data)
-
-            if total_rows > 0:  # to avoid division by zero
-                non_digit_chars_per_row = column_data.apply(utils.find_non_digits)
-                non_numerical_count = non_digit_chars_per_row.apply(
-                    lambda x: len(x) > 0
-                ).sum()
-                accuracy_score = (total_rows - non_numerical_count) / total_rows
-                all_accuracy_scores.append(accuracy_score)
-
-        overall_accuracy_score = (
-            sum(all_accuracy_scores) / len(all_accuracy_scores)
-            if all_accuracy_scores
-            else None
-        )
+        # compute final score
+        overall_accuracy_score = sum(all_accuracy_scores) / len(all_accuracy_scores) if all_accuracy_scores else None
         
         # add conditional return logic
         if self.return_type == "score":
-            return overall_accuracy_score, None
+            return overall_accuracy_score
         elif self.return_type == "dataset":
             if not overall_accuracy_score :
                 return "No valid a1 results generated"
             
-            final_df = utils.add_only_numbers_columns(adf, self.selected_columns)  
-            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
-            return overall_accuracy_score, output_file  # Return the file name
+            final_df = utils.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
+            output_file = f"a1_output_v{version}.csv" #TODO Get David to double check code, especially here
+            final_df.to_csv(output_file, index=False) #TODO
+            #return final_df
+            return output_file  # Return the file name
             
         else:
-            return adf, None  # Default return value (DataFrame)    
+            return adf  # Default return value (DataFrame)     
 
     """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
@@ -86,7 +81,7 @@ class Accuracy:
             for column in self.selected_columns: 
                 # Convert to numeric, remove none numeric values TODO: Do we keep this or adopt a different solution? 
                 column_data = pd.to_numeric(df[column], errors='coerce').dropna()  
-                 
+                
                 # Calculate Q1 (25th percentile) and Q3 (75th percentile)  
                 Q1 = column_data.quantile(0.25)  
                 Q3 = column_data.quantile(0.75)  

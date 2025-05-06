@@ -187,49 +187,46 @@ def compare_datasets(df,selected_column, unique_observations):
 
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
-For Accuracy A1, find non-numerical characters in a string.
+For Accuracy A1 
+Create a new column that flags previously existing nulls and empty strings. this prevents a false positive (if it is already a null then it shouldn't be counted as an instance of a symbol in numerics)
 """
-# Function 1: Using isdigit to find non-numerical entries
-def find_non_digits(s):
-    # Ensure the value is treated as a string
-    s = str(s)
-
-    # Track whether we've seen the first "-" or the first "." for negative values or decimals
-    first_dash_skipped = False
-    first_period_skipped = False
-
-    result = []
-    for i, char in enumerate(s):
-        if char in ["-", "."] :
-            if (char == "-" and first_dash_skipped) or (char == "." and first_period_skipped):
-                result.append(char)  # Keep dashes and periods that are not the first ones 
-            elif char == "-":
-                first_dash_skipped = True
-            elif char == ".":
-                first_period_skipped = True
-        
-        elif not char.isalnum():  # Keep only the symbols
-            result.append(char)
-
-    return "".join(result)  # Convert list back to a string
-
-"""
-For Accuracy A1, append columns that indicate true or false for whether there are symbols in numerics
-and create a new DataFrame with new column(s)
-"""
-def add_only_numbers_columns(df, selected_columns):    
-    selected_columns = [col for col in df.columns if col in selected_columns]   
-
-    for column_name in selected_columns:    
-        df[column_name + '_Only_Numbers'] = df[column_name].apply(
-            lambda x: np.where(pd.isnull(x), True, len(find_non_digits(x)) == 0)
-        )    
-
+def new_column(df, column_name):
+    df[f"{column_name}_new"] = np.where(
+        df[column_name].isnull() | (df[column_name].astype(str).str.strip() == ""), 1, 0)
+    
     return df
 
 """
-For Accuracy A3, .
+A1 
+Use the new null flag column to find symbols in numerics. change existing nulls to "True" as preparation for an output dataset that only flags symbols in numerics and not anything else, 
+change symbols in numerics to real NaN.
 """
+def find_non_digits(df, column_name):
+    new_column(df, column_name)
+    new_col_name = f"{column_name}_new"
+    to_numeric_with_coerce = partial(pd.to_numeric, errors='coerce')
+    
+    df[column_name] = np.where(df[new_col_name] == 0, df[column_name].apply(to_numeric_with_coerce), "True")
+    
+    df[column_name] = df[column_name].replace("nan", np.nan) # replace nan that was string, to real NaN 
+    
+    return df
+
+"""
+A1
+create new column(s) for output report based on the original input dataset with the additional newly generated column(s)
+"""
+def add_only_numbers_columns(df, selected_columns, original_df):    
+    selected_columns = [col for col in df.columns if col in selected_columns]   
+    
+    for column_name in selected_columns: 
+        non_digits = find_non_digits(df, column_name)
+        
+        original_df[column_name + '_Only_Numbers'] = non_digits[column_name].apply(
+            lambda x: np.where(pd.isnull(x), False, True)
+        )    
+
+    return original_df
 
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text for console output 
