@@ -133,7 +133,7 @@ class Consistency:
             return overall_consistency_score, None
         elif self.return_type == "dataset":
             if not overall_consistency_scores:
-                return "No valid c1 results generated"
+                return "No valid c1 results generated", None
             
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
@@ -185,7 +185,7 @@ class Consistency:
             return overall_avg_consistency, None
         elif self.return_type == "dataset":
             if not overall_avg_consistency :
-                return "No valid c2 results generated"
+                return "No valid c2 results generated", None
             
             final_df = utils.compare_datasets(df, selected_column, unique_observations)  
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)

@@ -42,7 +42,7 @@ class Completeness:
             return completeness_score, None
         elif self.return_type == "dataset":
             if not total_non_missing : # if there are not rows with data
-                return "No valid p1 results generated"
+                return "No valid p1 results generated", None
             
             final_df = dataset2  
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)

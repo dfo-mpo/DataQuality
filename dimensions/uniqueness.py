@@ -38,7 +38,7 @@ class Uniqueness:
             return percentage_duplicate, None
         elif self.return_type == "dataset":
             if not total_rows :
-                return "No valid u1 results generated"
+                return "No valid u1 results generated", None
             
             final_df = duplicate_rows  
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)

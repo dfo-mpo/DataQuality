@@ -46,19 +46,17 @@ class Accuracy:
         
         # add conditional return logic
         if self.return_type == "score":
-            return overall_accuracy_score
+            return overall_accuracy_score, None
         elif self.return_type == "dataset":
             if not overall_accuracy_score :
-                return "No valid a1 results generated"
+                return "No valid a1 results generated", None
             
             final_df = utils.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
-            output_file = f"a1_output_v{version}.csv" #TODO Get David to double check code, especially here
-            final_df.to_csv(output_file, index=False) #TODO
-            #return final_df
-            return output_file  # Return the file name
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return overall_accuracy_score, output_file  # Return the file name
             
         else:
-            return adf  # Default return value (DataFrame)     
+            return adf, None  # Default return value (DataFrame)     
 
     """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
@@ -103,7 +101,7 @@ class Accuracy:
             return final_score, None
         elif self.return_type == "dataset":
             if not outliers_dict :
-                return "No valid a2 results generated"
+                return "No valid a2 results generated", None
 
             final_df = pd.DataFrame([outliers_dict])
             # final_df = pd.DataFrame([outliers_dict])
