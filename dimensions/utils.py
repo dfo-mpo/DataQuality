@@ -2,7 +2,8 @@ import re
 import numpy as np  
 import os
 import statistics
-import pandas as pd  
+import pandas as pd
+from functools import partial
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer 
 from sklearn.metrics.pairwise import cosine_similarity  
