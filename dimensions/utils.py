@@ -254,7 +254,7 @@ def read_data(dataset_path):
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
 def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, metric_log_csv, threshold=None, minimum_score=None):
     # Convert score to a percentage
-    percentage_score = score
+    percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
     
     # Load the Excel file into a DataFrame
     log_file = "DQS_Output_Log_Test.xlsx"
@@ -266,9 +266,9 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
         threshold_value = threshold
 
     # If selected_columns is None, assume "All" was tested
-    if excluded_columns:
+    if excluded_columns and not excluded_columns == ['']:
         columns_tested = "All columns excluding " + ", ".join(excluded_columns)
-    elif selected_columns is None:
+    elif selected_columns is None or selected_columns == ['']:
         columns_tested = "All columns"
     else:
         # Convert selected_columns list to a string if specific columns are provided
@@ -383,9 +383,10 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                 min_value = df[column].min()
                 if min_value < threshold:
                     columns_below_threshold.append(column)
+            columns_below_threshold_str = ', '.join(columns_below_threshold)
             
             # Output the results  
-            return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold + "."
+            return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold_str + "."
         elif (metric == 'P1'):
             columns = ', '.join(df.columns)
 

@@ -25,7 +25,7 @@ class Accuracy:
         
         # dataframe for computing accuracy score
         adf = utils.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
-        selected_columns = [col for col in adf.columns if col in selected_columns] 
+        selected_columns = [col for col in adf.columns if col in self.selected_columns] 
 
         all_accuracy_scores = []
         

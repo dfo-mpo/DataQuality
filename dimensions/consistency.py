@@ -6,7 +6,7 @@ ALL_METRICS = ['C1', 'C2']
 
 """ Class to represent all metric tests for the Consistency dimension """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words="activity", ref_dataset_path=None, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], ref_dataset_path=None, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping 
@@ -166,7 +166,7 @@ class Consistency:
                 unique_observations = utils.get_names_used_for_column(df, selected_column)
 
             cosine_sim_matrix = utils.calculate_cosine_similarity(
-                df[selected_column].dropna(), unique_observations, Stop_Words=self.c2_stop_words
+                df[selected_column].dropna(), unique_observations, stop_words=self.c2_stop_words
             )
             column_consistency_score = utils.average_consistency_score(
                 cosine_sim_matrix, self.c2_threshold
