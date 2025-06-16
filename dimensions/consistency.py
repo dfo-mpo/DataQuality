@@ -121,7 +121,7 @@ class Consistency:
                 )
 
             # Calculate the overall consistency score for the current column
-            consistency_score = utils.average_consistency_score(text_sim_matrix, self.c1_threshold)
+            consistency_score = utils.average_c1_consistency_score(text_sim_matrix, self.c1_threshold)
             consistency_score_list.append(consistency_score)
 
         # Calculate the overall consistency score as the average of individual consistency scores
@@ -168,7 +168,7 @@ class Consistency:
             cosine_sim_matrix = utils.calculate_cosine_similarity(
                 df[selected_column].dropna(), unique_observations, stop_words=self.c2_stop_words
             )
-            column_consistency_score = utils.average_consistency_score(
+            column_consistency_score = utils.average_c2_consistency_score(
                 cosine_sim_matrix, self.c2_threshold
             )
             all_consistency_scores.append(column_consistency_score)

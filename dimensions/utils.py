@@ -5,7 +5,7 @@ import statistics
 import pandas as pd
 from functools import partial
 from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer 
+from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
 from difflib import SequenceMatcher  
 import io
@@ -86,7 +86,7 @@ def calculate_cosine_similarity(text_list, ref_list, stop_words):
 """
 Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
 """
-def average_consistency_score(cosine_sim_matrix, threshold=0.91):  
+def average_c1_consistency_score(cosine_sim_matrix, threshold=0.91):  
     num_rows, num_columns = cosine_sim_matrix.shape  
     inconsistency = 0  
     for i in range(num_rows):  
@@ -185,6 +185,20 @@ def compare_datasets(df,selected_column, unique_observations):
     df[selected_column + '_comparison'] = column_results  
     
     return df  
+
+"""
+Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
+"""
+def average_c2_consistency_score(cosine_sim_df, threshold=0.91):
+    num_rows, num_columns = cosine_sim_df.shape
+    total_count = 0  # This will count all values above or equal to the threshold
+
+    for i in range(num_rows):
+        if np.max(cosine_sim_df[i]) >= threshold:  # Include all comparisons
+            total_count += 1
+    total_observations = num_rows  # Total number of observations
+    average_consistency_score = total_count / total_observations
+    return average_consistency_score
 
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
