@@ -392,11 +392,18 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
         elif (metric == 'A2'):
             columns_below_threshold = []
 
+            # Get groupby columns
+            end_index = len(df.columns) - len(selected_columns) 
+            groupby_cols = df.columns[:end_index]
+            groupby_cols_str = ' (grouped by ' + ', '.join(groupby_cols) + ')'
+            
             # Check if each selected column has a value below the threshold
             for column in selected_columns:
                 min_value = df[column].min()
                 if min_value < threshold:
-                    columns_below_threshold.append(column)
+                    # find average non outlier scores for column below threshold
+                    outliers_avg = round(df[column].mean() * 100, 2)
+                    columns_below_threshold.append(column) if (len(df.columns) == len(selected_columns)) else columns_below_threshold.append(column + " (Avg score: " + str(outliers_avg) + ")")
             columns_below_threshold_str = ', '.join(columns_below_threshold)
             
             # Output the results  
