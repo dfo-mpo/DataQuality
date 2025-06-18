@@ -64,49 +64,63 @@ class Accuracy:
     def _a2_metric(self, metric): 
         df = utils.read_data(self.dataset_path)
         outliers_dict = {}
+        scores = {} # keep incase we want to view the final scores by column
+        avg_score = 0
 
+        # Detect outliers of given data
+        def detect_outliers(x):
+            Q1 = x.quantile(0.25)  
+            Q3 = x.quantile(0.75)  
+            IQR = Q3 - Q1  
+            lower_bound = Q1 - self.a2_threshold * IQR  
+            upper_bound = Q3 + self.a2_threshold * IQR  
+            return (x < lower_bound) | (x > upper_bound)
+            
         # If a groupby column is specified, perform the IQR calculation within each group  
         if self.groupby_column:  
             grouped = df.groupby(self.groupby_column)  
+            total_groups = len(grouped)
             for column in self.selected_columns:  
                 # Apply the outlier detection for each group  
-                outliers = grouped[column].apply(lambda x: ((x < x.quantile(0.25) - self.a2_threshold * (x.quantile(0.75) - x.quantile(0.25))) |  
-                                                            (x > x.quantile(0.75) + self.a2_threshold * (x.quantile(0.75) - x.quantile(0.25))))) 
+                outliers = grouped[column].apply(detect_outliers) 
                 # Combine the outlier Series into a single Series that corresponds to the original DataFrame index  
                 outliers_dict[column] = (1 - outliers.groupby(self.groupby_column).mean())
+                # Compute final score
+                scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score) / total_groups if total_groups > 0 else 0
+                avg_score += scores[column]
         else:
             # Perform the IQR calculation on the whole column if no groupby column is specified  
             for column in self.selected_columns: 
                 # Convert to numeric, remove none numeric values TODO: Do we keep this or adopt a different solution? 
                 column_data = pd.to_numeric(df[column], errors='coerce').dropna()  
                 
-                # Calculate Q1 (25th percentile) and Q3 (75th percentile)  
-                Q1 = column_data.quantile(0.25)  
-                Q3 = column_data.quantile(0.75)  
-                IQR = Q3 - Q1  
+                # Apply the outlier detection
+                outliers = detect_outliers(column_data)
+                outliers_dict[column] = (1 - outliers.mean())  
 
-                lower_bound = Q1 - self.a2_threshold * IQR  
-                upper_bound = Q3 + self.a2_threshold * IQR  
-                
-                outliers = (column_data < lower_bound) | (column_data > upper_bound)  
-                outliers_dict[column] = (1 - outliers.mean()) 
+                # Compute final score
+                scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score)  
+                avg_score += scores[column] 
 
-        # compute final score  
-        total_groups = len(outliers_dict)  
-        groups_above = sum(1 for score in outliers_dict.values() if score > self.a2_minimum_score)  
-        final_score = groups_above / total_groups if total_groups > 0 else 0  
+        # Compute average of final scores across selected columns  
+        avg_score = avg_score / len(self.selected_columns)   
 
         # add conditional return logic
         if self.return_type == "score":
-            return final_score, None
+            return avg_score, None
         elif self.return_type == "dataset":
             if not outliers_dict :
                 return "No valid a2 results generated", None
 
-            final_df = pd.DataFrame([outliers_dict])
-            # final_df = pd.DataFrame([outliers_dict])
+            final_df = pd.DataFrame()
+            if self.groupby_column is not None: 
+                final_df = final_df.from_dict(outliers_dict)
+                final_df.reset_index(inplace=True)
+                final_df.rename(columns={'index': 'GroupName'}, inplace=True)
+            else:
+                final_df = pd.DataFrame([outliers_dict])
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
-            return final_score, output_file  # Return the file name
+            return avg_score, output_file  # Return the file name
             
         else:
             return df, None  # Default return value (DataFrame)  
