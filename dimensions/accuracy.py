@@ -4,7 +4,18 @@ from . import utils
 
 ALL_METRICS = ['A1', 'A2']
 
-""" Class to represent all metric tests for the Accuracy dimension """
+""" Class to represent all metric tests for the Accuracy dimension
+    Goal: Ensure that the data correctly represents the real-world values it is intended to model. 
+    Accurate data is free from errors and is a true reflection of the actual values.
+
+dataset_path: path of the csv/xlsx to evaluate.
+selected_columns: columns from the provided dataset to evaluate, used for metics A1 and A2
+groupby_column: used by metric A2, __to do
+a2_threshold: theshold used in A2 interquartile range calculations to determine outliers
+a2_minimum_scure: minimum acceptible score from interquartile range calculations
+return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+"""
 class Accuracy:
     def __init__(self, dataset_path, selected_columns, groupby_column=None, a2_threshold=1.5, a2_minimum_score = 0.85, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
@@ -49,7 +60,7 @@ class Accuracy:
             return overall_accuracy_score, None
         elif self.return_type == "dataset":
             if not overall_accuracy_score :
-                return "No valid a1 results generated", None
+                return "No valid A1 results generated", None
             
             final_df = utils.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
@@ -83,8 +94,10 @@ class Accuracy:
             for column in self.selected_columns:  
                 # Apply the outlier detection for each group  
                 outliers = grouped[column].apply(detect_outliers) 
+  
                 # Combine the outlier Series into a single Series that corresponds to the original DataFrame index  
                 outliers_dict[column] = (1 - outliers.groupby(self.groupby_column).mean())
+
                 # Compute final score
                 scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score) / total_groups if total_groups > 0 else 0
                 avg_score += scores[column]
@@ -110,7 +123,7 @@ class Accuracy:
             return avg_score, None
         elif self.return_type == "dataset":
             if not outliers_dict :
-                return "No valid a2 results generated", None
+                return "No valid A2 results generated", None
 
             final_df = pd.DataFrame()
             if self.groupby_column is not None: 
@@ -132,8 +145,8 @@ class Accuracy:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
-            thresholds = {"A1": None, "A2": self.a2_threshold, "A3": None}
-            columns = {"A1": self.selected_columns, "A2": self.selected_columns, "A3": None}
+            thresholds = {"A1": None, "A2": self.a2_threshold}
+            columns = {"A1": self.selected_columns, "A2": self.selected_columns}
 
             for metric in metrics:
                 # Variables that prepare for output reports
