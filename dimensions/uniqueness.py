@@ -4,7 +4,13 @@ from . import utils
 
 ALL_METRICS = ['U1']
 
-""" Class to represent all metric tests for the Uniqueness dimension """
+""" Class to represent all metric tests for the Uniqueness dimension
+    Goal: Ensure that each record in the dataset is unique and there are no duplicate entries. Unique data means there are no redundant records.
+
+dataset_path: path of the csv/xlsx to evaluate.
+return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+"""
 class Uniqueness:
     def __init__(self, dataset_path, return_type="score", logging_path=None):
         self.dataset_path = dataset_path
@@ -38,7 +44,7 @@ class Uniqueness:
             return percentage_duplicate, None
         elif self.return_type == "dataset":
             if not total_rows :
-                return "No valid u1 results generated", None
+                return "No valid U1 results generated", None
             
             final_df = duplicate_rows  
             output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)

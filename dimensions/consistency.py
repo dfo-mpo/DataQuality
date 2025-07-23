@@ -4,7 +4,21 @@ from . import utils
 
 ALL_METRICS = ['C1', 'C2']
 
-""" Class to represent all metric tests for the Consistency dimension """
+""" Class to represent all metric tests for the Consistency dimension
+    Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, 
+    and definitions, and there are no contradictions within the dataset.
+
+dataset_path: path of the csv/xlsx to evaluate.
+c1_column_names: columns used from the dataset for the C1 metric.
+c2_column_mapping: columns used from the dataset for the C2 metric.
+c1_threshold: threshold for simulatrity score that is acceptable for C1 metric.
+c2_threshold: threshold for consistency score that is acceptable for C2 metric.
+c1_stop_words: Words filtered for C1 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
+c2_stop_words: Words filtered for C2 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
+ref_dataset_path: Reference dataset that selected dataset columns are compared too in C2 metric.
+return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+"""
 class Consistency:
     def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], ref_dataset_path=None, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  

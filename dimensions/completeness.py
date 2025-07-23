@@ -2,7 +2,16 @@ from . import utils
 
 ALL_METRICS = ['P1']
 
-""" Class to represent all metric tests for the Completeness dimension """
+""" Class to represent all metric tests for the Completeness dimension 
+    Goal: Ensure that all required data is available and that there are no missing values. 
+    Complete data includes all necessary records and fields needed for the intended use.
+
+dataset_path: path of the csv/xlsx to evaluate.
+exclude_columns: columns to ingore for the P1 test.
+p1_threshold: threshold for acceptible percentance of null values in a given column for P1 test
+return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+"""
 class Completeness:
     def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
