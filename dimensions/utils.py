@@ -7,6 +7,7 @@ from functools import partial
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
+from Levenshtein import ratio
 from difflib import SequenceMatcher  
 import io
 
@@ -82,6 +83,17 @@ def calculate_cosine_similarity(text_list, ref_list, stop_words):
     ref_vec = vectorizer.fit_transform(ref_list)  
     text_vec = vectorizer.transform(text_list)  
     return cosine_similarity(text_vec, ref_vec)  
+
+"""
+Calculate the levenshtein similarity ratio between lists of texts.
+"""
+def calculate_levenshtein_similarity(text_list, ref_list):
+    sim_matrix = np.zeros((len(text_list), len(ref_list)))
+
+    for i, text in enumerate(text_list):
+        for j, ref in enumerate(ref_list):
+            sim_matrix[i, j] = ratio(text, ref)
+    return sim_matrix
 
 """
 Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
@@ -200,6 +212,31 @@ def average_c2_consistency_score(cosine_sim_df, threshold=0.91):
     average_consistency_score = total_count / total_observations
     return average_consistency_score
 
+"""
+Calculate the average consistency score based on the levenshtein similarity ratio matrix and a given threshold.
+"""
+def average_c3_consistency_score(leven_dist_df, threshold=0.91):
+    num_rows, num_columns = leven_dist_df.shape
+    total_count = 0  # This will count all values above or equal to the threshold
+
+    for i in range(num_rows):
+        if np.max(leven_dist_df[i]) >= threshold:  # Include all comparisons
+            total_count += 1
+    total_observations = num_rows  # Total number of observations
+    average_consistency_score = total_count / total_observations
+    return average_consistency_score
+    
+"""
+Check whether given string date-time entry matches a given format.
+"""
+def incorrect_datetime(date_str, fmt):
+    # Catches incorrect format and return true 
+    try:
+        datetime.strptime(date_str, fmt)
+        return 0 
+    except ValueError:
+        return 1 
+        
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
 For Accuracy A1 
@@ -243,6 +280,31 @@ def add_only_numbers_columns(df, selected_columns, original_df):
 
     return original_df
 
+# ----------------------- Completeness and Interdependency Dimension Utils -------------------------------
+"""
+Filter for column pairs that meet the threshold, with same column pairings and duplicates removed.
+"""
+def filter_corrs(corrs, threshold, subset=None):
+    
+    corrs = corrs.copy()
+    # Remove same column pairings and subset sensitive features
+    np.fill_diagonal(corrs.values, np.nan)
+    corrs = corrs[subset].drop(subset) if subset is not None else corrs
+
+    # Keep columns pairings with absolute correlation above the threshold
+    corrs_thr = corrs[(abs(corrs) > threshold)].melt(ignore_index=False).reset_index().dropna()
+
+    # Rename columns
+    # used / because some features use _ in column name already so may confuse user reading output table
+    corrs_thr.columns = ['var1', 'var2', 'corr_coeff']
+    corrs_thr['features'] = ['/'.join(sorted((i.var1, i.var2))) for i in corrs_thr.itertuples()]
+    
+    # Remove duplicate column pairings and sort by descending correlation coefficients
+    corrs_thr.drop_duplicates('features', inplace=True)
+    corrs_thr.sort_values(by='corr_coeff', ascending=False, inplace=True)
+
+    return corrs_thr
+    
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text for console output 
 RED = "\033[31m"  

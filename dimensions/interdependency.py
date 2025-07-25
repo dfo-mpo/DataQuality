@@ -1,6 +1,7 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
+from dython.nominal import associations
 
 ALL_METRICS = ['I1']
 
@@ -9,40 +10,64 @@ ALL_METRICS = ['I1']
     Interdependent data can be effectively combined and used together without discrepancies.
 
 dataset_path: path of the csv/xlsx to evaluate.
+i1_sensitive_columns: sensitive columns used from the dataset for the I1 metric.
+i1_threshold: threshold for correlation coefficient that is acceptable for I1 test.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 """
 class Interdependency:
-    def __init__(self, dataset_path, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, i1_sensitive_columns, i1_threshold=0.75, return_type="score", logging_path=None):
         self.dataset_path = dataset_path
+        self.i1_sensitive_columns = i1_sensitive_columns
+        self.i1_threshold = i1_threshold
         self.return_type = return_type
         self.logging_path = logging_path
-        # TODO: Set all the other variables
 
-    """ Interdependency Type 1 (I1):
-    TODO: provide a description of what this script does. There can be multiple types (Type 1, Type 2, etc.), add more as needed
-    Example: Determines the similarity between string values in specified columns.
+    """ Interdependency Type 1 (I1): Identifies proxy variables whose correlation with sensitive features is higher than 0.75 (or any threshold).
+    Proxy variables indirectly capture information about sensitive features, often used as substitutes for other variables. 
+    Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
     """    
-    # TODO: Replace with the logic for this metric, where the final score should be called interdependency_score
     def _i1_metric(self, metric):  
-        dataset = utils.read_data(self.dataset_path)
+        df = utils.read_data(self.dataset_path)
+        all_interdependency_scores = {}
 
-        interdependency_score = None
-
-        idf = None
+        # Exclude the 'Comment' or 'Comments' column if it exists in the dataset  
+        if 'Comment' in df.columns:  
+            df = df.drop(columns=['Comment']) 
+        elif 'Comments' in df.columns:
+            df = df.drop(columns=['Comments'])
+        
+        # Number of non-sensitive features
+        n_non_sensitive = len(df.columns) - len(self.i1_sensitive_columns)
+    
+        # Computes correlation coeff of all variables in dataset 
+        corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True)['corr']
+        corrs_thr = utils.filter_corrs(corrs, self.i1_threshold, subset = self.i1_sensitive_columns)
+    
+        # Compute proportion that exceeds threshold for each sensitive column
+        corrs_subset = corrs[self.i1_sensitive_columns].drop(self.i1_sensitive_columns)
+        for column in self.i1_sensitive_columns:
+            all_interdependency_scores[column] = sum(1 for corr in corrs_subset[column] if corr > self.i1_threshold) / n_non_sensitive
+        
+        # Compute average score 
+        overall_interdependency_score = sum(all_interdependency_scores.values()) / len(all_interdependency_scores)
+        
+        # may want to use for one line summary?
+        summary = f"Found {len(corrs_thr)} feature pair(s) to sensitive attribute {self.i1_sensitive_columns} with correlation coefficient greater than defined threshold ({self.i1_threshold})"
 
         # add conditional return logic
         if self.return_type == "score":
-            return interdependency_score, None
+            return overall_interdependency_score, None
         elif self.return_type == "dataset":
-            if not interdependency_score :
+            if not overall_interdependency_score: 
                 return "No valid I1 results generated", None
-            
-            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=None)
-            return interdependency_score, output_file  # Return the file name
-            
+                
+            final_df = corrs_thr
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return overall_interdependency_score, output_file  # Return the file name
+                
         else:
-            return idf, None  # Default return value (Data Frame)
+            return df, None  # Default return value (DataFrame)
         
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
@@ -51,8 +76,8 @@ class Interdependency:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
-            thresholds = {"I1": None} # TODO: Update with thresholds use for each test
-            columns = {"I1": None} # TODO: Update with columns use for each test
+            thresholds = {"I1": self.i1_threshold} 
+            columns = {"I1": self.i1_sensitive_columns} 
 
             for metric in metrics:
                 # Variables that prepare for output reports

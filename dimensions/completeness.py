@@ -1,6 +1,7 @@
 from . import utils
+from dython.nominal import associations
 
-ALL_METRICS = ['P1']
+ALL_METRICS = ['P1', 'P2']
 
 """ Class to represent all metric tests for the Completeness dimension 
     Goal: Ensure that all required data is available and that there are no missing values. 
@@ -9,14 +10,16 @@ ALL_METRICS = ['P1']
 dataset_path: path of the csv/xlsx to evaluate.
 exclude_columns: columns to ingore for the P1 test.
 p1_threshold: threshold for acceptible percentance of null values in a given column for P1 test
+p2_threshold: threshold for correlation coefficient that is acceptable for P2 test.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 """
 class Completeness:
-    def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, exclude_columns=[], p1_threshold=0.75, p2_threshold=0.5, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.exclude_columns = exclude_columns
         self.p1_threshold = p1_threshold
+        self.p2_threshold = p2_threshold
         self.return_type = return_type
         self.logging_path = logging_path
 
@@ -59,7 +62,50 @@ class Completeness:
             
         else:
             return dataset, None  # Default return value (DataFrame) 
-    
+
+    """ Completeness Type 2 (P2): Finds column pairs with missing values whose correlation coefficient is higher than 0.5 (or any threshold).
+    Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.5 will be used as a midpoint threshold to investigate whether an association exists. 
+    """    
+    def _p2_metric(self, metric):  
+        df = utils.read_data(self.dataset_path)
+
+        # Exclude the 'Comment' or 'Comments' column if it exists in the dataset  
+        if 'Comment' in df.columns:  
+            df = df.drop(columns=['Comment']) 
+        elif 'Comments' in df.columns:
+            df = df.drop(columns=['Comments'])
+        
+        # Identify columns with nulls (missing values)
+        df_nulls = df.loc[:, df.isnull().sum() > 0]
+
+        # Compute correlation coefficients on missing column values (true/false entries) 
+        corrs = associations(df_nulls.isnull().astype(int), nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True)['corr']
+
+        # Number of unique column pairings
+        n_pairs = len(corrs) * (len(corrs) - 1)/2
+
+        # Keep columns pairings with absolute correlation above the threshold
+        corrs_thr = utils.filter_corrs(corrs, self.p2_threshold)
+
+        # Compute score 
+        completeness_score = (len(corrs_thr) / n_pairs) if corrs_thr is not None else None
+        # may want to use for one line summary?
+        summary = f"Found {len(corrs_thr)} feature pair(s) with correlation coefficient greater than defined threshold ({self.p2_threshold})"
+        
+        # add conditional return logic
+        if self.return_type == "score":
+            return completeness_score, None
+        elif self.return_type == "dataset":
+            if not completeness_score: 
+                return "No valid p2 results generated", None
+            
+            final_df = corrs_thr
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return completeness_score, output_file  # Return the file name
+            
+        else:
+            return df, None  # Default return value (DataFrame)
+            
     """ Run metrics: Will run specified metrics or all accuracy metrics by default
     """
     def run_metrics(self, metrics=ALL_METRICS):
@@ -67,8 +113,8 @@ class Completeness:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
-            thresholds = {"P1": self.p1_threshold}
-            columns = {"P1":None}
+            thresholds = {"P1": self.p1_threshold, "P2": self.p2_threshold}
+            columns = {"P1":None, "P2": None}
 
             for metric in metrics:
                 # Variables that prepare for output reports
@@ -81,6 +127,10 @@ class Completeness:
                     if metric == 'P1':
                         overall_completeness_score["metric"] = metric
                         completeness_score, metric_log_csv = self._p1_metric(metric.lower())
+                        overall_completeness_score["value"] = completeness_score
+                    elif metric == 'P2':
+                        overall_completeness_score["metric"] = metric
+                        completeness_score, metric_log_csv = self._p2_metric(metric.lower())
                         overall_completeness_score["value"] = completeness_score
 
                 except FileNotFoundError as e:

@@ -1,8 +1,9 @@
 import numpy as np  
 import pandas as pd 
+import re
 from . import utils
 
-ALL_METRICS = ['C1', 'C2']
+ALL_METRICS = ['C1', 'C2', 'C3', 'C4', 'C5']
 
 """ Class to represent all metric tests for the Consistency dimension
     Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, 
@@ -11,23 +12,33 @@ ALL_METRICS = ['C1', 'C2']
 dataset_path: path of the csv/xlsx to evaluate.
 c1_column_names: columns used from the dataset for the C1 metric.
 c2_column_mapping: columns used from the dataset for the C2 metric.
+c3_column_names: columns used from the dataset for the C3 metric.
+c4_column_names: columns used from the dataset for the C4 metric.
+c5_column_names: columns used from the dataset for the C5 metric.
 c1_threshold: threshold for simulatrity score that is acceptable for C1 metric.
 c2_threshold: threshold for consistency score that is acceptable for C2 metric.
+c3_threshold: threshold for simulatrity score that is acceptable for C3 metric.
 c1_stop_words: Words filtered for C1 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
 c2_stop_words: Words filtered for C2 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
-ref_dataset_path: Reference dataset that selected dataset columns are compared too in C2 metric.
+c4_format: date-time format that selected dataset columns are compared to in C4 metric.
+ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 metric.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], ref_dataset_path=None, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c3_column_names, c4_column_names, c5_column_names, c1_threshold=0.91, c2_threshold=0.91, c3_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', ref_dataset_path=None, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
-        self.c2_column_mapping = c2_column_mapping 
+        self.c2_column_mapping = c2_column_mapping
+        self.c3_column_names = c3_column_names
+        self.c4_column_names = c4_column_names
+        self.c5_column_names = c5_column_names
         self.c1_threshold = c1_threshold
         self.c2_threshold = c2_threshold
+        self.c3_threshold = c3_threshold
         self.c1_stop_words = c1_stop_words 
         self.c2_stop_words = c2_stop_words
+        self.c4_format = c4_format
         self.ref_dataset_path = ref_dataset_path
         self.return_type = return_type 
         self.logging_path = logging_path
@@ -206,7 +217,149 @@ class Consistency:
             return overall_avg_consistency, output_file  # Return the file name
         else:
             return df, None  # Default return value (DataFrame)
+
+    """ Consistency Type 3 (C3): Compares province/territory names (reference data) and string values in specified columns using Levenshtein Similarity Ratio.
+    Levenshtein Similarity Ratio = 1 - (normalized Levenshtein Distance), where a score of 1 means the strings are identical.
+    """
+    def _c3_metric(self, metric):
+        df = utils.read_data(self.dataset_path) # used for consistency calculations 
+        df_original = utils.read_data(self.dataset_path) # used to write output report with original dataframe
+        all_consistency_scores = []
+        compare_df = pd.DataFrame()
     
+        # Initialize reference data (lowercased province/territory names)
+        arr_ref_normalized = np.array([name.lower() for name in utils.province_abbreviations.values()])
+    
+        for column in self.c3_column_names:
+    
+            # Normalize entries 
+            df[f"Normalized {column}"] = df[column].apply(utils.normalize_text)
+    
+            # Calculate Levenshtein Similarity Ratio matrix and average consistency score based on matrix and threshold
+            levenshtein_sim_matrix = utils.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)      
+            column_consistency_score = utils.average_c3_consistency_score(levenshtein_sim_matrix, self.c3_threshold)
+            all_consistency_scores.append(column_consistency_score)
+    
+            # Compare to reference data and add comparison column to dataset
+            compare_df = utils.compare_datasets(df, f"Normalized {column}", arr_ref_normalized)
+
+        # Take subset of data inconsistent with reference data  
+        comparison_cols = [col for col in compare_df.columns if col.startswith('Normalized') and col.endswith('_comparison')]
+        inconsistent = ~compare_df[comparison_cols].all(axis=1)
+        inconsistent_df = df_original.loc[inconsistent].copy()
+
+        # Another version of output report, if this version if preferred: subset of data inconsistent with reference data + normalized columns + comparison columns
+        """
+        comparison_cols = [col for col in compare_df.columns if col.startswith('Normalized') and col.endswith('_comparison')]
+        inconsistent = ~compare_df[comparison_cols].all(axis=1)
+        inconsistent_df = df.loc[inconsistent].copy()
+        """
+            
+        # Compute average score
+        avg_score = (
+            sum(all_consistency_scores) / len(all_consistency_scores)
+            if all_consistency_scores
+            else None
+        )
+        
+        # add conditional return logic
+        if self.return_type == "score":
+            return avg_score, None
+        elif self.return_type == "dataset":
+            if not avg_score: 
+                return "No valid C3 results generated", None
+                    
+            final_df = inconsistent_df
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return avg_score, output_file  # Return the file name
+                    
+        else:
+            return df, None  # Default return value (DataFrame) 
+        
+    """ Consistency Type 4 (C4): Checks whether the dataset follows standard date-time ISO 8601 formatting (or any format defined by the user).
+    """
+    def _c4_metric(self, metric):
+        df = utils.read_data(self.dataset_path)
+        results = pd.DataFrame()
+        all_consistency_scores = {}
+    
+        # Check date-time formating on the whole column
+        for column in self.c4_column_names:
+            # Remove NA values
+            df_clean = df.dropna(subset=[column])
+    
+            # Calculate proportion of incorrectly formated values in each column
+            results[column] = df_clean[column].apply(lambda x: utils.incorrect_datetime(str(x), self.c4_format))
+            all_consistency_scores[column] = 1 - results[column].mean()
+    
+        # Take subset of data with inconsistent date-time formatting
+        inconsistent = results[self.c4_column_names].any(axis=1)
+        inconsistent_df = df[inconsistent].copy()
+
+        # Compute average score  
+        overall_consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
+    
+        # add conditional return logic
+        if self.return_type == "score":
+            return overall_consistency_score, None
+        elif self.return_type == "dataset":
+            if not overall_consistency_score: 
+                return "No valid C4 results generated", None
+                
+            final_df = inconsistent_df
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return overall_consistency_score, output_file  # Return the file name
+                
+        else:
+            return df, None  # Default return value (DataFrame) 
+
+    """ Consistency Type 5 (C5): Checks whether the dataset follows Decimal Degrees (DD) formatting and has valid latitude & longitude coordinates.
+    """
+    def _c5_metric(self, metric):
+        df = utils.read_data(self.dataset_path)
+        results = pd.DataFrame()
+        all_consistency_scores = {}
+
+        # Compile regex patterns to detect latitude and longitude column names
+        lat_pattern = re.compile(r'(lat|latitude)', flags=re.IGNORECASE)
+        long_pattern = re.compile(r'(long|longitude)', flags=re.IGNORECASE)
+    
+        for column in self.c5_column_names:
+            # Remove NA values
+            df_clean = df.dropna(subset=[column])
+            # Normalize column names by converting to lowercase and stripping whitespaces
+            lower = column.lower().strip()
+    
+            # Check validity of coordinates depending on if latitude or longitude (flags those out of bounds)
+            if lat_pattern.search(column):
+                results[column] = df_clean[column].apply(lambda x: False if -90 <= x <= 90 else True)
+                all_consistency_scores[column] = 1 - results[column].mean()
+    
+            elif long_pattern.search(column):
+                results[column] = df_clean[column].apply(lambda x: False if -180 <= x <= 180 else True)
+                all_consistency_scores[column] = 1 - results[column].mean()
+
+        # Take subset of data with invalid coordinates 
+        invalid = results[self.c5_column_names].any(axis=1)
+        invalid_df = df[invalid].copy()
+    
+        # Compute average score
+        overall_consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
+    
+        # add conditional return logic
+        if self.return_type == "score":
+            return overall_consistency_score, None
+        elif self.return_type == "dataset":
+            if not overall_consistency_score: 
+                return "No valid c5 results generated", None
+                
+            final_df = invalid_df
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=final_df)
+            return overall_consistency_score, output_file  # Return the file name
+                
+        else:
+            return df, None  # Default return value (DataFrame)
+            
     """ Run metrics: Will run specified metrics or all consistency metrics by default
     """
     def run_metrics(self, metrics=ALL_METRICS):
@@ -214,8 +367,8 @@ class Consistency:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
-            thresholds = {"C1": self.c1_threshold, "C2": self.c2_threshold}
-            columns = {"C1": self.c1_column_names, "C2": self.c2_column_mapping}
+            thresholds = {"C1": self.c1_threshold, "C2": self.c2_threshold, "C3": self.c3_threshold, "C4": None, "C5": None}
+            columns = {"C1": self.c1_column_names, "C2": self.c2_column_mapping, "C3": self.c3_column_names, "C4": self.c4_column_names, "C5": self.c5_column_names}
 
             for metric in metrics:
                 # Variables that prepare for output reports
@@ -232,7 +385,19 @@ class Consistency:
                     elif metric == 'C2':
                         overall_consistency_score["metric"] = metric
                         consistency_score, metric_log_csv = self._c2_metric(metric.lower())
-                        overall_consistency_score["value"] = consistency_score    
+                        overall_consistency_score["value"] = consistency_score
+                    elif metric == 'C3':
+                        overall_consistency_score["metric"] = metric
+                        consistency_score, metric_log_csv = self._c3_metric(metric.lower())
+                        overall_consistency_score["value"] = consistency_score
+                    elif metric == 'C4':
+                        overall_consistency_score["metric"] = metric
+                        consistency_score, metric_log_csv = self._c4_metric(metric.lower())
+                        overall_consistency_score["value"] = consistency_score 
+                    elif metric == 'C5':
+                        overall_consistency_score["metric"] = metric
+                        consistency_score, metric_log_csv = self._c5_metric(metric.lower())
+                        overall_consistency_score["value"] = consistency_score
 
                 except MemoryError as e:
                     print(f'{utils.RED}Dataset is too large for this test, out of memory!{utils.RESET}')
