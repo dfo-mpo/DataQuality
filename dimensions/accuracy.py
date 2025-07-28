@@ -184,14 +184,14 @@ class Accuracy:
     """
     def _a4_metric(self, metric): 
         df = utils.read_data(self.dataset_path)
-        results = pd.DataFrame()
+        results = df.copy()
         all_accuracy_scores = {}
         
         # Check whether column pairs are in chronological order (flags those not in chronological order)
         # assumes entries are datetime
         for start_col, end_col in self.a4_column_pairs:
     
-            col_name = f"{start_col}_before_{end_col}"
+            col_name = f"{start_col}_after_{end_col}"
             results[col_name] = ~(
                 (df[end_col] >= df[start_col]) | 
                 df[end_col].isna() | 
@@ -202,10 +202,10 @@ class Accuracy:
             all_accuracy_scores[col_name] = 1 - results[col_name].mean()
         
         # Take subset of data not in chronological order
-        check_cols = list(all_accuracy_scores.keys())
-        invalid = results[check_cols].any(axis=1)
-        invalid_df = df[invalid].copy()
-    
+        check_columns = list(all_accuracy_scores.keys())
+        invalid = results[check_columns].any(axis=1)
+        invalid_df = results[invalid].copy()
+        
         # Compute average score
         overall_accuracy_score = sum(all_accuracy_scores.values()) / len(all_accuracy_scores)
 

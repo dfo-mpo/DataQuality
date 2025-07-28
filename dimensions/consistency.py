@@ -222,8 +222,7 @@ class Consistency:
     Levenshtein Similarity Ratio = 1 - (normalized Levenshtein Distance), where a score of 1 means the strings are identical.
     """
     def _c3_metric(self, metric):
-        df = utils.read_data(self.dataset_path) # used for consistency calculations 
-        df_original = utils.read_data(self.dataset_path) # used to write output report with original dataframe
+        df = utils.read_data(self.dataset_path) 
         all_consistency_scores = []
         compare_df = pd.DataFrame()
     
@@ -236,24 +235,21 @@ class Consistency:
             df[f"Normalized {column}"] = df[column].apply(utils.normalize_text)
     
             # Calculate Levenshtein Similarity Ratio matrix and average consistency score based on matrix and threshold
-            levenshtein_sim_matrix = utils.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)      
+            levenshtein_sim_matrix = utils.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)    
             column_consistency_score = utils.average_c3_consistency_score(levenshtein_sim_matrix, self.c3_threshold)
             all_consistency_scores.append(column_consistency_score)
     
             # Compare to reference data and add comparison column to dataset
             compare_df = utils.compare_datasets(df, f"Normalized {column}", arr_ref_normalized)
 
-        # Take subset of data inconsistent with reference data  
-        comparison_cols = [col for col in compare_df.columns if col.startswith('Normalized') and col.endswith('_comparison')]
-        inconsistent = ~compare_df[comparison_cols].all(axis=1)
-        inconsistent_df = df_original.loc[inconsistent].copy()
+        # Drop normalized columns for output report
+        columns_to_drop = [f"Normalized {col}" for col in compare_df.columns]
+        compare_df = compare_df.drop(columns=[col for col in columns_to_drop if col in df.columns])
 
-        # Another version of output report, if this version if preferred: subset of data inconsistent with reference data + normalized columns + comparison columns
-        """
-        comparison_cols = [col for col in compare_df.columns if col.startswith('Normalized') and col.endswith('_comparison')]
-        inconsistent = ~compare_df[comparison_cols].all(axis=1)
-        inconsistent_df = df.loc[inconsistent].copy()
-        """
+        # Take subset of data inconsistent with reference data 
+        comparison_columns = [f"Normalized {col}_comparison" for col in self.c3_column_names]
+        inconsistent = ~compare_df[comparison_columns].all(axis=1)
+        inconsistent_df = compare_df[inconsistent].copy() 
             
         # Compute average score
         avg_score = (
@@ -280,22 +276,23 @@ class Consistency:
     """
     def _c4_metric(self, metric):
         df = utils.read_data(self.dataset_path)
-        results = pd.DataFrame()
+        results = df.copy()
         all_consistency_scores = {}
-    
+
         # Check date-time formating on the whole column
         for column in self.c4_column_names:
             # Remove NA values
             df_clean = df.dropna(subset=[column])
     
             # Calculate proportion of incorrectly formated values in each column
-            results[column] = df_clean[column].apply(lambda x: utils.incorrect_datetime(str(x), self.c4_format))
-            all_consistency_scores[column] = 1 - results[column].mean()
+            results[f"{column}_inconsistent"] = df_clean[column].apply(lambda x: utils.inconsistent_datetime(str(x), self.c4_format))
+            all_consistency_scores[column] = 1 - results[f"{column}_inconsistent"].mean()
     
         # Take subset of data with inconsistent date-time formatting
-        inconsistent = results[self.c4_column_names].any(axis=1)
-        inconsistent_df = df[inconsistent].copy()
-
+        comparison_columns = [f"{col}_inconsistent" for col in self.c4_column_names]
+        inconsistent = results[comparison_columns].any(axis=1)
+        inconsistent_df = results[inconsistent].copy() 
+        
         # Compute average score  
         overall_consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
     
@@ -317,7 +314,7 @@ class Consistency:
     """
     def _c5_metric(self, metric):
         df = utils.read_data(self.dataset_path)
-        results = pd.DataFrame()
+        results = df.copy()
         all_consistency_scores = {}
 
         # Compile regex patterns to detect latitude and longitude column names
@@ -332,16 +329,17 @@ class Consistency:
     
             # Check validity of coordinates depending on if latitude or longitude (flags those out of bounds)
             if lat_pattern.search(column):
-                results[column] = df_clean[column].apply(lambda x: False if -90 <= x <= 90 else True)
-                all_consistency_scores[column] = 1 - results[column].mean()
+                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if -90 <= x <= 90 else True)
+                all_consistency_scores[column] = 1 - results[f"{column}_invalid"].mean()
     
             elif long_pattern.search(column):
-                results[column] = df_clean[column].apply(lambda x: False if -180 <= x <= 180 else True)
-                all_consistency_scores[column] = 1 - results[column].mean()
+                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if -180 <= x <= 180 else True)
+                all_consistency_scores[column] = 1 - results[f"{column}_invalid"].mean()
 
         # Take subset of data with invalid coordinates 
-        invalid = results[self.c5_column_names].any(axis=1)
-        invalid_df = df[invalid].copy()
+        comparison_columns = [f"{col}_invalid" for col in self.c5_column_names]
+        invalid = results[comparison_columns].any(axis=1)
+        invalid_df = results[invalid].copy()
     
         # Compute average score
         overall_consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
