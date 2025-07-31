@@ -21,12 +21,13 @@ c3_threshold: threshold for simulatrity score that is acceptable for C3 metric.
 c1_stop_words: Words filtered for C1 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
 c2_stop_words: Words filtered for C2 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
 c4_format: date-time format that selected dataset columns are compared to in C4 metric.
+c5_region: restricts latitude/longitude validation to Pacific region.
 ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 metric.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c3_column_names, c4_column_names, c5_column_names, c1_threshold=0.91, c2_threshold=0.91, c3_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', ref_dataset_path=None, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c3_column_names, c4_column_names, c5_column_names, c1_threshold=0.91, c2_threshold=0.91, c3_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', c5_region=None, ref_dataset_path=None, return_type="score", logging_path=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping
@@ -39,6 +40,7 @@ class Consistency:
         self.c1_stop_words = c1_stop_words 
         self.c2_stop_words = c2_stop_words
         self.c4_format = c4_format
+        self.c5_region = c5_region
         self.ref_dataset_path = ref_dataset_path
         self.return_type = return_type 
         self.logging_path = logging_path
@@ -238,7 +240,7 @@ class Consistency:
             levenshtein_sim_matrix = utils.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)    
             column_consistency_score = utils.average_c3_consistency_score(levenshtein_sim_matrix, self.c3_threshold)
             all_consistency_scores.append(column_consistency_score)
-    
+
             # Compare to reference data and add comparison column to dataset
             compare_df = utils.compare_datasets(df, f"Normalized {column}", arr_ref_normalized)
 
@@ -311,16 +313,24 @@ class Consistency:
             return df, None  # Default return value (DataFrame) 
 
     """ Consistency Type 5 (C5): Checks whether the dataset follows Decimal Degrees (DD) formatting and has valid latitude & longitude coordinates.
+    Users can optionally check whether coordinates fall within DFO's administrative Pacific Region, otherwise defaults to global bounds.
     """
     def _c5_metric(self, metric):
         df = utils.read_data(self.dataset_path)
         results = df.copy()
         all_consistency_scores = {}
+        lat_min, lat_max = -90, 90
+        long_min, long_max = -180, 180
 
         # Compile regex patterns to detect latitude and longitude column names
         lat_pattern = re.compile(r'(lat|latitude)', flags=re.IGNORECASE)
         long_pattern = re.compile(r'(long|longitude)', flags=re.IGNORECASE)
-    
+
+        # Define coordinate bounds based on region
+        if self.c5_region == 'Pacific':
+            lat_min, lat_max = 48.309405570541784, 68.70812368168862
+            long_min, long_max = -141.01414329229658, -114.05462020890663
+        
         for column in self.c5_column_names:
             # Remove NA values
             df_clean = df.dropna(subset=[column])
@@ -329,11 +339,11 @@ class Consistency:
     
             # Check validity of coordinates depending on if latitude or longitude (flags those out of bounds)
             if lat_pattern.search(column):
-                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if -90 <= x <= 90 else True)
+                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if lat_min <= x <= lat_max else True)
                 all_consistency_scores[column] = 1 - results[f"{column}_invalid"].mean()
     
             elif long_pattern.search(column):
-                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if -180 <= x <= 180 else True)
+                results[f"{column}_invalid"] = df_clean[column].apply(lambda x: False if long_min <= x <= long_max else True)
                 all_consistency_scores[column] = 1 - results[f"{column}_invalid"].mean()
 
         # Take subset of data with invalid coordinates 
