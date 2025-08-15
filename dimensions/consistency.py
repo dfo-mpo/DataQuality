@@ -10,7 +10,7 @@ ALL_METRICS = ['C1', 'C2']
 
 dataset_path: path of the csv/xlsx to evaluate.
 c1_column_names: columns used from the dataset for the C1 metric.
-c2_column_mapping: columns used from the dataset for the C2 metric.
+c2_column_mapping: mapping of columns to evaluate and reference columns for each one in the C2 metric. The pattern for comparison is 'dataset column' : 'reference column'.
 c1_threshold: threshold for simulatrity score that is acceptable for C1 metric.
 c2_threshold: threshold for consistency score that is acceptable for C2 metric.
 c1_stop_words: Words filtered for C1 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
@@ -18,9 +18,10 @@ c2_stop_words: Words filtered for C2 metric simularity calculations, purpose is 
 ref_dataset_path: Reference dataset that selected dataset columns are compared too in C2 metric.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], ref_dataset_path=None, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c1_threshold=0.91, c2_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], ref_dataset_path=None, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping 
@@ -31,6 +32,7 @@ class Consistency:
         self.ref_dataset_path = ref_dataset_path
         self.return_type = return_type 
         self.logging_path = logging_path
+        self.uploaded_file_name = uploaded_file_name
 
     """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
@@ -258,7 +260,7 @@ class Consistency:
                 # output report of results
                 utils.output_log_score(
                     test_name = metric, 
-                    dataset_name = utils.get_dataset_name(self.dataset_path), 
+                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path), 
                     score = overall_consistency_score, 
                     selected_columns = columns[metric],
                     excluded_columns=[''], 

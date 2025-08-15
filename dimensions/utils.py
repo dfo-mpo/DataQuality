@@ -8,6 +8,7 @@ from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
 from difflib import SequenceMatcher  
+from ast import literal_eval
 import io
 
 # ----------------------- Consistency Dimension Utils -------------------------------
@@ -249,10 +250,18 @@ RED = "\033[31m"
 RESET = "\033[0m" 
 
 """ Reading the dataset file 
-- Function to read either csv or xlsx data
+- Function to read either csv or xlsx data. If input is already a data frame, it will return the input.
 """
-def read_data(dataset_path):
-    _, file_extension = os.path.splitext(dataset_path)
+def read_data(dataset_path, dataset_name=None):
+    # Case where input is already a dataframe
+    if isinstance(dataset_path, pd.DataFrame):
+        return dataset_path
+
+    # Case name if provided as a separate input, required when handeling streamlit input
+    if dataset_name:
+        _, file_extension = os.path.splitext(dataset_name)
+    else:
+        _, file_extension = os.path.splitext(dataset_path)
     if file_extension == ".csv":
         try:  
             df = pd.read_csv(dataset_path, encoding="utf-8-sig")  
@@ -421,19 +430,35 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
         print(f"When trying to create one line summary for {metric}, the following error occurred: {e}")
         return None
     
-""" Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
-    dimension_type: the name of the dimension being evaluated.
-    scores: a list of dictionaries containing each metric and the score from it.
-    weights: a multiply
-    Return: Dictionary with dimension (the dimension's name) and score (the overall score for the dimension)
 """
-def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: dict) -> dict:
-    # Custom weights are provided ensure it is correctly entered
-    if (weights != {}):
+- Determines if the given set of weights meet the follwing criteria
+    - The number of weights match the number of metrics/dimensions
+    - The weights add up to 1
+    weights: the weights to evaluate.
+    scores: a list of dictionaries containing each metric and the score from it.
+    type: if set to 'metric' will using metrics in error message, otherwise uses dimensions.
+    Return: Tuple of weights and boolean indicating if the weights needed to be set to default.
+"""
+def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple:
+    weight_type = 'metrics' if type == 'metric' else 'dimensions'
+
+    # Handle string inputes
+    if weights == '' or weights == '{}':
+        return {}, True
+    if isinstance(weights, str):
+        try:
+            weights = literal_eval(weights) if weights.strip() else {}
+            if not isinstance(weights, dict):
+                return {}, False
+        except:
+            return {}, False
+
+    try:
         # Ensure number of weights is the name as the number of metric run (else use default weights)
         if len(weights) != len(scores):
             weights = {}
-            print(f'{RED}Number of weights does not match number of metrics run, using default weights instead!{RESET}')
+            print(f'{RED}Number of weights does not match number of {weight_type} run, using default weights instead!{RESET}')
+            return weights, False
         
         # Ensure weights add to 1
         else:
@@ -443,6 +468,23 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
             if total_weight < 1.0:
                 weights = {}
                 print(f'{RED}Weights do not add up to 1.0, using default weights instead!{RESET}')
+                return weights, False
+    except:
+        print(f'{RED}Provided weights are not structured properly, ensure correct names and format is used. Using default weights instead!{RESET}')
+        return {}, False
+    
+    return weights, True
+
+""" Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
+    dimension_type: the name of the dimension being evaluated.
+    scores: a list of dictionaries containing each metric and the score from it.
+    weights: a multiply
+    Return: Dictionary with dimension (the dimension's name) and score (the overall score for the dimension)
+"""
+def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: dict) -> dict:
+    # Custom weights are provided ensure it is correctly entered
+    if (weights != {}):
+        weights, valid = are_weights_valid(weights, scores)
 
     score_value = 0
     for score in scores:
@@ -454,20 +496,24 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
 
 # Takes a list of scores (containing dimension name and total score) for each dimension.
 # Determines a grade for the DQ based on the inputted score.
-def calculate_DQ_grade(scores: list[dict]) -> str:
+def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
+    # Custom weights are provided ensure it is correctly entered
+    if (weights != {}):
+        weights, valid = are_weights_valid(weights, scores, type='dimension')
+
     total_score = 0
     for score in scores:
         # TODO: Check if Uniqueness and completeness are in score list
-        total_score += score["score"]
-    
-    average_score = total_score / len(scores)
+        numeric_score = 0 if score['score'] is None else score['score']
+        weight = weights[score['dimension']] if score['dimension'] in weights else 1 / len(scores)
+        total_score += numeric_score * weight
 
     # Based on conditions (raw score, ) return letter grade
-    if average_score > 0.9: # TODO: add limit if required dimensions are not there
+    if total_score > 0.9: # TODO: add limit if required dimensions are not there
         return "A"
-    elif average_score > 0.8:
+    elif total_score > 0.8:
         return "B"
-    elif average_score > 0.7:
+    elif total_score > 0.7:
         return "C"
     else:
         return "D"

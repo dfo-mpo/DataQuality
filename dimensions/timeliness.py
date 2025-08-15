@@ -10,12 +10,14 @@ ALL_METRICS = ['T1']
 dataset_path: path of the csv/xlsx to evaluate.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
+uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Timeliness:
-    def __init__(self, dataset_path, return_type="score", logging_path=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path
         self.return_type = return_type
         self.logging_path = logging_path
+        self.uploaded_file_name = uploaded_file_name
         # TODO: Set all the other variables
 
     """ Timeliness Type 1 (T1):
@@ -80,7 +82,7 @@ class Timeliness:
                 # output report of results
                 utils.output_log_score(
                     test_name = metric, 
-                    dataset_name = utils.get_dataset_name(self.dataset_path), 
+                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path), 
                     score = overall_timeliness_score, 
                     selected_columns = columns[metric], 
                     excluded_columns = [''],
