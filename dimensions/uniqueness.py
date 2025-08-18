@@ -55,9 +55,9 @@ class Uniqueness:
         else:
             return df, None  # Default return value (DataFrame)
         
-    """ Run metrics: Will run specified metrics or all accuracy metrics by default
+    """ Run metrics: Will run specified metrics or all accuracy metrics by default. return_logs returns the logging data so the UI can visualize test output details.
     """
-    def run_metrics(self, metrics=ALL_METRICS):
+    def run_metrics(self, metrics=ALL_METRICS, return_logs=False):
         # Verify that inputted metrics is valid
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
@@ -69,6 +69,7 @@ class Uniqueness:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
+                output_logs = []
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_uniqueness_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
@@ -90,7 +91,7 @@ class Uniqueness:
                 outputs.append(overall_uniqueness_score)
 
                 # output report of results
-                utils.output_log_score(
+                metric_output_log = utils.output_log_score(
                     test_name = metric, 
                     dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path),  
                     score = overall_uniqueness_score, 
@@ -101,7 +102,13 @@ class Uniqueness:
                     errors = errors, 
                     dimension = "Uniqueness", 
                     threshold= thresholds[metric],
-                    metric_log_csv = metric_log_csv)
+                    metric_log_csv = metric_log_csv,
+                    return_log = return_logs)
+                output_logs.append(metric_output_log)
+
+            # Only return outputs logs if output_log_score has returned logs in memory 
+            if return_logs:
+                return outputs, output_logs
             return outputs
         else:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')

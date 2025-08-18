@@ -275,7 +275,8 @@ def read_data(dataset_path, dataset_name=None):
     return df
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
-def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, metric_log_csv, threshold=None, minimum_score=None):
+def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, 
+                     errors, dimension, metric_log_csv, threshold=None, minimum_score=None, return_log=False):
     # Convert score to a percentage
     percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
     
@@ -330,6 +331,12 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
 
     # Save the updated DataFrame back to the Excel file
     df.to_excel(log_file, index=False)
+
+    # If return_log is set to true return the row, this allows the UI to visualize logs from metrics run
+    if return_log:
+        return new_row
+    else:
+        return None
 
 """
 - Function to extract dataset name from a path

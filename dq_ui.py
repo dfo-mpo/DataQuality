@@ -1,4 +1,6 @@
-import streamlit as st  
+import streamlit as st
+import pandas as pd  
+from functools import reduce
 
 # Import dimensions
 import dimensions.accessibility as accessibility
@@ -27,6 +29,8 @@ st.markdown("""
 uploaded_file = st.file_uploader("Choose your dataset file (CSV or XLSX)", type=["csv", "xlsx"])  
   
 if uploaded_file is not None:  
+    final_grade = None
+
     # Convert the uploaded file to a dataframe  
     df = read_data(uploaded_file, uploaded_file.name) 
       
@@ -200,14 +204,16 @@ if uploaded_file is not None:
                                           placeholder="e.g., {'Accessibility': 0.3, 'Consistency': 0.4, 'Uniqueness': 0.3}", 
                                           help="If left empty, weighting will be equal. Weights must add up to 1.")
     if st.button("Calculate Grade"):  
-        st.write(f"Running the following dimensions: {selected_dimensions}")
+        # st.write(f"Running the following dimensions: {selected_dimensions}")
+        output_logs = []
 
         # Run each selected dimension by creating class instance and running selected metrics to get dimension scores
         if "Accessibility" in selected_dimensions:
             accessibility_tests = accessibility.Accessibility(dataset_path=df, return_type=s_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = accessibility_tests.run_metrics() if s_metrics == [] else accessibility_tests.run_metrics(s_metrics)
+            scores, logs = accessibility_tests.run_metrics(return_logs=True) if s_metrics == [] else accessibility_tests.run_metrics(s_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(s_weights, scores)
@@ -219,11 +225,12 @@ if uploaded_file is not None:
 
         if "Accuracy" in selected_dimensions:
             accuracy_tests = accuracy.Accuracy(dataset_path=df, selected_columns=a_selected_columns, a2_threshold=a2_threshold, a2_minimum_score=a2_minimum_score,
-                return_type=a_return_type, groupby_columns=a_groupby_columns
+                return_type=a_return_type, groupby_columns=a_groupby_columns, uploaded_file_name=uploaded_file.name
             )
 
             # Run all of the metrics if not specified
-            scores = accuracy_tests.run_metrics() if a_metrics == [] else accuracy_tests.run_metrics(a_metrics)
+            scores, logs = accuracy_tests.run_metrics(return_logs=True) if a_metrics == [] else accuracy_tests.run_metrics(a_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(a_weights, scores)
@@ -234,10 +241,11 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(accuracy_score)
 
         if "Completeness" in selected_dimensions:
-            completeness_tests = completeness.Completeness(dataset_path=df, exclude_columns=p_exclude_columns, p1_threshold=p1_threshold, return_type=p_return_type)
+            completeness_tests = completeness.Completeness(dataset_path=df, exclude_columns=p_exclude_columns, p1_threshold=p1_threshold, return_type=p_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = completeness_tests.run_metrics() if p_metrics == [] else completeness_tests.run_metrics(p_metrics)
+            scores, logs = completeness_tests.run_metrics(return_logs=True) if p_metrics == [] else completeness_tests.run_metrics(p_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(p_weights, scores)
@@ -250,11 +258,12 @@ if uploaded_file is not None:
         if "Consistency" in selected_dimensions:
             consitancy_tests = consistency.Consistency(dataset_path=df, c1_column_names=c1_column_names, c2_column_mapping=c2_column_mapping, 
                 ref_dataset_path=read_data(c_ref_dataset_path, c_ref_dataset_path.name), c1_threshold=c1_threshold, 
-                c2_threshold=c2_threshold, return_type=c_return_type, c1_stop_words=c1_stop_words, c2_stop_words=c2_stop_words
+                c2_threshold=c2_threshold, return_type=c_return_type, c1_stop_words=c1_stop_words, c2_stop_words=c2_stop_words, uploaded_file_name=uploaded_file.name
             )
 
             # Run all of the metrics if not specified
-            scores = consitancy_tests.run_metrics() if c_metrics == [] else consitancy_tests.run_metrics(c_metrics)
+            scores, logs = consitancy_tests.run_metrics(return_logs=True) if c_metrics == [] else consitancy_tests.run_metrics(c_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(c_weights, scores)
@@ -265,10 +274,11 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(consistancy_score)
         
         if "Interdependency" in selected_dimensions:
-            interdependency_tests = interdependency.Interdependency(dataset_path=df, return_type=i_return_type)
+            interdependency_tests = interdependency.Interdependency(dataset_path=df, return_type=i_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = interdependency_tests.run_metrics() if i_metrics == [] else interdependency_tests.run_metrics(i_metrics)
+            scores, logs = interdependency_tests.run_metrics(return_logs=True) if i_metrics == [] else interdependency_tests.run_metrics(i_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(i_weights, scores)
@@ -279,10 +289,11 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(interdependency_score)
         
         if "Relevance" in selected_dimensions:
-            relevance_tests = relevance.Relevance(dataset_path=df, return_type=r_return_type)
+            relevance_tests = relevance.Relevance(dataset_path=df, return_type=r_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = relevance_tests.run_metrics() if r_metrics == [] else relevance_tests.run_metrics(r_metrics)
+            scores, logs = relevance_tests.run_metrics(return_logs=True) if r_metrics == [] else relevance_tests.run_metrics(r_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(r_weights, scores)
@@ -293,10 +304,11 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(relevance_score)
 
         if "Timeliness" in selected_dimensions:
-            timeliness_tests = timeliness.Timeliness(dataset_path=df, return_type=t_return_type)
+            timeliness_tests = timeliness.Timeliness(dataset_path=df, return_type=t_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = timeliness_tests.run_metrics() if t_metrics == [] else timeliness_tests.run_metrics(t_metrics)
+            scores, logs = timeliness_tests.run_metrics(return_logs=True) if t_metrics == [] else timeliness_tests.run_metrics(t_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(t_weights, scores)
@@ -307,10 +319,11 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(timeliness_score)
         
         if "Uniqueness" in selected_dimensions:
-            uniqueness_tests = uniqueness.Uniqueness(dataset_path=df, return_type=u_return_type)
+            uniqueness_tests = uniqueness.Uniqueness(dataset_path=df, return_type=u_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
-            scores = uniqueness_tests.run_metrics() if u_metrics == [] else uniqueness_tests.run_metrics(u_metrics)
+            scores, logs = uniqueness_tests.run_metrics(return_logs=True) if u_metrics == [] else uniqueness_tests.run_metrics(u_metrics, return_logs=True)
+            output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
             weights, valid = are_weights_valid(u_weights, scores)
@@ -325,7 +338,16 @@ if uploaded_file is not None:
         weights, valid = are_weights_valid(dim_weights, scores)
         if not valid:
             st.error('Dimension weights entered are not valid, using defualt weights intead.')
-        calculate_DQ_grade(DIMENSION_SCORES, weights=dim_weights)
+        final_grade = calculate_DQ_grade(DIMENSION_SCORES, weights=dim_weights)
+    
+    if final_grade != None:
+        st.markdown(f"### Calculated Data Quality Grade is: {final_grade}") 
+        st.write("See output logs below for results from each metric.")
+
+        with st.expander("Output Logs"):
+            merged_df = pd.concat(output_logs, ignore_index=True)
+            st.dataframe(merged_df)
+
 else:  
     # Disabled Run Tests button  
     st.button("Calculate Grade", disabled=True)  

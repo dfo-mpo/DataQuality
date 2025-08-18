@@ -1,7 +1,7 @@
 # Data Quality Tests  
 This repository contains scripts needed to obtain a data quality grade for a dataset used for the PSSI Data Portal. The tests are broken down into 8 dimensions, each with its own metrics. The final outputs are used to calculate a dimension score, and all dimension scores are used to calculate a final grade.  
   
-There is a notebook and UI (under development) that can be used to run all desired tests and obtain a final data quality grade for a given dataset (CSV or XLSX format).  
+There is a notebook and UI that can be used to run all desired tests and obtain a final data quality grade for a given dataset (CSV or XLSX format).  
   
 Additional metrics can also be added to the existing dimensions, with steps to do so explained in the [adding new metrics section](#adding-new-metrics).  
   
@@ -9,6 +9,9 @@ Additional metrics can also be added to the existing dimensions, with steps to d
 All tests used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness. Metrics are tests used to determine how well a given dataset satisfies the given dimension.  
   
 Each dimension has its own Python file in the dimensions folder containing all relevant metrics and documentation on what the goal of the given dimension is.  
+
+### Logging Outputs
+(add stuff about logging here)
   
 ### Code Structure  
 Each dimension file describes a Python class with the initializer containing the parameters needed for all of the dimension's metric tests. Each metric test exists in the class as numbered private methods with a public method (`run_metrics`) that can be used to run all or specific metrics.  
