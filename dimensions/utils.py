@@ -278,7 +278,10 @@ def read_data(dataset_path, dataset_name=None):
 def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, 
                      errors, dimension, metric_log_csv, threshold=None, minimum_score=None, return_log=False):
     # Convert score to a percentage
-    percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
+    try:
+        percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
+    except:
+        percentage_score = '0%'
     
     # Load the Excel file into a DataFrame
     log_file = "DQS_Output_Log_Test.xlsx"
@@ -430,7 +433,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             return "Columns that exceed the threshold of non-null values: " + columns + "."
         elif (metric == 'U1'):
 
-            return "Duplicate rows found in the dataset." if df.columns > 0 else "No duplicate rows found in the dataset."
+            return "Duplicate rows found in the dataset." if len(df.columns) > 0 else "No duplicate rows found in the dataset."
         else: 
             return None
     except Exception as e:
@@ -495,9 +498,12 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
 
     score_value = 0
     for score in scores:
-        numeric_score = 0 if score['value'] is None else score['value'] # If test failed make the score 0
-        weight = weights[score['metric']] if score['metric'] in weights else 1 / len(scores)
-        score_value += numeric_score * weight
+        try:
+            numeric_score = 0 if not score['value'] else score['value'] # If test failed make the score 0
+            weight = weights[score['metric']] if score['metric'] in weights else 1.0 / len(scores)
+            score_value += numeric_score * weight
+        except: # Case where value from metric is 'No valid XX results generated
+            score_value += 0
     
     return {"dimension": dimension_type, "score": score_value}
 
