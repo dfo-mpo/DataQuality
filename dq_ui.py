@@ -111,38 +111,32 @@ if uploaded_file is not None:
     if "Consistency" in selected_dimensions:
         with st.expander("Consistency Dimension", expanded=True):  
             # Create columns for the input fields 
-            # Rows 1 and 2                 
-            col_c1, col_c2 = st.columns(2)  
+            # Rows 1 and 2            
+            col_c1, col_c2, col_c3 = st.columns(3)  
             with col_c1:  
-                c1_column_names = st.multiselect("C1 Column Names", df.columns.tolist())
-                c_metrics = st.multiselect("Metrics", consistency.ALL_METRICS, help="Runs all metrics by default.")
-            with col_c2:  
-                c_ref_dataset_path = st.file_uploader("Reference Dataset File", type=["csv", "xlsx"])
-            
-            # Row 3 
-            c2_column_mapping = st.text_input("C2 Column Mapping", value='',
-                                              placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")             
-            
-            # Row 4
-            col_c5, col_c6, col_c7 = st.columns(3)  
-            with col_c5:  
-                c1_threshold = st.number_input("C1 Threshold", value=0.91, step=0.01)
-            with col_c6:  
-                c2_threshold = st.number_input("C2 Threshold", value=0.91, step=0.01)
-            with col_c7:  
                 c_return_type = st.selectbox("Return Type", ["score", "dataset"], key="Consistency")
-            
-            # Row 5
-            col_c8, col_c9, col_c10 = st.columns(3)
-            with col_c8:  
-                c1_stop_words = st.text_input("C1 Stop Words", value='["the", "and"]', help="Words filtered for C1 metric simularity calculations")
-            with col_c9:  
-                c2_stop_words = st.text_input("C2 Stop Words", value='["activity"]', help="Words filtered for C2 metric simularity calculations")
-            with col_c10:
+                c1_column_names = st.multiselect("C1 Column Names", df.columns.tolist())
+            with col_c2:  
+                c_metrics = st.multiselect("Metrics", consistency.ALL_METRICS, help="Runs all metrics by default.")
+                c1_threshold = st.number_input("C1 Threshold", value=0.91, step=0.01)
+            with col_c3:
                 c_weights = st.text_input("Weights", value="", 
                                           placeholder="e.g., {'C1': 0.3, 'C2': 0.7}", 
                                           help="If left empty, weighting will be equal. Weights must add up to 1.")
+                c1_stop_words = st.text_input("C1 Stop Words", value='["the", "and"]', help="Words filtered for C1 metric simularity calculations")
             
+            # Row 3 and 4
+            col_c4, col_c5 = st.columns(2)  
+            with col_c4: 
+                c2_threshold = st.number_input("C2 Threshold", value=0.91, step=0.01)
+                c2_stop_words = st.text_input("C2 Stop Words", value='["activity"]', help="Words filtered for C2 metric simularity calculations")
+            with col_c5: 
+                c_ref_dataset_path = st.file_uploader("Reference Dataset File", type=["csv", "xlsx"])
+
+            # Row 5
+            c2_column_mapping = st.text_input("C2 Column Mapping", value='',
+                                              placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")             
+                
     # Interdependency configuration block
     if "Interdependency" in selected_dimensions:
         with st.expander("Interdependency Dimension", expanded=True):  
@@ -219,13 +213,12 @@ if uploaded_file is not None:
             weights, valid = are_weights_valid(s_weights, scores)
             if not valid:
                 st.error('Weights entered for Accessibility are not valid, using defualt weights intead.')
-
             accessibility_score = calculate_dimension_score("Accessibility", scores=scores, weights=weights)
             DIMENSION_SCORES.append(accessibility_score)
 
         if "Accuracy" in selected_dimensions:
             accuracy_tests = accuracy.Accuracy(dataset_path=df, selected_columns=a_selected_columns, a2_threshold=a2_threshold, a2_minimum_score=a2_minimum_score,
-                return_type=a_return_type, groupby_columns=a_groupby_columns, uploaded_file_name=uploaded_file.name
+                return_type=a_return_type, groupby_column=a_groupby_columns, uploaded_file_name=uploaded_file.name
             )
 
             # Run all of the metrics if not specified
