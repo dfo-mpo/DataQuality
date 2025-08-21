@@ -330,7 +330,7 @@ if uploaded_file is not None:
         # First check if weights are valid, if not use default weights
         weights, valid = are_weights_valid(dim_weights, scores)
         if not valid:
-            st.error('Dimension weights entered are not valid, using defualt weights intead.')
+            st.error('Dimension weights entered are not valid, using default weights instead.')
         final_grade = calculate_DQ_grade(DIMENSION_SCORES, weights=dim_weights)
     
     if final_grade != None:
