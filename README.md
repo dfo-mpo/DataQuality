@@ -11,7 +11,7 @@ All tests used to calculate a data quality score are divided into 8 dimensions: 
 Each dimension has its own Python file in the dimensions folder containing all relevant metrics and documentation on what the goal of the given dimension is.  
 
 ### Logging Outputs
-(add stuff about logging here)
+Results from each individual metric run is outputed into the file 'DQS_Output_Log_Test.xlsx'. It contains the score with details to provide insight on why the metric gave the score it did. The information that is logged for each metric run are: "Dataset", "Dimension", "Test", "Selected_Columns", "Threshold", "Score", "Run_Time_and_Date", "New_or_Existing_Test", "One_Line_Summary", "Errors", "Why_Did_the_Test_Fail". To generate the "One_Line_Summary" for the metric result, the return type for the dimension must be set to 'Dataset' rather than 'Score'.
   
 ### Code Structure  
 Each dimension file describes a Python class with the initializer containing the parameters needed for all of the dimension's metric tests. Each metric test exists in the class as numbered private methods with a public method (`run_metrics`) that can be used to run all or specific metrics.  
@@ -146,4 +146,4 @@ Before re-running the notebook, you may need to apply the following changes to t
 - In the function call `calculate_dimension_score()`, update the weights if you have specified what weights to use.  
   
 ### Changes in UI File for New Metric  
-To be added soon, the tool is still under development.  
+To be added soon, the tool is still under development. Code standards need to be set first.
