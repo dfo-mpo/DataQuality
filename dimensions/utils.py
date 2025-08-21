@@ -7,6 +7,7 @@ from functools import partial
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
+from Levenshtein import ratio
 from difflib import SequenceMatcher  
 from ast import literal_eval
 import io
@@ -83,6 +84,17 @@ def calculate_cosine_similarity(text_list, ref_list, stop_words):
     ref_vec = vectorizer.fit_transform(ref_list)  
     text_vec = vectorizer.transform(text_list)  
     return cosine_similarity(text_vec, ref_vec)  
+
+"""
+Calculate the levenshtein similarity ratio between lists of texts.
+"""
+def calculate_levenshtein_similarity(text_list, ref_list):
+    sim_matrix = np.zeros((len(text_list), len(ref_list)))
+
+    for i, text in enumerate(text_list):
+        for j, ref in enumerate(ref_list):
+            sim_matrix[i, j] = ratio(text, ref)
+    return sim_matrix
 
 """
 Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
@@ -201,6 +213,31 @@ def average_c2_consistency_score(cosine_sim_df, threshold=0.91):
     average_consistency_score = total_count / total_observations
     return average_consistency_score
 
+"""
+Calculate the average consistency score based on the levenshtein similarity ratio matrix and a given threshold.
+"""
+def average_c3_consistency_score(leven_dist_df, threshold=0.91):
+    num_rows, num_columns = leven_dist_df.shape
+    total_count = 0  # This will count all values above or equal to the threshold
+
+    for i in range(num_rows):
+        if np.max(leven_dist_df[i]) >= threshold:  # Include all comparisons
+            total_count += 1
+    total_observations = num_rows  # Total number of observations 
+    average_consistency_score = total_count / total_observations
+    return average_consistency_score
+    
+"""
+Check whether given string date-time entry matches a given format.
+"""
+def inconsistent_datetime(date_str, fmt):
+    # Catches inconsistent format and return true 
+    try:
+        datetime.strptime(date_str, fmt)
+        return False 
+    except ValueError:
+        return True 
+        
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
 For Accuracy A1 
@@ -244,6 +281,31 @@ def add_only_numbers_columns(df, selected_columns, original_df):
 
     return original_df
 
+# ----------------------- Completeness and Interdependency Dimension Utils -------------------------------
+"""
+Filter for column pairs that meet the threshold, with same column pairings and duplicates removed.
+"""
+def filter_corrs(corrs, threshold, subset=None):
+    
+    corrs = corrs.copy()
+    # Remove same column pairings and subset sensitive features
+    np.fill_diagonal(corrs.values, np.nan)
+    corrs = corrs[subset].drop(subset) if subset is not None else corrs
+
+    # Keep columns pairings with absolute correlation above the threshold
+    corrs_thr = corrs[(abs(corrs) > threshold)].melt(ignore_index=False).reset_index().dropna()
+
+    # Rename columns
+    # used / because some features use _ in column name already so may confuse user reading output table
+    corrs_thr.columns = ['var1', 'var2', 'corr_coeff']
+    corrs_thr['features'] = ['/'.join(sorted((i.var1, i.var2))) for i in corrs_thr.itertuples()]
+    
+    # Remove duplicate column pairings and sort by descending correlation coefficients
+    corrs_thr.drop_duplicates('features', inplace=True)
+    corrs_thr.sort_values(by='corr_coeff', ascending=False, inplace=True)
+
+    return corrs_thr
+    
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text for console output 
 RED = "\033[31m"  
@@ -397,6 +459,39 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             simular_columns_str = ', '.join(simular_columns)
 
             return "The following columns may have names that do not resemble a reference data column: " + simular_columns_str + "."
+        elif (metric == "C3"):
+            inconsistent_columns = []
+
+            # Find columns with Normalized {column}_comparison and 'False' entries
+            comparison_columns = [col for col in df.columns if col.startswith('Normalized ') and col.endswith('_comparison')]
+            for column in comparison_columns:
+                if (df[column] == False).sum() > 0:
+                    # Add original test column name
+                    inconsistent_columns.append(column[len("Normalized "):-len("_comparison")])         
+            
+            return "The following columns may have names that do not resemble a province/territory: " + ', '.join(inconsistent_columns) + "."
+        elif (metric == "C4"):
+            inconsistent_columns = []
+
+            # Find columns with _inconsistent and 'True' entries
+            comparison_columns = [col for col in df.columns if col.endswith('_inconsistent')]
+            for column in comparison_columns:
+                if (df[column] == True).sum() > 0:
+                    # Add original test column name
+                    inconsistent_columns.append(column[:-len("_inconsistent")])   
+            
+            return "The following columns may have dates inconsistent with a date-time formatting: " + ', '.join(inconsistent_columns) + "."
+        elif (metric == "C5"):
+            invalid_columns = []
+
+            # Find columns with _invalid and 'True' entries
+            comparison_columns = [col for col in df.columns if col.endswith('_invalid')]
+            for column in comparison_columns:
+                if (df[column] == True).sum() > 0:
+                    # Add original test column name
+                    invalid_columns.append(column[:-len("_invalid")])   
+            
+            return "The following columns may have invalid latitude/longitude coordinates: " + ', '.join(invalid_columns) + "."
         elif (metric == 'A1'):
             columns = df.columns
 
@@ -427,10 +522,45 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             
             # Output the results  
             return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold_str + "."
+        elif (metric == "A3"):
+            component_columns = ', '.join(selected_columns[:-1])
+            agg_column = selected_columns[-1]
+            
+            return "The aggregated column " + agg_column + " may contain values not equal to the sums of its component columns: " + component_columns + "." if len(df) > 2 else "The aggregated column " + agg_column + " equals the sum of its component columns: " + component_columns + "."
+        elif (metric == "A4"):
+            invalid_pairs = []
+
+            # Find column pairs not in chronological order
+            n_pairs = int(len(selected_columns) / 2)
+            column_pairs_check = df.iloc[:,-n_pairs:].columns
+            for column_pair in column_pairs_check:
+                if (df[column_pair] == True).sum() > 0:
+                    invalid_pairs.append(column_pair)    
+            # Add original test column pair names
+            invalid_pairs_list = [tuple(s.split("_after_")) for s in invalid_pairs] 
+
+            return "Column pairs that may contain dates not in chronological order: " + ", ".join(f"({a}, {b})" for a, b in invalid_pairs_list) + "."
         elif (metric == 'P1'):
             columns = ', '.join(df.columns)
 
             return "Columns that exceed the threshold of non-null values: " + columns + "."
+        elif (metric == 'P2'):
+            strength = ""
+            
+            if threshold < 0.5:
+                strength = "little to no"
+            elif threshold == 0.5:
+                strength = "a possible"
+            elif threshold > 0.5 and threshold < 0.75:
+                strength = "a possibly moderate"
+            elif threshold >= 0.75:
+                strength = "a possibly strong"
+                
+            return f"There are {len(df['features'])} feature pair(s) with " + strength + f" association in missingness, given a correlation threshold of {threshold}."
+        elif (metric == 'I1'):
+            columns_above_threshold = ", ".join(df['var1'].unique())
+        
+            return f"Proxy variables whose correlation with sensitive features is higher than {threshold}: " + columns_above_threshold + "."
         elif (metric == 'U1'):
 
             return "Duplicate rows found in the dataset." if len(df.columns) > 0 else "No duplicate rows found in the dataset."
