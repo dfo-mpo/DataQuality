@@ -11,7 +11,7 @@ ALL_METRICS = ['A1', 'A2', 'A3', 'A4']
 dataset_path: path of the csv/xlsx to evaluate.
 selected_columns: columns from the provided dataset to evaluate, used for metics A1 and A2, should be all numeric columns.
 a3_column_names: columns used from the dataset for the A3 metric.
-a3_agg_column: TODO: for A3 metric.
+a3_agg_column: aggregate column used to evaluate a3_column_names for A3 metric.
 a4_column_pairs: related timestamp columns used from the dataset for the A4 metric.
 groupby_column: used by metric A2, __to do
 a2_threshold: threshold used in A2 interquartile range calculations to determine outliers.
@@ -234,7 +234,7 @@ class Accuracy:
             # Run each metric and send outputs in combined list
             outputs = []
             thresholds = {"A1": None, "A2": self.a2_threshold, "A3": None, "A4": None}
-            columns = {"A1": self.selected_columns, "A2": self.selected_columns, "A3": self.a3_column_names + self.a3_agg_column, "A4": [col for pair in self.a4_column_pairs for col in pair]}
+            columns = {"A1": self.selected_columns, "A2": self.selected_columns, "A3": self.a3_column_names + self.a3_agg_column, "A4": [col for pair in self.a4_column_pairs for col in pair] if self.a4_column_pairs else None}
 
             for metric in metrics:
                 # Variables that prepare for output reports

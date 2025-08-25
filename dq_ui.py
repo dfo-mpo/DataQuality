@@ -79,10 +79,19 @@ if uploaded_file is not None:
                 a2_minimum_score = st.number_input("A2 Minimum Score", value=0.85, step=0.05)
 
             # Row 3
-            col_a6, col_a7 = st.columns(2)    
+            col_a6, col_a7, col_a8 = st.columns(3)    
             with col_a6:  
-                a_metrics = st.multiselect("Metrics", accuracy.ALL_METRICS, help="Runs all metrics by default.")
+                a3_column_names = st.multiselect("A3 Column Names", df.columns.tolist())
             with col_a7:  
+                a3_agg_column = st.selectbox("A3 Aggregate Column", df.columns.tolist())
+            with col_a8:  
+                a4_column_pairs = st.text_input("A4 Column Pairs", value="", placeholder="e.g., [('col1', 'col2'), ('col3', 'col4')]",)
+
+            # Row 4
+            col_a9, col_a10 = st.columns(2)    
+            with col_a9:  
+                a_metrics = st.multiselect("Metrics", accuracy.ALL_METRICS, help="Runs all metrics by default.")
+            with col_a10:  
                 a_weights = st.text_input("Weights", value="", 
                                           placeholder="e.g., {'A1': 0.3, 'A2': 0.7}", 
                                           help="If left empty, weighting will be equal. Weights must add up to 1.")
@@ -91,18 +100,21 @@ if uploaded_file is not None:
     if "Completeness" in selected_dimensions:
         with st.expander("Completeness Dimension", expanded=True):  
             # Create columns for the input fields                  
-            col_p1, col_p2 = st.columns(2)  
+            col_p1, col_p2, col_p3 = st.columns(3)  
             with col_p1: 
                 p_exclude_columns = st.multiselect("Exclude Columns", df.columns.tolist(), default=[])
             with col_p2:  
                 p1_threshold = st.number_input("P1 Threshold", value=0.75, step=0.05) 
+            with col_p3:
+                p2_threshold = st.number_input("P2 Threshold", value=0.5, step=0.05) 
+
             # Row 2
-            col_p3, col_p4, col_p5 = st.columns(3)  
-            with col_p3:  
-                p_return_type = st.selectbox("Return Type", ["score", "dataset"],  key="Completeness")
+            col_p4, col_p5, col_p6 = st.columns(3)  
             with col_p4:  
-                p_metrics = st.multiselect("Metrics", completeness.ALL_METRICS, help="Runs all metrics by default.")
+                p_return_type = st.selectbox("Return Type", ["score", "dataset"],  key="Completeness")
             with col_p5:  
+                p_metrics = st.multiselect("Metrics", completeness.ALL_METRICS, help="Runs all metrics by default.")
+            with col_p6:  
                 p_weights = st.text_input("Weights", value="", 
                                           placeholder="e.g., {'P1': 0.3, 'P2': 0.7}", 
                                           help="If left empty, weighting will be equal. Weights must add up to 1.")
@@ -135,7 +147,19 @@ if uploaded_file is not None:
 
             # Row 5
             c2_column_mapping = st.text_input("C2 Column Mapping", value='',
-                                              placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")             
+                                              placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")   
+ 
+            # Row 6, 7, 8
+            col_c6, col_c7 = st.columns(2)
+            with col_c6:
+                c3_column_names = st.multiselect("C3 Column Names", df.columns.tolist())
+                c4_column_names = st.multiselect("C4 Column Names", df.columns.tolist())
+                c5_column_names = st.multiselect("C5 Column Names", df.columns.tolist())
+            with col_c7:
+                c3_threshold = st.number_input("C3 Threshold", value=0.91, step=0.01)
+                c4_format = st.text_input("C4 Format", value='%Y-%m-%d %H:%M:%S')
+                c5_region = st.text_input("C5 Region", value='')
+                   
                 
     # Interdependency configuration block
     if "Interdependency" in selected_dimensions:
@@ -150,7 +174,13 @@ if uploaded_file is not None:
                 i_weights = st.text_input("Weights", value="", 
                                           placeholder="e.g., {'I1': 0.3, 'I2': 0.7}", 
                                           help="If left empty, weighting will be equal. Weights must add up to 1.")
-    
+            # Row 2
+            col_i4, col_i5 = st.columns(2)
+            with col_i4:  
+                i1_sensitive_columns = st.multiselect("I1 Sensitive Columns", df.columns.tolist())
+            with col_i5:  
+                i1_threshold = st.number_input("I1 Threshold", value=0.75, step=0.05) 
+
     # Relevance configuration block
     if "Relevance" in selected_dimensions:
         with st.expander("Relevance Dimension", expanded=True):  
@@ -217,8 +247,15 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(accessibility_score)
 
         if "Accuracy" in selected_dimensions:
+            try: # Since A4 Column Pairs is a string input, varify that it is formatted correctly
+                a4_column_pairs = a4_column_pairs(a4_column_pairs)
+            except:
+                st.error("Invalid A4 Column Pairs provided")
+                a4_column_pairs = None
+
             accuracy_tests = accuracy.Accuracy(dataset_path=df, selected_columns=a_selected_columns, a2_threshold=a2_threshold, a2_minimum_score=a2_minimum_score,
-                return_type=a_return_type, groupby_column=a_groupby_columns, uploaded_file_name=uploaded_file.name
+                a3_column_names=a3_column_names, a3_agg_column=[a3_agg_column], a4_column_pairs=a4_column_pairs, return_type=a_return_type, 
+                groupby_column=a_groupby_columns, uploaded_file_name=uploaded_file.name
             )
 
             # Run all of the metrics if not specified
@@ -234,7 +271,8 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(accuracy_score)
 
         if "Completeness" in selected_dimensions:
-            completeness_tests = completeness.Completeness(dataset_path=df, exclude_columns=p_exclude_columns, p1_threshold=p1_threshold, return_type=p_return_type, uploaded_file_name=uploaded_file.name)
+            completeness_tests = completeness.Completeness(dataset_path=df, exclude_columns=p_exclude_columns, p1_threshold=p1_threshold, p2_threshold=p2_threshold,
+                return_type=p_return_type, uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
             scores, logs = completeness_tests.run_metrics(return_logs=True) if p_metrics == [] else completeness_tests.run_metrics(p_metrics, return_logs=True)
@@ -249,9 +287,12 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(completeness_score)
         
         if "Consistency" in selected_dimensions:
+            if c5_region.strip() == '':
+                c5_region = None
             consitancy_tests = consistency.Consistency(dataset_path=df, c1_column_names=c1_column_names, c2_column_mapping=c2_column_mapping, 
-                ref_dataset_path=read_data(c_ref_dataset_path, c_ref_dataset_path.name), c1_threshold=c1_threshold, 
-                c2_threshold=c2_threshold, return_type=c_return_type, c1_stop_words=c1_stop_words, c2_stop_words=c2_stop_words, uploaded_file_name=uploaded_file.name
+                ref_dataset_path=read_data(c_ref_dataset_path, c_ref_dataset_path.name), c1_threshold=c1_threshold, c2_threshold=c2_threshold, 
+                c3_column_names=c3_column_names, c4_column_names=c4_column_names, c5_column_names=c5_column_names, return_type=c_return_type, 
+                c1_stop_words=c1_stop_words, c2_stop_words=c2_stop_words, c4_format=c4_format, c5_region=c5_region, uploaded_file_name=uploaded_file.name
             )
 
             # Run all of the metrics if not specified
@@ -267,7 +308,8 @@ if uploaded_file is not None:
             DIMENSION_SCORES.append(consistancy_score)
         
         if "Interdependency" in selected_dimensions:
-            interdependency_tests = interdependency.Interdependency(dataset_path=df, return_type=i_return_type, uploaded_file_name=uploaded_file.name)
+            interdependency_tests = interdependency.Interdependency(dataset_path=df, return_type=i_return_type, i1_sensitive_columns=i1_sensitive_columns, i1_threshold=i1_threshold,
+                uploaded_file_name=uploaded_file.name)
 
             # Run all of the metrics if not specified
             scores, logs = interdependency_tests.run_metrics(return_logs=True) if i_metrics == [] else interdependency_tests.run_metrics(i_metrics, return_logs=True)
