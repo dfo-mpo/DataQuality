@@ -33,11 +33,20 @@ Determines whether there are symbols in numerics. Make the column a string, find
 #### Accuracy Type 2 (A2): 
 Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range. The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
 
+#### Accuracy Type 3 (A3): 
+Checks whether aggregated column (eg. Total) values are equal to the expected sum of their component columns.
+
+#### Accuracy Type 4 (A4): 
+Checks whether related timestamp columns are in chronological order. Test will consider missing start and end dates as valid.
+
 ### Completeness
 Goal: Ensure that all required data is available and that there are no missing values. Complete data includes all necessary records and fields needed for the intended use.
 
 #### Completeness Type 1 (P1): 
 Checks for whether there are blanks in the entire dataset.
+
+#### Completeness Type 2 (P2): 
+Finds column pairs with missing values whose correlation coefficient is higher than 0.5 (or any threshold). Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.5 will be used as a midpoint threshold to investigate whether an association exists. 
 
 ### Consistancy
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
@@ -45,16 +54,22 @@ Goal: Ensure that data is consistent across different datasets and systems. Cons
 #### Consistency Type 1 (C1): 
 Determines the similarity between string values in specified columns. Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
 
-Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated)
+Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated).
 
 #### Consistency Type 2 (C2): 
 Compares reference data and string values in specified columns. The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.
 
+#### Consistency Type 3 (C3): 
+Compares province/territory names (reference data) and string values in specified columns using Levenshtein Similarity Ratio. Levenshtein Similarity Ratio = 1 - (normalized Levenshtein Distance), where a score of 1 means the strings are identical.
+
+#### Consistency Type 4 (C4): 
+Checks whether the dataset follows standard date-time ISO 8601 formatting (or any format defined by the user).
+
 ### Interdependency
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
 
-#### Interdependency Type 1 (I1):
-Currently an empty template test.
+#### Interdependency Type 1 (I1): 
+Identifies proxy variables whose correlation with sensitive features is higher than 0.75 (or any threshold). Proxy variables indirectly capture information about sensitive features, often used as substitutes for other variables. Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
 
 ### Relevance
 Goal: Ensure that the data is relevant and useful for the intended purposes. Relevant data meets the needs of the users and supports the business processes.
@@ -77,9 +92,9 @@ Find duplicated rows.
 ## Running Tests with the Notebook  
 You can run all of the tests using the notebook [Data Quality Complete](/Data%20Quality%20Complete.ipynb).  
   
-1. Install the following libraries using the following command in a terminal:  
+1. Install all required libraries using the following command in a terminal:  
     ```sh  
-    pip install numpy pandas scikit-learn nbformat openpyxl
+    pip install -r requirements.txt
     ```  
   
 2. Connect your dataset (CSV or XLSX file):  
@@ -107,7 +122,8 @@ The UI tool allows users to calculate Data Quality scores by entering the given 
 ```
 py -m venv streamlit-env
 streamlit-env\Scripts\activate
-pip install streamlit numpy pandas scikit-learn nbformat openpyxl
+pip install -r requirements.txt
+pip install streamlit
 ```
 2. Then to run the UI, run the following command
 ```
@@ -120,7 +136,8 @@ streamlit run dq_ui.py
   
 ## Adding New Metrics  
 You may want to run your own test or implementation of an existing test. In this case, you can add a metric to the code. This will involve adding the new test code and updating global parts of a dimension Python file, then making possible updates to the Notebook and UI to run the new metric properly.  
-  
+TODO: add info incase new metric introduces new libraries, may want to tell people to run requirements txt instead of a static install command.
+
 ### Adding Test to Dimension File  
 Once you have determined which dimension the metric fits under, open its Python file under the dimensions folder and follow the steps below:  
   
@@ -147,3 +164,6 @@ Before re-running the notebook, you may need to apply the following changes to t
   
 ### Changes in UI File for New Metric  
 To be added soon, the tool is still under development. Code standards need to be set first.
+
+## Code Standards
+TODO: describe coding standards that should be followed for those contributing their ownd data quality tests (eg. metric names, updating global variables, updating functions, standards for comments)
