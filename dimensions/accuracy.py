@@ -13,7 +13,7 @@ selected_columns: columns from the provided dataset to evaluate, used for metics
 a3_column_names: columns used from the dataset for the A3 metric.
 a3_agg_column: aggregate column used to evaluate a3_column_names for A3 metric.
 a4_column_pairs: related timestamp columns used from the dataset for the A4 metric.
-groupby_column: used by metric A2, __to do
+groupby_column: used by metric A2, groupby data from selected_columns by each unique groupby_column entry. Score is calculated for each groupby then averaged for groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.
 a2_threshold: threshold used in A2 interquartile range calculations to determine outliers.
 a2_minimum_score: minimum acceptable score from interquartile range calculations.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).

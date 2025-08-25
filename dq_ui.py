@@ -67,7 +67,7 @@ if uploaded_file is not None:
             with col_a1:  
                 a_selected_columns = st.multiselect("Selected Columns", df.columns.tolist())
             with col_a2: 
-                a_groupby_columns = st.multiselect("Groupby Column(s)", df.columns.tolist(), help="TODO: Add comment on purpose. Used in A2 metric.") 
+                a_groupby_columns = st.multiselect("Groupby Column(s)", df.columns.tolist(), help="Used by metric A2, groupby data from selected_columns by each unique groupby_column entry. Score is calculated for each groupby then averaged for groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.") 
             
             # Row 2
             col_a3, col_a4, col_a5 = st.columns(3)
@@ -159,8 +159,7 @@ if uploaded_file is not None:
                 c3_threshold = st.number_input("C3 Threshold", value=0.91, step=0.01)
                 c4_format = st.text_input("C4 Format", value='%Y-%m-%d %H:%M:%S')
                 c5_region = st.text_input("C5 Region", value='')
-                   
-                
+                        
     # Interdependency configuration block
     if "Interdependency" in selected_dimensions:
         with st.expander("Interdependency Dimension", expanded=True):  

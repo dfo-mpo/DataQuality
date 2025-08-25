@@ -54,7 +54,7 @@ Goal: Ensure that data is consistent across different datasets and systems. Cons
 #### Consistency Type 1 (C1): 
 Determines the similarity between string values in specified columns. Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
 
-Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated)
+Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated).
 
 #### Consistency Type 2 (C2): 
 Compares reference data and string values in specified columns. The compared columns in question must be identical to the ref list, otherwise they will be penalized more harshly.

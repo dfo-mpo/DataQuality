@@ -49,6 +49,7 @@ class Consistency:
 
     """ Consistency Type 1 (C1): Determines the similarity between string values in specified columns.
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
+    Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated).
     """    
     consistency_score_list=[]
     
