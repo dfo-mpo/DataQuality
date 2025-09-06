@@ -7,7 +7,9 @@ from functools import partial
 from datetime import datetime
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 from sklearn.metrics.pairwise import cosine_similarity  
+from Levenshtein import ratio
 from difflib import SequenceMatcher  
+from ast import literal_eval
 import io
 
 # ----------------------- Consistency Dimension Utils -------------------------------
@@ -82,6 +84,17 @@ def calculate_cosine_similarity(text_list, ref_list, stop_words):
     ref_vec = vectorizer.fit_transform(ref_list)  
     text_vec = vectorizer.transform(text_list)  
     return cosine_similarity(text_vec, ref_vec)  
+
+"""
+Calculate the levenshtein similarity ratio between lists of texts.
+"""
+def calculate_levenshtein_similarity(text_list, ref_list):
+    sim_matrix = np.zeros((len(text_list), len(ref_list)))
+
+    for i, text in enumerate(text_list):
+        for j, ref in enumerate(ref_list):
+            sim_matrix[i, j] = ratio(text, ref)
+    return sim_matrix
 
 """
 Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
@@ -200,6 +213,31 @@ def average_c2_consistency_score(cosine_sim_df, threshold=0.91):
     average_consistency_score = total_count / total_observations
     return average_consistency_score
 
+"""
+Calculate the average consistency score based on the levenshtein similarity ratio matrix and a given threshold.
+"""
+def average_c3_consistency_score(leven_dist_df, threshold=0.91):
+    num_rows, num_columns = leven_dist_df.shape
+    total_count = 0  # This will count all values above or equal to the threshold
+
+    for i in range(num_rows):
+        if np.max(leven_dist_df[i]) >= threshold:  # Include all comparisons
+            total_count += 1
+    total_observations = num_rows  # Total number of observations 
+    average_consistency_score = total_count / total_observations
+    return average_consistency_score
+    
+"""
+Check whether given string date-time entry matches a given format.
+"""
+def inconsistent_datetime(date_str, fmt):
+    # Catches inconsistent format and return true 
+    try:
+        datetime.strptime(date_str, fmt)
+        return False 
+    except ValueError:
+        return True 
+        
 # ----------------------- Accuracy Dimension Utils -------------------------------
 """
 For Accuracy A1 
@@ -243,16 +281,49 @@ def add_only_numbers_columns(df, selected_columns, original_df):
 
     return original_df
 
+# ----------------------- Completeness and Interdependency Dimension Utils -------------------------------
+"""
+Filter for column pairs that meet the threshold, with same column pairings and duplicates removed.
+"""
+def filter_corrs(corrs, threshold, subset=None):
+    
+    corrs = corrs.copy()
+    # Remove same column pairings and subset sensitive features
+    np.fill_diagonal(corrs.values, np.nan)
+    corrs = corrs[subset].drop(subset) if subset is not None else corrs
+
+    # Keep columns pairings with absolute correlation above the threshold
+    corrs_thr = corrs[(abs(corrs) > threshold)].melt(ignore_index=False).reset_index().dropna()
+
+    # Rename columns
+    # used / because some features use _ in column name already so may confuse user reading output table
+    corrs_thr.columns = ['var1', 'var2', 'corr_coeff']
+    corrs_thr['features'] = ['/'.join(sorted((i.var1, i.var2))) for i in corrs_thr.itertuples()]
+    
+    # Remove duplicate column pairings and sort by descending correlation coefficients
+    corrs_thr.drop_duplicates('features', inplace=True)
+    corrs_thr.sort_values(by='corr_coeff', ascending=False, inplace=True)
+
+    return corrs_thr
+    
 # ----------------------- All Dimension Utils -------------------------------
 # ANSI escape code for red text for console output 
 RED = "\033[31m"  
 RESET = "\033[0m" 
 
 """ Reading the dataset file 
-- Function to read either csv or xlsx data
+- Function to read either csv or xlsx data. If input is already a data frame, it will return the input.
 """
-def read_data(dataset_path):
-    _, file_extension = os.path.splitext(dataset_path)
+def read_data(dataset_path, dataset_name=None):
+    # Case where input is already a dataframe
+    if isinstance(dataset_path, pd.DataFrame):
+        return dataset_path
+
+    # Case name if provided as a separate input, required when handeling streamlit input
+    if dataset_name:
+        _, file_extension = os.path.splitext(dataset_name)
+    else:
+        _, file_extension = os.path.splitext(dataset_path)
     if file_extension == ".csv":
         try:  
             df = pd.read_csv(dataset_path, encoding="utf-8-sig")  
@@ -266,9 +337,13 @@ def read_data(dataset_path):
     return df
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
-def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, errors, dimension, metric_log_csv, threshold=None, minimum_score=None):
+def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, 
+                     errors, dimension, metric_log_csv, threshold=None, minimum_score=None, return_log=False):
     # Convert score to a percentage
-    percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
+    try:
+        percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
+    except:
+        percentage_score = '0%'
     
     # Load the Excel file into a DataFrame
     log_file = "DQS_Output_Log_Test.xlsx"
@@ -321,6 +396,12 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
 
     # Save the updated DataFrame back to the Excel file
     df.to_excel(log_file, index=False)
+
+    # If return_log is set to true return the row, this allows the UI to visualize logs from metrics run
+    if return_log:
+        return new_row
+    else:
+        return None
 
 """
 - Function to extract dataset name from a path
@@ -378,6 +459,39 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             simular_columns_str = ', '.join(simular_columns)
 
             return "The following columns may have names that do not resemble a reference data column: " + simular_columns_str + "."
+        elif (metric == "C3"):
+            inconsistent_columns = []
+
+            # Find columns with Normalized {column}_comparison and 'False' entries
+            comparison_columns = [col for col in df.columns if col.startswith('Normalized ') and col.endswith('_comparison')]
+            for column in comparison_columns:
+                if (df[column] == False).sum() > 0:
+                    # Add original test column name
+                    inconsistent_columns.append(column[len("Normalized "):-len("_comparison")])         
+            
+            return "The following columns may have names that do not resemble a province/territory: " + ', '.join(inconsistent_columns) + "."
+        elif (metric == "C4"):
+            inconsistent_columns = []
+
+            # Find columns with _inconsistent and 'True' entries
+            comparison_columns = [col for col in df.columns if col.endswith('_inconsistent')]
+            for column in comparison_columns:
+                if (df[column] == True).sum() > 0:
+                    # Add original test column name
+                    inconsistent_columns.append(column[:-len("_inconsistent")])   
+            
+            return "The following columns may have dates inconsistent with a date-time formatting: " + ', '.join(inconsistent_columns) + "."
+        elif (metric == "C5"):
+            invalid_columns = []
+
+            # Find columns with _invalid and 'True' entries
+            comparison_columns = [col for col in df.columns if col.endswith('_invalid')]
+            for column in comparison_columns:
+                if (df[column] == True).sum() > 0:
+                    # Add original test column name
+                    invalid_columns.append(column[:-len("_invalid")])   
+            
+            return "The following columns may have invalid latitude/longitude coordinates: " + ', '.join(invalid_columns) + "."
         elif (metric == 'A1'):
             columns = df.columns
 
@@ -408,32 +522,83 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             
             # Output the results  
             return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold_str + "."
+        elif (metric == "A3"):
+            component_columns = ', '.join(selected_columns[:-1])
+            agg_column = selected_columns[-1]
+            
+            return "The aggregated column " + agg_column + " may contain values not equal to the sums of its component columns: " + component_columns + "." if len(df) > 2 else "The aggregated column " + agg_column + " equals the sum of its component columns: " + component_columns + "."
+        elif (metric == "A4"):
+            invalid_pairs = []
+
+            # Find column pairs not in chronological order
+            n_pairs = int(len(selected_columns) / 2)
+            column_pairs_check = df.iloc[:,-n_pairs:].columns
+            for column_pair in column_pairs_check:
+                if (df[column_pair] == True).sum() > 0:
+                    invalid_pairs.append(column_pair)    
+            # Add original test column pair names
+            invalid_pairs_list = [tuple(s.split("_after_")) for s in invalid_pairs] 
+
+            return "Column pairs that may contain dates not in chronological order: " + ", ".join(f"({a}, {b})" for a, b in invalid_pairs_list) + "."
         elif (metric == 'P1'):
             columns = ', '.join(df.columns)
 
             return "Columns that exceed the threshold of non-null values: " + columns + "."
+        elif (metric == 'P2'):
+            strength = ""
+            
+            if threshold < 0.5:
+                strength = "little to no"
+            elif threshold == 0.5:
+                strength = "a possible"
+            elif threshold > 0.5 and threshold < 0.75:
+                strength = "a possibly moderate"
+            elif threshold >= 0.75:
+                strength = "a possibly strong"
+                
+            return f"There are {len(df['features'])} feature pair(s) with " + strength + f" association in missingness, given a correlation threshold of {threshold}."
+        elif (metric == 'I1'):
+            columns_above_threshold = ", ".join(df['var1'].unique())
+        
+            return f"Proxy variables whose correlation with sensitive features is higher than {threshold}: " + columns_above_threshold + "."
         elif (metric == 'U1'):
 
-            return "Duplicate rows found in the dataset." if df.columns > 0 else "No duplicate rows found in the dataset."
+            return "Duplicate rows found in the dataset." if len(df.columns) > 0 else "No duplicate rows found in the dataset."
         else: 
             return None
     except Exception as e:
         print(f"When trying to create one line summary for {metric}, the following error occurred: {e}")
         return None
     
-""" Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
-    dimension_type: the name of the dimension being evaluated.
-    scores: a list of dictionaries containing each metric and the score from it.
-    weights: a multiply
-    Return: Dictionary with dimension (the dimension's name) and score (the overall score for the dimension)
 """
-def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: dict) -> dict:
-    # Custom weights are provided ensure it is correctly entered
-    if (weights != {}):
+- Determines if the given set of weights meet the follwing criteria
+    - The number of weights match the number of metrics/dimensions
+    - The weights add up to 1
+    weights: the weights to evaluate.
+    scores: a list of dictionaries containing each metric and the score from it.
+    type: if set to 'metric' will using metrics in error message, otherwise uses dimensions.
+    Return: Tuple of weights and boolean indicating if the weights needed to be set to default.
+"""
+def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple:
+    weight_type = 'metrics' if type == 'metric' else 'dimensions'
+
+    # Handle string inputes
+    if weights == '' or weights == '{}':
+        return {}, True
+    if isinstance(weights, str):
+        try:
+            weights = literal_eval(weights) if weights.strip() else {}
+            if not isinstance(weights, dict):
+                return {}, False
+        except:
+            return {}, False
+
+    try:
         # Ensure number of weights is the name as the number of metric run (else use default weights)
         if len(weights) != len(scores):
             weights = {}
-            print(f'{RED}Number of weights does not match number of metrics run, using default weights instead!{RESET}')
+            print(f'{RED}Number of weights does not match number of {weight_type} run, using default weights instead!{RESET}')
+            return weights, False
         
         # Ensure weights add to 1
         else:
@@ -443,31 +608,55 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
             if total_weight < 1.0:
                 weights = {}
                 print(f'{RED}Weights do not add up to 1.0, using default weights instead!{RESET}')
+                return weights, False
+    except:
+        print(f'{RED}Provided weights are not structured properly, ensure correct names and format is used. Using default weights instead!{RESET}')
+        return {}, False
+    
+    return weights, True
+
+""" Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
+    dimension_type: the name of the dimension being evaluated.
+    scores: a list of dictionaries containing each metric and the score from it.
+    weights: a multiply
+    Return: Dictionary with dimension (the dimension's name) and score (the overall score for the dimension)
+"""
+def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: dict) -> dict:
+    # Custom weights are provided ensure it is correctly entered
+    if (weights != {}):
+        weights, valid = are_weights_valid(weights, scores)
 
     score_value = 0
     for score in scores:
-        numeric_score = 0 if score['value'] is None else score['value'] # If test failed make the score 0
-        weight = weights[score['metric']] if score['metric'] in weights else 1 / len(scores)
-        score_value += numeric_score * weight
+        try:
+            numeric_score = 0 if not score['value'] else score['value'] # If test failed make the score 0
+            weight = weights[score['metric']] if score['metric'] in weights else 1.0 / len(scores)
+            score_value += numeric_score * weight
+        except: # Case where value from metric is 'No valid XX results generated
+            score_value += 0
     
     return {"dimension": dimension_type, "score": score_value}
 
 # Takes a list of scores (containing dimension name and total score) for each dimension.
 # Determines a grade for the DQ based on the inputted score.
-def calculate_DQ_grade(scores: list[dict]) -> str:
+def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
+    # Custom weights are provided ensure it is correctly entered
+    if (weights != {}):
+        weights, valid = are_weights_valid(weights, scores, type='dimension')
+
     total_score = 0
     for score in scores:
         # TODO: Check if Uniqueness and completeness are in score list
-        total_score += score["score"]
-    
-    average_score = total_score / len(scores)
+        numeric_score = 0 if score['score'] is None else score['score']
+        weight = weights[score['dimension']] if score['dimension'] in weights else 1 / len(scores)
+        total_score += numeric_score * weight
 
     # Based on conditions (raw score, ) return letter grade
-    if average_score > 0.9: # TODO: add limit if required dimensions are not there
+    if total_score > 0.9: # TODO: add limit if required dimensions are not there
         return "A"
-    elif average_score > 0.8:
+    elif total_score > 0.8:
         return "B"
-    elif average_score > 0.7:
+    elif total_score > 0.7:
         return "C"
     else:
         return "D"
