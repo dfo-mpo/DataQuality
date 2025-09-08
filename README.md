@@ -83,7 +83,7 @@ Goal: Ensure that the data is up-to-date and available when needed. Timely data 
 #### Timeliness Type 1 (T1):
 Currently an empty template test.
 
-### Unigueness
+### Uniqueness
 Goal: Ensure that each record in the dataset is unique and there are no duplicate entries. Unique data means there are no redundant records.
 
 #### Uniqueness Type 1 (U1):
