@@ -1,5 +1,4 @@
 # Detailed Metrics/Tests
----
 This page provides an in-depth overview of the data quality metrics/tests, along with variables that users can define. All tests used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness.
 
 To compute the final data quality grade for a given dataset, weights can be assigned to each dimension:
@@ -8,7 +7,6 @@ To compute the final data quality grade for a given dataset, weights can be assi
 | `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `{'Accessibility': 0.3,'Consistency': 0.4,'Uniqueness': 0.3}` |
 
 ## Metric Tests 
----
 Metrics are tests used to determine how well a given dataset satisfies the given dimension. Each metric returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given metric. 
 
 For tests applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information. In the case of Completeness (P2) and Interdependency (I1), the output report includes pairs of column names along with their corresponding correlation coefficients, which meet or exceed a defined threshold.
