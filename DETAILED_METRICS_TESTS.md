@@ -109,9 +109,7 @@ P2 serves as a secondary test for users interested in exploring the association 
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
 
 #### Consistency Type 1 (C1) 
-C1 detects near-duplicate entries in selected columns that likely refer to the same entity despite minor differences in spelling or naming conventions. 
-
-Before generating a unique list of entries, all text is normalized by:
+C1 detects near-duplicate entries in selected columns that likely refer to the same entity despite minor differences in spelling or naming conventions. Before generating a unique list of entries, all text is normalized by:
 - Converting to lowercase
 - Replacing abbreviations with full province or territory names
 - Removing short numbers (fewer than two digits)
@@ -146,14 +144,13 @@ A record is flagged as inconsistent if none of its similarity scores to referenc
 | `Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
 
 #### Consistency Type 3 (C3)
-C3 compares string values to official province or territory names using the Levenshtein similarity ratio. This ratio measures the similarity between two strings based on the number of character edits required to transform one into the other, where a score of 1 indicates an exact match. Each entry in the selected columns is normalized and compared against all official names, and the highest similarity score is used for evaluation against a defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
-
-Normalization includes converting text to lowercase, replacing abbreviations with full province or territory names, stripping whitespaces, and removing non-alphanumeric characters. 
-Normalization by:
+C3 compares string values to official province or territory names using the Levenshtein similarity ratio. This ratio measures the similarity between two strings based on the number of character edits required to transform one into the other, where a score of 1 indicates an exact match. Before calculating similarity scores, all text is normalized by:
 - Converting to lowercase
 - Replacing abbreviations with full province or territory names
 - Stripping whitespaces
 - Removing non-alphanumeric characters
+
+Each entry is then compared against all official names, and the highest similarity score is used for evaluation against a defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
 
 A default threshold of 0.91 was chosen after manual review of test data. Scores at or above this threshold largely resemble an official name with minor spelling differences.
 
