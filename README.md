@@ -73,6 +73,9 @@ Compares province/territory names (reference data) and string values in specifie
 #### Consistency Type 4 (C4): 
 Checks whether the dataset follows standard date-time ISO 8601 formatting (or any format defined by the user).
 
+#### Consistency Type 5 (C5): 
+Verifies that geographic coordinates follow Decimal Degrees (DD) formatting and represent valild latitude and longitude values. Users can optionally restrict validation to coordinates that fall within DFO's administrative Pacific Region.
+
 ### Interdependency
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
 

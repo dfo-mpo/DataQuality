@@ -37,13 +37,12 @@ A record is flagged as a data entry mistake if any non-numeric character is foun
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `Groupby Columns` | Column(s) to group data by. | `groupby_col` |
 | `Selected Columns` | Column(s) to test for non-numeric characters. | `col1` `col2` |
 
 #### Accuracy Type 2 (A2)
 A2 detects outliers in numeric columns using the interquartile range (IQR) method. A value is considered an outlier if it falls below `Q1 - (threshold * IQR)` or above `Q3 + (threshold * IQR)`. The default threshold is 1.5, but it can be adjusted based on the dataset. This test can be applied to one or more numeric columns at the same time, with scores averaged across selected columns. Users can also specify grouping columns to find outliers within subgroups, with results computed per group and then averaged. 
 
-A column or group is flagged as inaccurate if the proportion of non-outliers falls below the specified minimum score. 
+A column or group is flagged as inaccurate if the proportion of non-outliers falls below or above the specified range. 
 
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
@@ -94,7 +93,7 @@ A record is flagged as incomplete if it contains a blank or NULL value in any of
 | `P1 Threshold` | Maximum allowable proportion of missing values in a column. Default is `0.75`. | `0.75` |
 
 #### Completeness Type 2 (P2)
-P2 finds pairs of columns whose missing values tend to occur together, with a correlation exceeding a specified threshold. Each data point is labelled `true` if it is missing and `false` otherwise. The correlation coefficient is then calculated between these true/false values for each pair of columns. This test is applied to columns with one or more missing values, excluding comments intended for comments, which are considered less informative.
+P2 finds pairs of columns whose missing values tend to occur together, with an absolute value of the correlation exceeding a specified threshold. Each data point is labelled `true` if it is missing and `false` otherwise. The correlation coefficient is then calculated between these true/false values for each pair of columns. This test is applied to columns with one or more missing values, excluding comments intended for comments, which are considered less informative.
 
 The correlation coefficient ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship. The default threshold is 0.5, which serves as a midpoint to detect potential associations. Users may increase this threshold (e.g., to 0.75) to explore stronger missingness correlations.
 
@@ -190,7 +189,7 @@ Goal: Ensure that data across different systems and datasets are harmonized and 
 #### Interdependency Type 1 (I1) 
 I1 identifies proxy variables, which indirectly capture information about sensitive features and are often used as substitutes for other variables. Sensitive features refer to protected data that, if exposed or mishandled, can lead to legal consequences. For this test, these features can include personal or business identifiable information such as name, address, or licence number. Non-sensitive features do not require the same level of protection and cannot be used to uniquely identify an individual or business. This test is applied to user-defined sensitive features, while all other columns are treated as non-sensitive features. Comment columns are excluded by default, as they are considered less informative. 
 
-The test flags pairs of columns where the correlation coefficient between a non-sensitive and a sensitive feature exceeds 0.75, or any user-defined threshold. Since correlation ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship, a threshold of 0.75 suggests a high level of association. 
+The test flags pairs of columns where the absolute value of the correlation coefficient between a non-sensitive and a sensitive feature exceeds 0.75, or any user-defined threshold. Since correlation ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship, a threshold of 0.75 suggests a high level of association. 
 
 I1 serves to identify proxy variables that capture similar patterns, enabling meaningful analysis without directly using sensitive data.
 
