@@ -10,6 +10,8 @@ All tests used to calculate a data quality score are divided into 8 dimensions: 
   
 Each dimension has its own Python file in the dimensions folder containing all relevant metrics and documentation on what the goal of the given dimension is.  
 
+For more detailed information about each metric, see the [Detailed Metrics/Tests](DETAILED_METRICS_TESTS.md) page.
+
 ### Logging Outputs
 Results from each individual metric run is outputed into the file 'DQS_Output_Log_Test.xlsx'. It contains the score with details to provide insight on why the metric gave the score it did. The information that is logged for each metric run are: "Dataset", "Dimension", "Test", "Selected_Columns", "Threshold", "Score", "Run_Time_and_Date", "New_or_Existing_Test", "One_Line_Summary", "Errors", "Why_Did_the_Test_Fail". To generate the "One_Line_Summary" for the metric result, the return type for the dimension must be set to 'Dataset' rather than 'Score'.
   
@@ -27,6 +29,8 @@ Currently an empty template test.
 ### Accuracy
 Goal: Ensure that the data correctly represents the real-world values it is intended to model. Accurate data is free from errors and is a true reflection of the actual values.
 
+See the [Accuracy Tests Details](DETAILED_METRICS_TESTS.md#accuracy) section for more detail on these tests.
+
 #### Accuracy Type 1 (A1): 
 Determines whether there are symbols in numerics. Make the column a string, find symbols, and calculate the accuracy scores for multiple columns.
 
@@ -42,6 +46,8 @@ Checks whether related timestamp columns are in chronological order. Test will c
 ### Completeness
 Goal: Ensure that all required data is available and that there are no missing values. Complete data includes all necessary records and fields needed for the intended use.
 
+See the [Completeness Tests Details](DETAILED_METRICS_TESTS.md#completeness) section for more detail on these tests.
+
 #### Completeness Type 1 (P1): 
 Checks for whether there are blanks in the entire dataset.
 
@@ -50,6 +56,8 @@ Finds column pairs with missing values whose correlation coefficient is higher t
 
 ### Consistancy
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
+
+See the [Consistency Tests Details](DETAILED_METRICS_TESTS.md#consistency) section for more detail on these tests.
 
 #### Consistency Type 1 (C1): 
 Determines the similarity between string values in specified columns. Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
@@ -65,8 +73,13 @@ Compares province/territory names (reference data) and string values in specifie
 #### Consistency Type 4 (C4): 
 Checks whether the dataset follows standard date-time ISO 8601 formatting (or any format defined by the user).
 
+#### Consistency Type 5 (C5): 
+Verifies that geographic coordinates follow Decimal Degrees (DD) formatting and represent valild latitude and longitude values. Users can optionally restrict validation to coordinates that fall within DFO's administrative Pacific Region.
+
 ### Interdependency
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
+
+See the [Interdependency Tests Details](DETAILED_METRICS_TESTS.md#interdependency) section for more detail on these tests.
 
 #### Interdependency Type 1 (I1): 
 Identifies proxy variables whose correlation with sensitive features is higher than 0.75 (or any threshold). Proxy variables indirectly capture information about sensitive features, often used as substitutes for other variables. Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
@@ -85,6 +98,8 @@ Currently an empty template test.
 
 ### Uniqueness
 Goal: Ensure that each record in the dataset is unique and there are no duplicate entries. Unique data means there are no redundant records.
+
+See the [Uniqueness Tests Details](DETAILED_METRICS_TESTS.md#uniqueness) section for more detail on these tests.
 
 #### Uniqueness Type 1 (U1):
 Find duplicated rows.
