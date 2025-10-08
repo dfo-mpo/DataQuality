@@ -17,7 +17,8 @@ import dimensions.uniqueness as uniqueness
 from dimensions.utils import calculate_dimension_score, calculate_DQ_grade, read_data, are_weights_valid
 
 # Title of the web app  
-st.title("Data Quality Calculator")
+st.title("Data Quality Calculator", anchor=False)
+
 DIMENSION_SCORES = [] # Stores the final score for each dimension used to calculate final grade
 dimensions = { # Nested dictionary to keep track of values for each given dimension durring runtime
     "Accessibility": { "all_metrics": accessibility.ALL_METRICS, 'metadata': accessibility.create_metadata(), "parameters": {}, "instantiate": accessibility.Accessibility},
@@ -31,8 +32,8 @@ dimensions = { # Nested dictionary to keep track of values for each given dimens
 }
 
 # Instructions for the dataset upload section  
-st.markdown("""  
-### Some requirements for the datasets:  
+st.subheader("Some requirements for the datasets:", anchor=False)
+st.markdown("""   
 - The data must be on the **first sheet** in the Excel document.  
 - The **first row** must be the column names.  
 - The test won't run if the Excel file is open.  
@@ -52,8 +53,8 @@ if uploaded_file is not None:
         st.dataframe(df)  
     
     # Selection for dimensions to use for tests
+    st.subheader("Select Dimensions to Include ", anchor=False)
     st.markdown("""  
-    ### Select Dimensions to Include  
       Documentation for dimensions and the metric tests within can be found in the [README file](https://github.com/dfo-mpo/DataQuality/blob/main/README.md#dimensions-and-metric-tests).  
     """)
     selected_dimensions = st.multiselect("Choose dimensions to use", dimensions.keys())
