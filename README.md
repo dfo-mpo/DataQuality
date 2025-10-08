@@ -127,16 +127,15 @@ pip install streamlit
 ```
 2. Then to run the UI, run the following command
 ```
-streamlit run dq_ui.py
+streamlit run ui_tool/dq_ui.py
 ```
 
 ### Running script after setup
 1. Open a terminal at the root of this project and active the virtual enviroment with the command: `streamlit-env\Scripts\activate`
-2. Run the UI with the command: `streamlit run dq_ui.py`
+2. Run the UI with the command: `streamlit run ui_tool/dq_ui.py`
   
 ## Adding New Metrics  
 You may want to run your own test or implementation of an existing test. In this case, you can add a metric to the code. This will involve adding the new test code and updating global parts of a dimension Python file, then making possible updates to the Notebook and UI to run the new metric properly.  
-TODO: add info incase new metric introduces new libraries, may want to tell people to run requirements txt instead of a static install command.
 
 ### Adding Test to Dimension File  
 Once you have determined which dimension the metric fits under, open its Python file under the dimensions folder and follow the steps below:  
@@ -167,3 +166,5 @@ To be added soon, the tool is still under development. Code standards need to be
 
 ## Code Standards
 TODO: describe coding standards that should be followed for those contributing their ownd data quality tests (eg. metric names, updating global variables, updating functions, standards for comments)
+
+Any new library added for a metric is to be added to the requirements.txt file with the package version specified.

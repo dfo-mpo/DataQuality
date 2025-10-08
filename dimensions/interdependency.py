@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 from . import utils
 from dython.nominal import associations
+from metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['I1']
 
@@ -17,7 +18,7 @@ logging_path: path to store csv of what test used to calculate score, if set to 
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Interdependency:
-    def __init__(self, dataset_path, i1_sensitive_columns, i1_threshold=0.75, return_type="score", logging_path=None, uploaded_file_name=None):
+    def __init__(self, dataset_path, i1_sensitive_columns=[], i1_threshold=0.75, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path
         self.i1_sensitive_columns = i1_sensitive_columns
         self.i1_threshold = i1_threshold
@@ -78,6 +79,7 @@ class Interdependency:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            output_logs = []
             thresholds = {"I1": self.i1_threshold} 
             columns = {"I1": self.i1_sensitive_columns} 
 
@@ -85,7 +87,6 @@ class Interdependency:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                output_logs = []
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_interdependency_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
@@ -131,3 +132,21 @@ class Interdependency:
             print(f'Metric options: {ALL_METRICS}, inputted metrics: {metrics}')
             return -1
         
+""" Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
+Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension
+"""
+def create_metadata():
+    metadata = []
+    dimension = "Interdependency"
+
+    # Define instance for metric
+    i1_metadata = MetricMetadata(dimension, "I1")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT)
+    i1_metadata.add_parameter('i1_threshold', 'I1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
+    # Append instance into metadata list
+    metadata.append(i1_metadata)
+
+    # Define instance for next metric and parameters as needed
+    
+    return metadata
