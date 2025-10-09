@@ -587,6 +587,7 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
         return {}, True
     if isinstance(weights, str):
         try:
+            weights = weights.replace('‘', "'").replace('’', "'").replace('“', '"').replace('”', '"') # sanitize quates to prevent syntax errors
             weights = literal_eval(weights) if weights.strip() else {}
             if not isinstance(weights, dict):
                 return {}, False
@@ -653,10 +654,12 @@ def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
 
     # Based on conditions (raw score, ) return letter grade
     if total_score > 0.9: # TODO: add limit if required dimensions are not there
-        return "A"
+        return "Exceptional"
     elif total_score > 0.8:
-        return "B"
+        return "High"
     elif total_score > 0.7:
-        return "C"
+        return "Good"
+    elif total_score > 0.5:
+        return "Minimum"
     else:
-        return "D"
+        return "Needs Improvement"

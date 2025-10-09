@@ -1,6 +1,7 @@
 import numpy as np  
 import pandas as pd
 from . import utils
+from metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['A1', 'A2', 'A3', 'A4']
 
@@ -9,11 +10,12 @@ ALL_METRICS = ['A1', 'A2', 'A3', 'A4']
     Accurate data is free from errors and is a true reflection of the actual values.
 
 dataset_path: path of the csv/xlsx to evaluate.
-selected_columns: columns from the provided dataset to evaluate, used for metics A1 and A2, should be all numeric columns.
+a1_column_names: columns used from the dataset for the A1 metric, should be all numeric columns.
+a2_column_names: columns used from the dataset for the A2 metric, should be all numeric columns.
 a3_column_names: columns used from the dataset for the A3 metric.
 a3_agg_column: aggregate column used to evaluate a3_column_names for A3 metric.
 a4_column_pairs: related timestamp columns used from the dataset for the A4 metric.
-groupby_column: used by metric A2, groupby data from selected_columns by each unique groupby_column entry. Score is calculated for each groupby then averaged for groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.
+a2_groupby_column: used by metric A2, groupby data from selected_columns by each unique groupby_column entry. Score is calculated for each groupby then averaged for groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.
 a2_threshold: threshold used in A2 interquartile range calculations to determine outliers.
 a2_minimum_score: minimum acceptable score from interquartile range calculations.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
@@ -21,13 +23,14 @@ logging_path: path to store csv of what test used to calculate score, if set to 
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Accuracy:
-    def __init__(self, dataset_path, selected_columns, a3_column_names, a3_agg_column, a4_column_pairs, groupby_column=None, a2_threshold=1.5, a2_minimum_score = 0.85, return_type="score", logging_path=None, uploaded_file_name=None):
+    def __init__(self, dataset_path, a1_column_names=[], a2_column_names=[], a3_column_names=[], a3_agg_column=[], a4_column_pairs=None, a2_groupby_column=None, a2_threshold=1.5, a2_minimum_score = 0.85, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path  
-        self.selected_columns = selected_columns
+        self.a1_column_names = a1_column_names
+        self.a2_column_names = a2_column_names
         self.a3_column_names = a3_column_names
-        self.a3_agg_column = a3_agg_column
+        self.a3_agg_column = [a3_agg_column] if isinstance(a3_agg_column, str) else a3_agg_column
         self.a4_column_pairs = a4_column_pairs
-        self.groupby_column = groupby_column
+        self.groupby_column = a2_groupby_column
         self.a2_threshold = a2_threshold
         self.a2_minimum_score = a2_minimum_score
         self.return_type = return_type
@@ -44,7 +47,7 @@ class Accuracy:
         
         # dataframe for computing accuracy score
         adf = utils.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
-        selected_columns = [col for col in adf.columns if col in self.selected_columns] 
+        selected_columns = [col for col in adf.columns if col in self.a1_column_names] 
 
         all_accuracy_scores = []
         
@@ -99,7 +102,7 @@ class Accuracy:
         if self.groupby_column:  
             grouped = df.groupby(self.groupby_column)  
             total_groups = len(grouped)
-            for column in self.selected_columns:  
+            for column in self.a2_column_names:  
                 # Apply the outlier detection for each group  
                 outliers = grouped[column].apply(detect_outliers) 
   
@@ -111,7 +114,7 @@ class Accuracy:
                 avg_score += scores[column]
         else:
             # Perform the IQR calculation on the whole column if no groupby column is specified  
-            for column in self.selected_columns: 
+            for column in self.a2_column_names: 
                 # Convert to numeric, remove none numeric values TODO: Do we keep this or adopt a different solution? 
                 column_data = pd.to_numeric(df[column], errors='coerce').dropna()  
                 
@@ -124,7 +127,7 @@ class Accuracy:
                 avg_score += scores[column] 
 
         # Compute average of final scores across selected columns  
-        avg_score = avg_score / len(self.selected_columns)   
+        avg_score = avg_score / len(self.a2_column_names)   
 
         # add conditional return logic
         if self.return_type == "score":
@@ -233,14 +236,14 @@ class Accuracy:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            output_logs = []
             thresholds = {"A1": None, "A2": self.a2_threshold, "A3": None, "A4": None}
-            columns = {"A1": self.selected_columns, "A2": self.selected_columns, "A3": self.a3_column_names + self.a3_agg_column, "A4": [col for pair in self.a4_column_pairs for col in pair] if self.a4_column_pairs else None}
+            columns = {"A1": self.a1_column_names, "A2": self.a2_column_names, "A3": self.a3_column_names + self.a3_agg_column, "A4": [col for pair in self.a4_column_pairs for col in pair] if self.a4_column_pairs else None}
 
             for metric in metrics:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                output_logs = []
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_accuracy_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
@@ -301,3 +304,45 @@ class Accuracy:
             print(f'Metric options: {ALL_METRICS}, inputted metrics: {metrics}')
             return -1
         
+""" Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
+Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension
+"""
+def create_metadata():
+    metadata = []
+    dimension = "Accuracy"
+
+    # Define instance for metric
+    a1_metadata = MetricMetadata(dimension, "A1")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    a1_metadata.add_parameter('a1_column_names', 'A1 Column Names', ParameterType.MULTI_SELECT)
+    # Append instance into metadata list
+    metadata.append(a1_metadata)
+
+    # Define instance for metric
+    a2_metadata = MetricMetadata(dimension, "A2")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    a2_metadata.add_parameter('a2_column_names', 'A2 Column Names', ParameterType.MULTI_SELECT)
+    a2_metadata.add_parameter('a2_groupby_column', 'Groupby Column(s)', ParameterType.MULTI_SELECT, hint="Used by metric A2, groupby data from selected_columns by each unique groupby_column entry. Score is calculated for each groupby then averaged for groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.")
+    a2_metadata.add_parameter('a2_threshold', 'A2 Threshold', ParameterType.DECIMAL, value='1.5', step = 0.1)
+    a2_metadata.add_parameter('a2_minimum_score', 'A2 Minimum Score', ParameterType.DECIMAL, value='0.85', step = 0.05)
+    # Append instance into metadata list
+    metadata.append(a2_metadata)
+
+    # Define instance for metric
+    a3_metadata = MetricMetadata(dimension, "A3")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    a3_metadata.add_parameter('a3_column_names', 'A3 Column Names', ParameterType.MULTI_SELECT)
+    a3_metadata.add_parameter('a3_agg_column', 'A3 Aggregate Column', ParameterType.SINGLE_SELECT)
+    # Append instance into metadata list
+    metadata.append(a3_metadata)
+
+    # Define instance for metric
+    a4_metadata = MetricMetadata(dimension, "A4")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    a4_metadata.add_parameter('a4_column_pairs', 'A4 Column Pairs', ParameterType.TEXT_INPUT, value="", placeholder="e.g., [('col1', 'col2'), ('col3', 'col4')]", hint="Pairs of related timestamp columns used from the dataset. Use format in placeholder replacing text with names of columns from your uploaded dataset.")
+    # Append instance into metadata list
+    metadata.append(a4_metadata)
+
+    # Define instance for next metric and parameters as needed
+    
+    return metadata 

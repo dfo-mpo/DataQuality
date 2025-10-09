@@ -1,6 +1,7 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
+from metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['S1']
 
@@ -53,6 +54,7 @@ class Accessibility:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            output_logs = []
             thresholds = {"S1": None} # TODO: Update with thresholds use for each test
             columns = {"S1": None} # TODO: Update with columns use for each test
 
@@ -60,7 +62,6 @@ class Accessibility:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                output_logs = []
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_accessibility_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
@@ -105,3 +106,21 @@ class Accessibility:
             print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
             print(f'Metric options: {ALL_METRICS}, inputted metrics: {metrics}')
             return -1
+        
+""" Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
+Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension
+"""
+def create_metadata():
+    metadata = []
+    dimension = "Accessibility"
+
+    # Define instance for metric, replace with metric that requires parameters
+    s1_metadata = MetricMetadata(dimension, "S1")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    # s1_metadata.add_parameter()
+    # Append instance into metadata list
+    # metadata.append(s1_metadata)
+
+    # Define instance for next metric and parameters as needed
+    
+    return metadata 

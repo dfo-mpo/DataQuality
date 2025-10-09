@@ -2,6 +2,7 @@ import numpy as np
 import pandas as pd 
 import re
 from . import utils
+from metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['C1', 'C2', 'C3', 'C4', 'C5']
 
@@ -28,7 +29,7 @@ logging_path: path to store csv of what test used to calculate score, if set to 
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Consistency:
-    def __init__(self, dataset_path, c1_column_names, c2_column_mapping, c3_column_names, c4_column_names, c5_column_names, c1_threshold=0.91, c2_threshold=0.91, c3_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', c5_region=None, ref_dataset_path=None, return_type="score", logging_path=None, uploaded_file_name=None):
+    def __init__(self, dataset_path, c1_column_names=[], c2_column_mapping=[], c3_column_names=[], c4_column_names=[], c5_column_names=[], c1_threshold=0.91, c2_threshold=0.91, c3_threshold=0.91, c1_stop_words=["the", "and"], c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', c5_region=None, ref_dataset_path=None, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path  
         self.c1_column_names = c1_column_names 
         self.c2_column_mapping = c2_column_mapping
@@ -378,6 +379,7 @@ class Consistency:
         if set(metrics).issubset(set(ALL_METRICS)):
             # Run each metric and send outputs in combined list
             outputs = []
+            output_logs = []
             thresholds = {"C1": self.c1_threshold, "C2": self.c2_threshold, "C3": self.c3_threshold, "C4": None, "C5": None}
             columns = {"C1": self.c1_column_names, "C2": self.c2_column_mapping, "C3": self.c3_column_names, "C4": self.c4_column_names, "C5": self.c5_column_names}
 
@@ -385,7 +387,6 @@ class Consistency:
                 # Variables that prepare for output reports
                 errors = None
                 test_fail_comment = None
-                output_logs = []
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_consistency_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
 
@@ -457,3 +458,56 @@ class Consistency:
             print(f'Metric options: {ALL_METRICS}, inputted metrics: {metrics}')
             return -1
         
+""" Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
+Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension
+"""
+def create_metadata():
+    metadata = []
+    dimension = "Consistency"
+
+    # Define instance for metric  c3_column_names, c4_column_names, c5_column_names,  c2_threshold=0.91, c3_threshold=0.91, c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', c5_region=None, ref_dataset_path=None,
+    c1_metadata = MetricMetadata(dimension, "C1")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT)
+    c1_metadata.add_parameter('c1_threshold', 'C1 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
+    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.TEXT_INPUT, value='["the", "and"]', hint="Words filtered for C1 metric simularity calculations")
+    # Append instance into metadata list
+    metadata.append(c1_metadata)
+
+    # Define instance for metric
+    c2_metadata = MetricMetadata(dimension, "C2")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
+    c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.TEXT_INPUT, value='["activity"]', hint="Words filtered for C2 metric simularity calculations")
+    c2_metadata.add_parameter('ref_dataset_path', 'Reference Dataset File', ParameterType.FILE_UPLOAD)
+    c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")
+    # Append instance into metadata list
+    metadata.append(c2_metadata)
+
+    # Define instance for metric
+    c3_metadata = MetricMetadata(dimension, "C3")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    c3_metadata.add_parameter('c3_column_names', 'C3 Column Names', ParameterType.MULTI_SELECT)
+    c3_metadata.add_parameter('c3_threshold', 'C3 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
+    # Append instance into metadata list
+    metadata.append(c3_metadata)
+
+    # Define instance for metric
+    c4_metadata = MetricMetadata(dimension, "C4")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT)
+    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.STRING, value='%Y-%m-%d %H:%M:%S', hint="Date-time format that selected dataset columns are compared to. Use %Y (year), %M (months), and %D (days) separated by '-'. Use %H (hours), %M (minutes), and %S (seconds) separated by ':'." )
+    # Append instance into metadata list
+    metadata.append(c4_metadata)
+
+    # Define instance for metric
+    c5_metadata = MetricMetadata(dimension, "C5")
+    # Define each parameter needed for metric, use ParameterType when defining type
+    c5_metadata.add_parameter('c5_column_names', 'C5 Column Names', ParameterType.MULTI_SELECT)
+    c5_metadata.add_parameter('c5_region', 'C5 Region', ParameterType.SINGLE_SELECT, value=["All", "Pacific"], hint="Restricts geographic coordinates to specified DFO region.")
+    # Append instance into metadata list
+    metadata.append(c5_metadata)
+
+    # Define instance for next metric and parameters as needed
+    
+    return metadata 
