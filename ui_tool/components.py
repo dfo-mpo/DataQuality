@@ -1,23 +1,5 @@
-from dimensions import interdependency
 from metadata import ParameterMetadata, ParameterType
 import streamlit as st
-
-# def generateMetadata():
-#     metric_metadata = {
-#         "Accessibility": { "all_metrics": accessibility.ALL_METRICS },
-#         "Accuracy": { "all_metrics": consistency.ALL_METRICS },
-#         "Completeness": { "all_metrics": accuracy.ALL_METRICS },
-#         "Consistency": { "all_metrics": completeness.ALL_METRICS },
-#         "Interdependency": { "all_metrics": interdependency.ALL_METRICS },
-#         "Relevance": { "all_metrics": relevance.ALL_METRICS },
-#         "Timeliness": { "all_metrics": timeliness.ALL_METRICS },
-#         "Uniqueness": { "all_metrics": uniqueness.ALL_METRICS }
-#     }
-
-
-#     metric_metadata.append()
-
-#     return metric_metadata
 
 """ Generate first row containing parameters required for all dimensions, inputs are stored in the provided dictionary object. 
 dimension: The name of the given dimension.
