@@ -15,7 +15,6 @@ The following variables are generic and can be defined for each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `Metrics` | Metrics to run within a dimension. By default, all metrics are run. | `A1` `A2` |
-| `Return Type` | Defines what a metric returns. Set to `dataset` to generate a one-line summary. Default is `score`.  | `score` |
 | `Weights` | Weights assigned to metrics within a dimension. By default, all metrics are weighted equally. Weights must add up to 1. | `{'A1': 0.3,'A2': 0.7}` |
 
 Additional variables specific to each metric will be described in their respective sections below.
@@ -37,7 +36,7 @@ A record is flagged as a data entry mistake if any non-numeric character is foun
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `Selected Columns` | Column(s) to test for non-numeric characters. | `col1` `col2` |
+| `A1 Column Names` | Column(s) to test for non-numeric characters. | `col1` `col2` |
 
 #### Accuracy Type 2 (A2)
 A2 detects outliers in numeric columns using the interquartile range (IQR) method. A value is considered an outlier if it falls below `Q1 - (threshold * IQR)` or above `Q3 + (threshold * IQR)`. The default threshold is 1.5, but it can be adjusted based on the dataset. This test can be applied to one or more numeric columns at the same time, with scores averaged across selected columns. Users can also specify grouping columns to find outliers within subgroups, with results computed per group and then averaged. 
@@ -47,10 +46,10 @@ A column or group is flagged as inaccurate if the proportion of non-outliers fal
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `A2 Minimum Score` | Minimum acceptable proportion of non-outliers in a column or group. Default is `0.85`. | `0.85` |
+| `A2 Column Names` | Column(s) to test for outliers. | `col1` `col2` |
+| `Groupby Column(s)` | Column(s) to group data by. | `groupby_col` |
 | `A2 Threshold` | Threshold multiplier for IQR-based outlier detections. Default is `1.5`. | `1.5` |
-| `Groupby Columns` | Column(s) to group data by. | `groupby_col` |
-| `Selected Columns` | Column(s) to test for outliers. | `col1` `col2` |
+| `A2 Minimum Score` | Minimum acceptable proportion of non-outliers in a column or group. Default is `0.85`. | `0.85` |
 
 #### Accuracy Type 3 (A3) 
 A3 checks whether values in an aggregated column (e.g., Total) match the sum of their respective component columns. Blank or NULL entries in selected columns are replaced with zeros for calculation and comparison purposes. This test can be applied to one aggregated column against multiple component columns at the same time. 
@@ -60,8 +59,8 @@ A record is flagged as inaccurate if the aggregated value does not equal the sum
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `A3 Aggregated Column` | Column containing the total value to validate. | `total_col` |
 | `A3 Column Names` | Component columns expected to sum up to the aggregated column. | `col1` `col2` |
+| `A3 Aggregated Column` | Column containing the total value to validate. | `total_col` |
 
 #### Accuracy Type 4 (A4) 
 A4 verifies whether related timestamp columns are in chronological order (i.e., the start timestamp occurs on or before the end timestamp). Missing values in these columns are treated as valid to account for records that are still in progress, awaiting updates, or have no start date on record. This test can be applied to one or more column pairs at the same time, with scores averaged across selected pairs.
@@ -89,7 +88,7 @@ A record is flagged as incomplete if it contains a blank or NULL value in any of
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `Exclude Columns` | Column(s) to exclude from the test. | `col1` `col2` |
+| `P1 Exclude Columns` | Column(s) to exclude from the test. | `col1` `col2` |
 | `P1 Threshold` | Maximum allowable proportion of missing values in a column. Default is `0.75`. | `0.75` |
 
 #### Completeness Type 2 (P2)
@@ -124,8 +123,8 @@ A record is flagged as inconsistent if it has a near-duplicate entry with a simi
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `C1 Column Names` | Column(s) to test for similarity. | `col1` `col2` |
-| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `['the', 'and']`. | `['the', 'and']` |
 | `C1 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
+| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["the", "and"]`. | `["the", "and"]` |
 
 #### Consistency Type 2 (C2) 
 C2 checks whether string values in selected columns consistently follow naming conventions found in a reference dataset. If no reference dataset is provided, the test compares values within the dataset itself. Similarity between test and reference values is measured using cosine similarity based on a user-defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
@@ -137,10 +136,10 @@ A record is flagged as inconsistent if none of its similarity scores to referenc
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `C2 Column Mapping` | Mapping of test column(s) to reference column(s) for comparison. | `{'col1':'ref_col1','col2':'ref_col2'}` |
-| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `['activity']`. | `['activity']` |
 | `C2 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
+| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["activity"]`. | `["activity"]` |
 | `Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
+| `C2 Column Mapping` | Mapping of test column(s) to reference column(s) for comparison. | `{'col1':'ref_col1','col2':'ref_col2'}` |
 
 #### Consistency Type 3 (C3)
 C3 compares string values to official province or territory names using the Levenshtein similarity ratio. This ratio measures the similarity between two strings based on the number of character edits required to transform one into the other, where a score of 1 indicates an exact match. Before calculating similarity scores, all text is normalized by:
@@ -181,7 +180,7 @@ A record is flagged as inconsistent if its geographic coordinate falls outside t
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `C5 Column Names` | Column(s) to test for invalid coordinates. | `col1` `col2` |
-| `C5 Region` | Restricts test to check within DFO's administrative Pacific Region by setting to `Pacific`. Default is `None`. | `Pacific` |
+| `C5 Region` | Restricts test to check within DFO's administrative Pacific Region by setting to `Pacific`. Default is `All`. | `Pacific` |
 
 ### Interdependency
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
