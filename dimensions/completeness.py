@@ -9,7 +9,7 @@ ALL_METRICS = ['P1', 'P2']
     Complete data includes all necessary records and fields needed for the intended use.
 
 dataset_path: path of the csv/xlsx to evaluate.
-exclude_columns: columns to ingore for the P1 test.
+p1_exclude_columns: columns to ingore for the P1 test.
 p1_threshold: threshold for acceptible percentance of null values in a given column for P1 test
 p2_threshold: threshold for correlation coefficient that is acceptable for P2 test.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
