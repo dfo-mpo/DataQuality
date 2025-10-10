@@ -54,7 +54,7 @@ Checks for whether there are blanks in the entire dataset.
 #### Completeness Type 2 (P2): 
 Finds column pairs with missing values whose correlation coefficient is higher than 0.5 (or any threshold). Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.5 will be used as a midpoint threshold to investigate whether an association exists. 
 
-### Consistancy
+### Consistency
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
 
 See the [Consistency Tests Details](DETAILED_METRICS_TESTS.md#consistency) section for more detail on these tests.
