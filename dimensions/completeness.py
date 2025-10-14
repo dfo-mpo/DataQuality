@@ -9,7 +9,7 @@ ALL_METRICS = ['P1', 'P2']
     Complete data includes all necessary records and fields needed for the intended use.
 
 dataset_path: path of the csv/xlsx to evaluate.
-exclude_columns: columns to ingore for the P1 test.
+p1_exclude_columns: columns to ingore for the P1 test.
 p1_threshold: threshold for acceptible percentance of null values in a given column for P1 test
 p2_threshold: threshold for correlation coefficient that is acceptable for P2 test.
 return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
@@ -19,7 +19,7 @@ uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 class Completeness:
     def __init__(self, dataset_path, p1_exclude_columns=[], p1_threshold=0.75, p2_threshold=0.5, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path  
-        self.exclude_columns = p1_exclude_columns
+        self.p1_exclude_columns = p1_exclude_columns
         self.p1_threshold = p1_threshold
         self.p2_threshold = p2_threshold
         self.return_type = return_type
@@ -35,8 +35,8 @@ class Completeness:
         if 'Comment' in dataset.columns:  
             dataset = dataset.drop(columns=['Comment'])  
 
-        # Exclude columns in exclude_columns if they exist in the dataset    
-        dataset = dataset.drop(columns=[col for col in self.exclude_columns if col in dataset.columns])
+        # Exclude columns in p1_exclude_columns if they exist in the dataset    
+        dataset = dataset.drop(columns=[col for col in self.p1_exclude_columns if col in dataset.columns])
         
         # Calculate the percentage of non-null (non-missing) values in each column  
         is_null_percentage = dataset.isna().mean()  
@@ -154,7 +154,7 @@ class Completeness:
                     dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path), 
                     score = overall_completeness_score, 
                     selected_columns = columns[metric], 
-                    excluded_columns = self.exclude_columns,
+                    excluded_columns = self.p1_exclude_columns,
                     isStandardTest = True, 
                     test_fail_comment = test_fail_comment, 
                     errors = errors, 
