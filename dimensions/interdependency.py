@@ -39,12 +39,17 @@ class Interdependency:
             df = df.drop(columns=['Comment']) 
         elif 'Comments' in df.columns:
             df = df.drop(columns=['Comments'])
-        
+
+        # Convert timestamp columns to int for computational purposes (formatted as yyyymmdd)
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime('%Y%m%d').astype('Int64')
+                
         # Number of non-sensitive features
         n_non_sensitive = len(df.columns) - len(self.i1_sensitive_columns)
     
         # Computes correlation coeff of all variables in dataset 
-        corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True)['corr']
+        corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True, cramers_v_bias_correction=False)['corr']
         corrs_thr = utils.filter_corrs(corrs, self.i1_threshold, subset = self.i1_sensitive_columns)
     
         # Compute proportion that exceeds threshold for each sensitive column
