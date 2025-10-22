@@ -91,9 +91,7 @@ class Completeness:
         corrs_thr = utils.filter_corrs(corrs, self.p2_threshold)
 
         # Compute score 
-        completeness_score = (len(corrs_thr) / n_pairs) if corrs_thr is not None else None
-        # may want to use for one line summary?
-        summary = f"Found {len(corrs_thr)} feature pair(s) with correlation coefficient greater than defined threshold ({self.p2_threshold})"
+        completeness_score = (1 - (len(corrs_thr) / n_pairs)) if corrs_thr is not None else None
         
         # add conditional return logic
         if self.return_type == "score":

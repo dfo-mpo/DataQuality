@@ -96,7 +96,7 @@ P2 finds pairs of columns whose missing values tend to occur together, with an a
 
 The correlation coefficient ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship. The default threshold is 0.5, which serves as a midpoint to detect potential associations. Users may increase this threshold (e.g., to 0.75) to explore stronger missingness correlations.
 
-P2 serves as a secondary test for users interested in exploring the association between missing values across columns. Investigating such patterns can help guide how missing data should be handled and reveal potential gaps in data collection, such as measurements not being recorded for specific sample types.
+P2 serves as a secondary test for users interested in exploring whether missingness in data is independent across columns or follows consistent patterns. Investigating such patterns can help guide how missing data should be handled and reveal potential gaps in data collection, such as measurements not being recorded for specific sample types.
 
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
@@ -186,7 +186,15 @@ A record is flagged as inconsistent if its geographic coordinate falls outside t
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
 
 #### Interdependency Type 1 (I1) 
-I1 identifies proxy variables, which indirectly capture information about sensitive features and are often used as substitutes for other variables. Sensitive features refer to protected data that, if exposed or mishandled, can lead to legal consequences. For this test, these features can include personal or business identifiable information such as name, address, or licence number. Non-sensitive features do not require the same level of protection and cannot be used to uniquely identify an individual or business. This test is applied to user-defined sensitive features, while all other columns are treated as non-sensitive features. Comment columns are excluded by default, as they are considered less informative. 
+I1 identifies proxy variables, which indirectly capture information about sensitive features and are often used as substitutes for other variables. Sensitive features refer to protected data that, if exposed or mishandled, can lead to legal consequences. For this test, these features can include personal or business identifiers (e.g., name, address, or licence number). Non-sensitive features do not require the same level of protection and cannot be used to uniquely identify an individual or business. This test is applied to user-defined sensitive features, while all other columns are treated as non-sensitive features. Comment columns are excluded by default, as they are considered less informative. 
+
+Proxy variables can have both positive and negative implications, depending on their use: 
+- They enable analysis when sensitive features are excluded.
+- They may also pose privacy and confidentiality risks if they are strongly related to, or can be used to infer protected data.
+
+For the purpose of this test, proxy variables are treated as neutral. Interpretation of the test scores may vary based on user objectives:
+- High scores may suggest better privacy protection but could also indicate that many non-sensitive features are less suitable as proxies, which may limit their usefulness for analytics. 
+- Low scores may enable more informative analysis without directly using sensitive data, while potentially increasing privacy risks if these proxies reveal sensitive information. 
 
 The test flags pairs of columns where the absolute value of the correlation coefficient between a non-sensitive and a sensitive feature exceeds 0.75, or any user-defined threshold. Since correlation ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship, a threshold of 0.75 suggests a high level of association. 
 
