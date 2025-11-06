@@ -505,7 +505,6 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
         elif (metric == 'A2'):
             columns_below_threshold = []
-
             # Get groupby columns
             end_index = len(df.columns) - len(selected_columns) 
             groupby_cols = df.columns[:end_index]
