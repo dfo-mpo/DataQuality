@@ -15,24 +15,22 @@ logging_path: path to store csv of what test used to calculate score, if set to 
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 """
 class Accessibility:
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None):
+    def __init__(self, dataset_path, s1_has_metadata, return_type="score", logging_path=None, uploaded_file_name=None):
         self.dataset_path = dataset_path
+        self.s1_has_metadata = s1_has_metadata
         self.return_type = return_type
         self.logging_path = logging_path
         self.uploaded_file_name = uploaded_file_name
         # TODO: Set all the other variables
 
-    """ Accessibility Type 1 (S1):
-    TODO: provide a description of what this script does. There can be multiple types (Type 1, Type 2, etc.), add more as needed
-    Example: Determines the similarity between string values in specified columns.
+    """ Accessibility Type 1 (S1): Gives score based on if a metadata file exists for the given dataset.
     """    
-    # TODO: Replace with the logic for this metric, where the final score should be called accessibility_score
     def _s1_metric(self, metric):  
-        dataset = utils.read_data(self.dataset_path)
+        # dataset = utils.read_data(self.dataset_path)
+        # Add new metric asking if user has a meta data file
+        accessibility_score = 1 if self.s1_has_metadata == True else 0
 
-        accessibility_score = None
-
-        adf = None
+        adf = False
 
         # add conditional return logic
         if self.return_type == "score":
@@ -40,8 +38,8 @@ class Accessibility:
         elif self.return_type == "dataset":
             if not accessibility_score :
                 return "No valid S1 results generated", None
-            
-            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=None)
+            df = pd.DataFrame({"Score": [accessibility_score]})
+            output_file = utils.df_to_csv(self.logging_path, metric=metric, final_df=df)
             return accessibility_score, output_file  # Return the file name
             
         else:
@@ -117,9 +115,9 @@ def create_metadata():
     # Define instance for metric, replace with metric that requires parameters
     s1_metadata = MetricMetadata(dimension, "S1")
     # Define each parameter needed for metric, use ParameterType when defining type
-    # s1_metadata.add_parameter()
+    s1_metadata.add_parameter("s1_has_metadata", "S1 Has Metadata", ParameterType.CHECKBOX, value=False)
     # Append instance into metadata list
-    # metadata.append(s1_metadata)
+    metadata.append(s1_metadata)
 
     # Define instance for next metric and parameters as needed
     
