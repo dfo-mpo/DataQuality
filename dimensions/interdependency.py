@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd 
 from . import utils
 from dython.nominal import associations
-from metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['I1']
 

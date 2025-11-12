@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd 
 import re
 from . import utils
-from metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['C1', 'C2', 'C3', 'C4', 'C5']
 

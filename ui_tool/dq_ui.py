@@ -3,7 +3,7 @@ import pandas as pd
 from functools import reduce
 import ast
 from metadata import ParameterType
-import ui_tool.components as components
+import components as components
 
 # Import dimensions
 import dimensions.accessibility as accessibility
