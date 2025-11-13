@@ -86,7 +86,7 @@ if uploaded_file is not None:
                 for metric in dimensions[dimension]["metadata"]: # metric is of type MetricMetadata from metadata.py
                     if metric.name in dimensions[dimension]["metrics"]:
                         try:
-                            components.generateDimensionRow(dimension_dict=dimensions[dimension], parameters=metric.parameters, df_columns=df.columns.tolist())
+                            components.generateDimensionRow(dimension_dict=dimensions[dimension], metric=metric.name, parameters=metric.parameters, df_columns=df.columns.tolist())
                         except Exception as e:
                             st.error(f"Error encountered when generating fields for the {metric.name} metric!")
                             st.error(e)

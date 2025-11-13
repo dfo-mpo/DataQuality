@@ -29,7 +29,7 @@ def generateFirstDimensionRow(dimension_dict):
                                     help="If left empty, weighting will be equal. Weights must add up to 1.")
         
 
-def generateDimensionRow(dimension_dict, parameters: list[ParameterMetadata], df_columns):
+def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:
         return
 
