@@ -7,7 +7,7 @@ COMPONENTS_DIR = BASE_DIR / "custom_components"
 if str(COMPONENTS_DIR) not in sys.path:  
     sys.path.insert(0, str(COMPONENTS_DIR))  
 
-from metadata import ParameterMetadata, ParameterType
+from ui_tool.metadata import ParameterMetadata, ParameterType
 from streamlit_tags import st_tags # Community component
 from streamlit_pairs import st_pairs # Custom component
 import streamlit as st

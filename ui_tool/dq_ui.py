@@ -1,9 +1,13 @@
 import streamlit as st
+# Overwrite root path set by streamlit so files from sibling folders (dimensions) can be accessed
+import os, sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pandas as pd  
 from functools import reduce
 import ast
-from metadata import ParameterType
-import components as components
+from ui_tool.metadata import ParameterType
+import ui_tool.components as components
 
 # Import dimensions
 import dimensions.accessibility as accessibility
