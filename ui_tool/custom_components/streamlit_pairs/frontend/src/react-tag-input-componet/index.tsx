@@ -53,7 +53,7 @@ const RTIContainer = css({
   flexWrap: "wrap",
   gap: "var(--rtiS)",
   lineHeight: 1.4,
-  padding: "var(--rtiS)",
+  padding: "0.43rem var(--rtiS)",
 
   "&:focus-within": {
     // borderColor: "var(--rtiMain)",
@@ -85,9 +85,11 @@ const pair_input = css({
   button: {
     color: "var(--text-color)",
     borderRadius: "0.5rem",
-    lineHeight: 1.6,
-    padding: "4px 12px",
+    lineHeight: 1.2,
+    fontSize: "0.875rem",
+    padding: "3px 8px",
     fontWeight: 400,
+    margin: "-2px 0",
     backgroundColor: "var(--btn-color)",
     border: "1px solid var(--btn-boarder-color)",
   },

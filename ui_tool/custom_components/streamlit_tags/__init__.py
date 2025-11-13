@@ -2,7 +2,6 @@ import os
 
 import streamlit.components.v1 as components
 import streamlit as st
-import pyarrow
 
 # Create a _RELEASE constant. We'll set this to False while we're developing
 # the component, and True when we're ready to package and distribute it.

@@ -22,9 +22,19 @@ const tagStyles = css({
     cursor: "pointer",
     lineHeight: "inherit",
     padding: "0 var(--rtiS)",
+    fontSize: "0.625em",
+    fontWeight: "600",
 
     "&:hover": {
       color: "var(--rti-tag-remove)",
+    },
+
+    "&:focus": {
+      outline: "none",
+    },
+
+    "&:focus-visible": {
+      outline: "none",
     },
   },
 });
