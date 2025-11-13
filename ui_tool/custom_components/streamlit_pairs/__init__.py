@@ -71,29 +71,3 @@ def st_pairs(value: list = [],
                                       key=key,
                                       default=value)
     return component_value
-
-
-# Add some test code to play with the component while it's in development.
-# During development, we can run this just as we would any other Streamlit
-# app: `$ streamlit run my_component/__init__.py`
-if not _RELEASE:
-    import streamlit as st
-
-    # Create a second instance of our component whose `name` arg will vary
-    # based on a text_input widget.
-    #
-    # We use the special "key" argument to assign a fixed identity to this
-    # component instance. By default, when a component's arguments change,
-    # it is considered a new instance and will be re-mounted on the frontend
-    # and lose its current state. In this case, we want to vary the component's
-    # "name" argument without having it get recreated.
-
-    keyword = st_pairs(label='# Enter Keywords:',
-                      text='Press enter to add more',
-                      value=['Zero', 'One', 'Two'],
-                      suggestions=['five', 'six', 'seven', 'eight', 'nine', 'three', 'eleven', 'ten', 'four'],
-                      maxtags=4,
-                      key='2')
-
-    st.sidebar.write("### Results:")
-    st.sidebar.write(keyword)

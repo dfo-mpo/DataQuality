@@ -142,7 +142,7 @@ export const TagsInput = ({
     // Verify both columns are entered
     if (firstCol && firstCol !== '' && secondCol && secondCol !== '') {
       // Save pair
-      const pair = `"${firstCol}", "${secondCol}"`
+      const pair = `('${firstCol}', '${secondCol}')`
       if (tags.length) {
         setTags(tags.slice(0, -1));
       }

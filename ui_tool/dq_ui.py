@@ -138,6 +138,11 @@ if uploaded_file is not None:
                         elif parameter.type == ParameterType.MULTI_SELECT:
                             if dimension_dict['parameters'][parameter.name] == []:
                                 dimension_dict['parameters'][parameter.name] = parameter.default
+
+                        # Need to convert stringified duples into objects within the list
+                        elif parameter.type == ParameterType.PAIRS:
+                            pairs = dimension_dict['parameters'][parameter.name]
+                            dimension_dict['parameters'][parameter.name] = [ast.literal_eval(pair) for pair in pairs]
                 
             # Instanciate class instance using generated parameter fields
             dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, **dimension_dict["parameters"])
