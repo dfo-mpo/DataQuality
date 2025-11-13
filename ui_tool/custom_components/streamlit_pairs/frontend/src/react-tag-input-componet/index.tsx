@@ -89,7 +89,7 @@ const pair_input = css({
     fontSize: "0.875rem",
     padding: "3px 8px",
     fontWeight: 400,
-    margin: "-2px 0",
+    margin: "-2px 0 -2px 4px",
     backgroundColor: "var(--btn-color)",
     border: "1px solid var(--btn-boarder-color)",
   },
