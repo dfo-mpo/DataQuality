@@ -1,16 +1,6 @@
-import re  
 import numpy as np  
-import os
-import statistics
 import pandas as pd
-from functools import partial
-from datetime import datetime
-from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-from sklearn.metrics.pairwise import cosine_similarity  
-from Levenshtein import ratio
-from difflib import SequenceMatcher  
-from ast import literal_eval
-import io
+from utils.column_operations import find_non_digits
 
 # ----------------------- Table Operations -------------------------------
 
