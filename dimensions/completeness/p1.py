@@ -23,7 +23,7 @@ class Metric:
         self.logging_path = logging_path
         self.uploaded_file_name = uploaded_file_name
         
-        self.exclude_columns = p1_exclude_columns
+        self.p1_exclude_columns = p1_exclude_columns
         self.p1_threshold = p1_threshold
 
         self.threshold = self.p1_threshold
@@ -38,8 +38,8 @@ class Metric:
         if 'Comment' in dataset.columns:  
             dataset = dataset.drop(columns=['Comment'])  
 
-        # Exclude columns in exclude_columns if they exist in the dataset    
-        dataset = dataset.drop(columns=[col for col in self.exclude_columns if col in dataset.columns])
+        # Exclude columns in p1_exclude_columns if they exist in the dataset    
+        dataset = dataset.drop(columns=[col for col in self.p1_exclude_columns if col in dataset.columns])
         
         # Calculate the percentage of non-null (non-missing) values in each column  
         is_null_percentage = dataset.isna().mean()  

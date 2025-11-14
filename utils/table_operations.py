@@ -1,6 +1,7 @@
 import numpy as np  
 import pandas as pd
-from utils.column_operations import find_non_digits
+from utils.column_operations import find_non_digits, contains_short_number, numeric_similarity
+from utils.item_operations import extract_numbers, string_similarity
 
 # ----------------------- Table Operations -------------------------------
 

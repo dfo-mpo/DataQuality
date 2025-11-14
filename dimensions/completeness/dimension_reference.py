@@ -55,7 +55,6 @@ class Completeness:
                 test_fail_comment = None
                 metric_log_csv = None # Ensure it exists even if errors occur
                 overall_completeness_score = {"metric": None, "value": None}  # Ensure it exists even if errors occur
-                print("current metric", metric)
                 try:
                     # Get any user-defined parameters for this metric
                     params = self.metric_params.get(metric, {})
