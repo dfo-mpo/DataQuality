@@ -12,305 +12,32 @@ from difflib import SequenceMatcher
 from ast import literal_eval
 import io
 
-# ----------------------- Consistency Dimension Utils -------------------------------
-province_abbreviations = {  
-    "BC": "British Columbia",  
-    "ON": "Ontario",  
-    "QC": "Quebec",  
-    "AB": "Alberta",  
-    "MB": "Manitoba",  
-    "SK": "Saskatchewan",  
-    "NS": "Nova Scotia",  
-    "NB": "New Brunswick",  
-    "NL": "Newfoundland and Labrador",  
-    "PE": "Prince Edward Island",  
-    "NT": "Northwest Territories",  
-    "YT": "Yukon",  
-    "NU": "Nunavut",  
-}  
+# ----------------------- Core Operations -------------------------------
 
-"""
-Normalize input text by converting to lowercase, stripping whitespace,
-replacing province abbreviations with full names, and removing non-alphanumeric characters.
-Optionally remove numbers based on the flag.
-""" 
-def normalize_text(text, remove_numbers=False):  
-    text = str(text).lower().strip()  
-    for abbr, full in province_abbreviations.items():  
-        text = re.sub(r"\b" + abbr.lower() + r"\b", full.lower(), text)  
-    if remove_numbers:  
-        text = re.sub(r"\d+", "", text)  
-    text = "".join(char for char in text if char.isalnum() or char.isspace())  
-    return " ".join(text.split())  
-
-"""
-Extract all numbers from the input text and return them as a list of strings.
-"""
-def extract_numbers(text):  
-    return re.findall(r"\d+", text)  
-
-"""
-Remove numbers with 1 or 2 digits from the input text.
-"""
-def remove_short_numbers(text):  
-    return re.sub(r"\b\d{1,4}\b", "", text)  
-
-"""
-Calculate the similarity between two lists of numbers by comparing each digit.
-Return the proportion of matching digits.
-"""
-def numeric_similarity(num1_list, num2_list):  
-    num1, num2 = " ".join(num1_list), " ".join(num2_list)  
-    matches = sum(1 for a, b in zip(num1, num2) if a == b)  
-    max_length = max(len(num1), len(num2))  
-    return matches / max_length if max_length > 0 else 0  
-
-"""
-Calculate the similarity between two strings using the SequenceMatcher from difflib.
-Return the similarity ratio.
-"""
-def string_similarity(str1, str2):  
-    return SequenceMatcher(None, str1, str2).ratio()  
-    
-def get_names_used_for_column(df, column_name):  
-    unique_observations = pd.unique(df[column_name].dropna().values.ravel())  
-    return unique_observations  
-
-"""
-Calculate the cosine similarity between lists of texts using TF-IDF vectorization.
-"""
-def calculate_cosine_similarity(text_list, ref_list, stop_words):  
-    vectorizer = TfidfVectorizer(stop_words=stop_words, analyzer="word", ngram_range=(1, 2))  
-    ref_vec = vectorizer.fit_transform(ref_list)  
-    text_vec = vectorizer.transform(text_list)  
-    return cosine_similarity(text_vec, ref_vec)  
-
-"""
-Calculate the levenshtein similarity ratio between lists of texts.
-"""
-def calculate_levenshtein_similarity(text_list, ref_list):
-    sim_matrix = np.zeros((len(text_list), len(ref_list)))
-
-    for i, text in enumerate(text_list):
-        for j, ref in enumerate(ref_list):
-            sim_matrix[i, j] = ratio(text, ref)
-    return sim_matrix
-
-"""
-Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
-"""
-def average_c1_consistency_score(cosine_sim_matrix, threshold=0.91):  
-    num_rows, num_columns = cosine_sim_matrix.shape  
-    inconsistency = 0  
-    for i in range(num_rows):  
-        if np.any((cosine_sim_matrix[i] > threshold) & (cosine_sim_matrix[i] <= 1.0000000)):  
-            inconsistency += 1  
-    return (num_rows - inconsistency) / num_rows  
-
-"""
-Check if any number in the list has 1 or 2 digits.
-"""
-def contains_short_number(num_list):
-    return any(len(num) <= 4 for num in num_list)
-
-"""
-Check if any number in the first list is present in the second list.
-"""
-def numbers_match(num_list1, num_list2):
-    return any(num in num_list2 for num in num_list1)
-
-"""
-Combine text and numeric similarities into a single similarity matrix.
-"""
-def calculate_combined_similarity(unique_observations, text_similarity_matrix):
-    # Make a copy of the text similarity matrix to modify it
-    combined_sim_matrix = np.copy(text_similarity_matrix)
-    
-    # Extract numeric parts from each unique observation, but remove short numbers
-    numeric_parts = [extract_numbers(obs) for obs in unique_observations]
-    
-    # Iterate over each pair of unique observations to calculate numeric similarity
-    for i, num_i in enumerate(numeric_parts):
-        for j, num_j in enumerate(numeric_parts):
-            if i != j:
-                if not contains_short_number(numeric_parts):
-                    # Calculate the numeric similarity for the current pair
-                    num_sim = numeric_similarity(num_i, num_j)
-                    
-                    # Update the combined similarity matrix with the maximum value between text and numeric similarity
-                    combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], num_sim)
-
-    # Iterate over each pair of unique observations to calculate string similarity
-    for i, obs_i in enumerate(unique_observations):
-        for j, obs_j in enumerate(unique_observations):
-            if i != j:
-                # Calculate the string similarity for the current pair
-                seq_sim = string_similarity(obs_i, obs_j)
-                
-                # Update the combined similarity matrix with the maximum value between existing and sequence matcher 
-                combined_sim_matrix[i, j] = max(combined_sim_matrix[i, j], seq_sim)
-    
-    return combined_sim_matrix
-
-"""
-Extract maximum similarity values, and corresponding project names
-and create a DataFrame with this information.
-"""
-def get_max_similarity_values(combined_sim_matrix, unique_observations, column_names):
-    # Store max values and names
-    max_values = []
-    max_names = []
-    unique_project_names = np.array(unique_observations)
-    
-    # Iterate over each row to find max similarity values and corresponding project names
-    for i, row in enumerate(combined_sim_matrix):
-        # Ignore self-similarity by setting the diagonal to -1
-        row[i] = -1
-        
-        # Get the index of the maximum similarity
-        top_indices = np.argsort(row)[::-1]  # Sort in descending order
-        
-        # Get the maximum value, name, and ratio
-        max_values.append(row[top_indices[0]])
-        max_names.append(unique_project_names[top_indices[0]])
-    
-    # Create a DataFrame with the max values and corresponding project names
-    max_values_df = pd.DataFrame({
-        "Column Source": column_names,
-        "Names Tested": unique_project_names,
-        "Highest Similarity Names": max_names,
-        "Similarity Score": max_values
-    })
-    
-    return max_values_df
-
-"""
-Compare whether the column being tested resembles the reference data column
-and create a DataFrame with new column(s) added
-"""
-def compare_datasets(df,selected_column, unique_observations):     
-    # Iterate over each row in the selected column    
-    column_results = []  
-    for value in df[selected_column]:    
-        column_results.append(np.where(pd.isnull(value), True, value in unique_observations))    
-    
-    # Add the results as a new column in the DataFrame  
-    df[selected_column + '_comparison'] = column_results  
-    
-    return df  
-
-"""
-Calculate the average consistency score based on the cosine similarity matrix and a given threshold.
-"""
-def average_c2_consistency_score(cosine_sim_df, threshold=0.91):
-    num_rows, num_columns = cosine_sim_df.shape
-    total_count = 0  # This will count all values above or equal to the threshold
-
-    for i in range(num_rows):
-        if np.max(cosine_sim_df[i]) >= threshold:  # Include all comparisons
-            total_count += 1
-    total_observations = num_rows  # Total number of observations
-    average_consistency_score = total_count / total_observations
-    return average_consistency_score
-
-"""
-Calculate the average consistency score based on the levenshtein similarity ratio matrix and a given threshold.
-"""
-def average_c3_consistency_score(leven_dist_df, threshold=0.91):
-    num_rows, num_columns = leven_dist_df.shape
-    total_count = 0  # This will count all values above or equal to the threshold
-
-    for i in range(num_rows):
-        if np.max(leven_dist_df[i]) >= threshold:  # Include all comparisons
-            total_count += 1
-    total_observations = num_rows  # Total number of observations 
-    average_consistency_score = total_count / total_observations
-    return average_consistency_score
-    
-"""
-Check whether given string date-time entry matches a given format.
-"""
-def inconsistent_datetime(date_str, fmt):
-    # Catches inconsistent format and return true 
-    try:
-        datetime.strptime(date_str, fmt)
-        return False 
-    except ValueError:
-        return True 
-        
-# ----------------------- Accuracy Dimension Utils -------------------------------
-"""
-For Accuracy A1 
-Create a new column that flags previously existing nulls and empty strings. this prevents a false positive (if it is already a null then it shouldn't be counted as an instance of a symbol in numerics)
-"""
-def new_column(df, column_name):
-    df[f"{column_name}_new"] = np.where(
-        df[column_name].isnull() | (df[column_name].astype(str).str.strip() == ""), 1, 0)
-    
-    return df
-
-"""
-A1 
-Use the new null flag column to find symbols in numerics. change existing nulls to "True" as preparation for an output dataset that only flags symbols in numerics and not anything else, 
-change symbols in numerics to real NaN.
-"""
-def find_non_digits(df, column_name):
-    new_column(df, column_name)
-    new_col_name = f"{column_name}_new"
-    to_numeric_with_coerce = partial(pd.to_numeric, errors='coerce')
-    
-    df[column_name] = np.where(df[new_col_name] == 0, df[column_name].apply(to_numeric_with_coerce), "True")
-    
-    df[column_name] = df[column_name].replace("nan", np.nan) # replace nan that was string, to real NaN 
-    
-    return df
-
-"""
-A1
-create new column(s) for output report based on the original input dataset with the additional newly generated column(s)
-"""
-def add_only_numbers_columns(df, selected_columns, original_df):    
-    selected_columns = [col for col in df.columns if col in selected_columns]   
-    
-    for column_name in selected_columns: 
-        non_digits = find_non_digits(df, column_name)
-        
-        original_df[column_name + '_Only_Numbers'] = non_digits[column_name].apply(
-            lambda x: np.where(pd.isnull(x), False, True)
-        )    
-
-    return original_df
-
-# ----------------------- Completeness and Interdependency Dimension Utils -------------------------------
-"""
-Filter for column pairs that meet the threshold, with same column pairings and duplicates removed.
-"""
-def filter_corrs(corrs, threshold, subset=None):
-    
-    corrs = corrs.copy()
-    # Remove same column pairings and subset sensitive features
-    np.fill_diagonal(corrs.values, np.nan)
-    corrs = corrs[subset].drop(subset) if subset is not None else corrs
-
-    # Keep columns pairings with absolute correlation above the threshold
-    corrs_thr = corrs[(abs(corrs) > threshold)].melt(ignore_index=False).reset_index().dropna()
-
-    # Rename columns
-    # used / because some features use _ in column name already so may confuse user reading output table
-    corrs_thr.columns = ['var1', 'var2', 'corr_coeff']
-    corrs_thr['features'] = ['/'.join(sorted((i.var1, i.var2))) for i in corrs_thr.itertuples()]
-    
-    # Remove duplicate column pairings and sort by descending correlation coefficients
-    corrs_thr.drop_duplicates('features', inplace=True)
-    corrs_thr.sort_values(by='corr_coeff', ascending=False, inplace=True)
-
-    return corrs_thr
-    
-# ----------------------- All Dimension Utils -------------------------------
+# --- Utils Helpers ---
 # ANSI escape code for red text for console output 
 RED = "\033[31m"  
 RESET = "\033[0m" 
 
+"""
+- Function to convert dataframe in CSV, 
+    if a logging path is defined: Return is the name of the csv file created
+    if no loggin path defined: Return the csv in memory
+"""
+def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
+    # Define csv file name
+    base_filename=f"{logging_path}{metric}_output"
+    version = 1
+    while os.path.exists(f"{base_filename}_v{version}.csv"):
+        version += 1
+    
+    # Create CSV file
+    output_file = io.StringIO() if logging_path == None else f"{base_filename}_v{version}.csv"
+    final_df.to_csv(output_file, index=False)
+
+    return output_file
+
+# --- Input / Output ---
 """ Reading the dataset file 
 - Function to read either csv or xlsx data. If input is already a data frame, it will return the input.
 """
@@ -412,24 +139,6 @@ def get_dataset_name(dataset_path):
     # Split the file name to remove the extension (e.g., 'Dataset_A')
     dataset_name = os.path.splitext(file_name)[0]
     return dataset_name
-
-"""
-- Function to convert dataframe in CSV, 
-    if a logging path is defined: Return is the name of the csv file created
-    if no loggin path defined: Return the csv in memory
-"""
-def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
-    # Define csv file name
-    base_filename=f"{logging_path}{metric}_output"
-    version = 1
-    while os.path.exists(f"{base_filename}_v{version}.csv"):
-        version += 1
-    
-    # Create CSV file
-    output_file = io.StringIO() if logging_path == None else f"{base_filename}_v{version}.csv"
-    final_df.to_csv(output_file, index=False)
-
-    return output_file
 
 """
 - Function to read metric log if it exists
@@ -574,7 +283,8 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
     except Exception as e:
         print(f"When trying to create one line summary for {metric}, the following error occurred: {e}")
         return None
-    
+
+# --- Scoring / Validation ---
 """
 - Determines if the given set of weights meet the follwing criteria
     - The number of weights match the number of metrics/dimensions
@@ -643,8 +353,10 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
     
     return {"dimension": dimension_type, "score": score_value}
 
-# Takes a list of scores (containing dimension name and total score) for each dimension.
-# Determines a grade for the DQ based on the inputted score.
+"""
+Takes a list of scores (containing dimension name and total score) for each dimension.
+Determines a grade for the DQ based on the inputted score.
+"""
 def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
     # Custom weights are provided ensure it is correctly entered
     if (weights != {}):
@@ -668,3 +380,4 @@ def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
         return "Minimum"
     else:
         return "Needs Improvement"
+
