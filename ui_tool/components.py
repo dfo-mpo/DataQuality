@@ -1,23 +1,16 @@
-from dimensions import interdependency
-from metadata import ParameterMetadata, ParameterType
+import sys  
+from pathlib import Path  
+  
+# Set path for local custom components 
+BASE_DIR = Path(__file__).resolve().parent  
+COMPONENTS_DIR = BASE_DIR / "custom_components"  
+if str(COMPONENTS_DIR) not in sys.path:  
+    sys.path.insert(0, str(COMPONENTS_DIR))  
+
+from ui_tool.metadata import ParameterMetadata, ParameterType
+from streamlit_tags import st_tags # Community component
+from streamlit_pairs import st_pairs # Custom component
 import streamlit as st
-
-# def generateMetadata():
-#     metric_metadata = {
-#         "Accessibility": { "all_metrics": accessibility.ALL_METRICS },
-#         "Accuracy": { "all_metrics": consistency.ALL_METRICS },
-#         "Completeness": { "all_metrics": accuracy.ALL_METRICS },
-#         "Consistency": { "all_metrics": completeness.ALL_METRICS },
-#         "Interdependency": { "all_metrics": interdependency.ALL_METRICS },
-#         "Relevance": { "all_metrics": relevance.ALL_METRICS },
-#         "Timeliness": { "all_metrics": timeliness.ALL_METRICS },
-#         "Uniqueness": { "all_metrics": uniqueness.ALL_METRICS }
-#     }
-
-
-#     metric_metadata.append()
-
-#     return metric_metadata
 
 """ Generate first row containing parameters required for all dimensions, inputs are stored in the provided dictionary object. 
 dimension: The name of the given dimension.
@@ -25,18 +18,18 @@ dimension_dict: The dictionary representing the given dimension.
 """
 def generateFirstDimensionRow(dimension_dict):
     all_metrics = dimension_dict["all_metrics"]
-    example_weights = f"'{all_metrics[0]}': 0.3, '{all_metrics[0][0]}': 0.7"
+    example_weights = f"'{all_metrics[0]}': 0.3, '{all_metrics[0][0]}2': 0.7"
     col_1, col_2 = st.columns(2)
 
     with col_1:  
-        dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics, help="Runs all metrics by default.")
+        dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
     with col_2:  
         dimension_dict["weights"] = st.text_input("Weights", value="", 
                                     placeholder="e.g., {"+example_weights+"}", 
                                     help="If left empty, weighting will be equal. Weights must add up to 1.")
         
 
-def generateDimensionRow(dimension_dict, parameters: list[ParameterMetadata], df_columns):
+def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:
         return
 
@@ -94,16 +87,23 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
     match parameter.type:
         case ParameterType.MULTI_SELECT:
             options = parameter.value if parameter.value else df_columns
-            return st.multiselect(parameter.title, options=options, default=[])
+            return st.multiselect(parameter.title, options=options, default=[], help=parameter.hint)
         case ParameterType.SINGLE_SELECT:
             options = parameter.value if parameter.value else df_columns
-            return st.selectbox(parameter.title, options=options)
+            return st.selectbox(parameter.title, options=options, help=parameter.hint)
         case ParameterType.DECIMAL:
-            return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step) 
+            return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
         case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running metrics
             return st.text_input(parameter.title, value=parameter.value, placeholder=parameter.placeholder, help=parameter.hint)
+        case ParameterType.CHECKBOX:
+            return st.checkbox(parameter.title, value=parameter.value, help=parameter.hint)
         case ParameterType.FILE_UPLOAD:
-            return st.file_uploader(parameter.title, type=["csv", "xlsx"])
+            return st.file_uploader(parameter.title, type=["csv", "xlsx"], help=parameter.hint)
+        case ParameterType.STRING_LIST:
+            return st_tags(label=parameter.title, text='Press enter to add more', value=parameter.value, suggestions=parameter.suggestions)
+        case ParameterType.PAIRS:
+            suggestions = parameter.suggestions if parameter.suggestions != [] else df_columns
+            return st_pairs(label=parameter.title, text='Enter column name', value=parameter.value, suggestions=suggestions)
         # Fall through if invalid ParameterType found
         case _:
             st.error("None valid ParameterType found when generating fields from dimension class metadata.")

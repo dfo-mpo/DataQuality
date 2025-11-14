@@ -24,4 +24,4 @@ fi
   
 # Run the Streamlit application  
 echo "Running Streamlit application..."  
-streamlit run streamlit.py  
+streamlit run ui_tool/dq_ui.py

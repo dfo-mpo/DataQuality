@@ -1,8 +1,12 @@
 import streamlit as st
+# Overwrite root path set by streamlit so files from sibling folders (dimensions) can be accessed
+import os, sys
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
 import pandas as pd  
 from functools import reduce
 import ast
-from metadata import ParameterType
+from ui_tool.metadata import ParameterType
 import ui_tool.components as components
 
 # Import dimensions
@@ -18,6 +22,16 @@ from dimensions.utils import calculate_dimension_score, calculate_DQ_grade, read
 
 # Title of the web app  
 st.title("Data Quality Calculator", anchor=False)
+
+# Set the page layout to wide mode
+st.html("""
+    <style>
+        .stMainBlockContainer {
+            max-width:57rem;
+        }
+    </style>
+    """
+)
 
 DIMENSION_SCORES = [] # Stores the final score for each dimension used to calculate final grade
 dimensions = { # Nested dictionary to keep track of values for each given dimension durring runtime
@@ -59,6 +73,8 @@ if uploaded_file is not None:
     """)
     selected_dimensions = st.multiselect("Choose dimensions to use", dimensions.keys())
 
+
+    # CHange metrics to only show params when selected, remove hint for metric, and check that a metric is selected for check dimension before allowing a data quality run.
     # Iterate through each dimension
     for dimension in dimensions:
         if dimension in selected_dimensions:
@@ -68,9 +84,9 @@ if uploaded_file is not None:
 
                 # Iterate through each metric that has metadata, parameters will be grouped together for each metric
                 for metric in dimensions[dimension]["metadata"]: # metric is of type MetricMetadata from metadata.py
-                    if dimensions[dimension]["metrics"] == [] or metric.name in dimensions[dimension]["metrics"]:
+                    if metric.name in dimensions[dimension]["metrics"]:
                         try:
-                            components.generateDimensionRow(dimension_dict=dimensions[dimension], parameters=metric.parameters, df_columns=df.columns.tolist())
+                            components.generateDimensionRow(dimension_dict=dimensions[dimension], metric=metric.name, parameters=metric.parameters, df_columns=df.columns.tolist())
                         except Exception as e:
                             st.error(f"Error encountered when generating fields for the {metric.name} metric!")
                             st.error(e)
@@ -117,6 +133,16 @@ if uploaded_file is not None:
                             except:
                                 st.error(f"Error processing uploaded file for {parameter.title}, defaulting value to {parameter.default} for calculation.")
                                 dimension_dict['parameters'][parameter.name] = parameter.default
+                        
+                        # If left blank update Multi select with default (which is None if not defined in the dimension class)
+                        elif parameter.type == ParameterType.MULTI_SELECT:
+                            if dimension_dict['parameters'][parameter.name] == []:
+                                dimension_dict['parameters'][parameter.name] = parameter.default
+
+                        # Need to convert stringified duples into objects within the list
+                        elif parameter.type == ParameterType.PAIRS:
+                            pairs = dimension_dict['parameters'][parameter.name]
+                            dimension_dict['parameters'][parameter.name] = [ast.literal_eval(pair) for pair in pairs]
                 
             # Instanciate class instance using generated parameter fields
             dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, **dimension_dict["parameters"])
@@ -149,4 +175,4 @@ if uploaded_file is not None:
 
 else:  
     # Disabled Run Tests button  
-    st.button("Calculate Grade", disabled=True)  
+    st.button("Calculate Data Quality", disabled=True)  
