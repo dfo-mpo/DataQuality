@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "T1" 
@@ -37,7 +37,7 @@ class Metric:
     """
     # TODO: Replace with the logic for this metric, where the final score should be called timeliness_score
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         timeliness_score = None
 
@@ -50,7 +50,7 @@ class Metric:
             if not timeliness_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=tdf)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=tdf)
             return timeliness_score, output_file  # Return the file name
                 
         else:

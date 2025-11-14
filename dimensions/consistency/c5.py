@@ -1,7 +1,7 @@
 import numpy as np  
 import pandas as pd
 import re
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "C5"
@@ -36,7 +36,7 @@ class Metric:
     Users can optionally check whether coordinates fall within DFO's administrative Pacific Region, otherwise defaults to global bounds.
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         results = df.copy()
         all_consistency_scores = {}
         lat_min, lat_max = -90, 90
@@ -82,7 +82,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                 
             final_df = invalid_df
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_consistency_score, output_file  # Return the file name
                 
         else:

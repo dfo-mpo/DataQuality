@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "A2"
@@ -38,7 +38,7 @@ class Metric:
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         outliers_dict = {}
         scores = {} # keep incase we want to view the final scores by column
         avg_score = 0
@@ -98,7 +98,7 @@ class Metric:
                 final_df.rename(columns={'index': 'GroupName'}, inplace=True)
             else:
                 final_df = pd.DataFrame([outliers_dict])
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return avg_score, output_file  # Return the file name
             
         else:

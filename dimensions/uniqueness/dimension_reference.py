@@ -1,4 +1,4 @@
-from utils import utils
+from utils import core_operations
 import os
 import importlib
 
@@ -78,13 +78,13 @@ class Uniqueness:
                     overall_uniqueness_score["value"] = uniqueness_score
                 
                 except KeyError as e:
-                    print(f'{utils.RED}Issue with column names, are you sure you entered them correctly?{utils.RESET}')
+                    print(f'{core_operations.RED}Issue with column names, are you sure you entered them correctly?{core_operations.RESET}')
                     print(f'Column name that fails: {e}')
-                    print(f'List of all detected column names: {list(utils.read_data(self.dataset_path).columns)}')
+                    print(f'List of all detected column names: {list(core_operations.read_data(self.dataset_path).columns)}')
                     errors = type(e).__name__  
                     test_fail_comment = str(e) + ' column not found in dataset.'
                 except Exception as e:
-                    print(f'{utils.RED} {type(e).__name__} error has occured!{utils.RESET}')
+                    print(f'{core_operations.RED} {type(e).__name__} error has occured!{core_operations.RESET}')
                     print(e)
                     errors = type(e).__name__  
                     test_fail_comment = str(e)
@@ -92,9 +92,9 @@ class Uniqueness:
                 outputs.append(overall_uniqueness_score)
                
                 # output report of results
-                metric_output_log = utils.output_log_score(
+                metric_output_log = core_operations.output_log_score(
                     test_name = metric, 
-                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path), 
+                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else core_operations.get_dataset_name(self.dataset_path), 
                     score = overall_uniqueness_score, 
                     selected_columns = selected_columns,
                     excluded_columns = [''],
@@ -112,7 +112,7 @@ class Uniqueness:
                 return outputs, output_logs
             return outputs
         else:
-            print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
+            print(f'{core_operations.RED}Non valid entry for metrics.{core_operations.RESET}')
             print(f'Metric options: {self.ALL_METRICS}, inputted metrics: {metrics}')
             return -1
 

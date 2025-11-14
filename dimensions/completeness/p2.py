@@ -1,5 +1,5 @@
 from dython.nominal import associations
-from utils import utils
+from utils import core_operations, table_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "P2"
@@ -31,7 +31,7 @@ class Metric:
     Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.5 will be used as a midpoint threshold to investigate whether an association exists. 
     """ 
     def run_metric(self):
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         # Exclude the 'Comment' or 'Comments' column if it exists in the dataset  
         if 'Comment' in df.columns:  
@@ -49,7 +49,7 @@ class Metric:
         n_pairs = len(corrs) * (len(corrs) - 1)/2
 
         # Keep columns pairings with absolute correlation above the threshold
-        corrs_thr = utils.filter_corrs(corrs, self.p2_threshold)
+        corrs_thr = table_operations.filter_corrs(corrs, self.p2_threshold)
 
         # Compute score 
         completeness_score = (1 - (len(corrs_thr) / n_pairs)) if corrs_thr is not None else None
@@ -62,7 +62,7 @@ class Metric:
                 return "No valid p2 results generated", None
             
             final_df = corrs_thr
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return completeness_score, output_file  # Return the file name
             
         else:

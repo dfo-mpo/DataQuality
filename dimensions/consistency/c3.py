@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations, table_operations, column_operations, item_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "C3" 
@@ -34,25 +34,25 @@ class Metric:
     Levenshtein Similarity Ratio = 1 - (normalized Levenshtein Distance), where a score of 1 means the strings are identical.
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path) 
+        df = core_operations.read_data(self.dataset_path) 
         all_consistency_scores = []
         compare_df = pd.DataFrame()
     
         # Initialize reference data (lowercased province/territory names)
-        arr_ref_normalized = np.array([name.lower() for name in utils.province_abbreviations.values()])
+        arr_ref_normalized = np.array([name.lower() for name in item_operations.province_abbreviations.values()])
     
         for column in self.c3_column_names:
     
             # Normalize entries 
-            df[f"Normalized {column}"] = df[column].apply(utils.normalize_text)
+            df[f"Normalized {column}"] = df[column].apply(item_operations.normalize_text)
     
             # Calculate Levenshtein Similarity Ratio matrix and average consistency score based on matrix and threshold
-            levenshtein_sim_matrix = utils.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)    
-            column_consistency_score = utils.average_c3_consistency_score(levenshtein_sim_matrix, self.c3_threshold)
+            levenshtein_sim_matrix = column_operations.calculate_levenshtein_similarity(df[f"Normalized {column}"].dropna(), arr_ref_normalized)    
+            column_consistency_score = table_operations.average_c3_consistency_score(levenshtein_sim_matrix, self.c3_threshold)
             all_consistency_scores.append(column_consistency_score)
 
             # Compare to reference data and add comparison column to dataset
-            compare_df = utils.compare_datasets(df, f"Normalized {column}", arr_ref_normalized)
+            compare_df = column_operations.compare_datasets(df, f"Normalized {column}", arr_ref_normalized)
 
         # Drop normalized columns for output report
         columns_to_drop = [f"Normalized {col}" for col in compare_df.columns]
@@ -78,7 +78,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                     
             final_df = inconsistent_df
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return avg_score, output_file  # Return the file name
                     
         else:

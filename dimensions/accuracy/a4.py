@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "A4"
@@ -32,7 +32,7 @@ class Metric:
     Test will consider missing start and end dates as valid.
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         results = df.copy()
         all_accuracy_scores = {}
         
@@ -66,7 +66,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                 
             final_df = invalid_df
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_accuracy_score, output_file  # Return the file name
                 
         else:

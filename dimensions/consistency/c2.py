@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations, table_operations, column_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "C2" 
@@ -38,11 +38,11 @@ class Metric:
     """
     def run_metric(self):    
         # Read the data file
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         # Initialize ref_df if a ref dataset is provided
         if self.ref_dataset_path:
-            df_ref = utils.read_data(self.ref_dataset_path)
+            df_ref = core_operations.read_data(self.ref_dataset_path)
             ref_data = True  # Flag to indicate we are using a ref dataset
         else:
             ref_data = False  # No ref dataset, compare within the same dataset
@@ -52,15 +52,15 @@ class Metric:
         for selected_column, m_selected_column in self.c2_column_mapping.items():
             if ref_data:
                 # Compare to ref dataset
-                unique_observations = utils.get_names_used_for_column(df_ref, m_selected_column)
+                unique_observations = column_operations.get_names_used_for_column(df_ref, m_selected_column)
             else:
                 # Use own column for comparison
-                unique_observations = utils.get_names_used_for_column(df, selected_column)
+                unique_observations = column_operations.get_names_used_for_column(df, selected_column)
 
-            cosine_sim_matrix = utils.calculate_cosine_similarity(
+            cosine_sim_matrix = column_operations.calculate_cosine_similarity(
                 df[selected_column].dropna(), unique_observations, stop_words=self.c2_stop_words
             )
-            column_consistency_score = utils.average_c2_consistency_score(
+            column_consistency_score = table_operations.average_c2_consistency_score(
                 cosine_sim_matrix, self.c2_threshold
             )
             all_consistency_scores.append(column_consistency_score)
@@ -79,8 +79,8 @@ class Metric:
             if not overall_avg_consistency :
                 return f"No valid {METRIC} results generated", None
             
-            final_df = utils.compare_datasets(df, selected_column, unique_observations)  
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            final_df = column_operations.compare_datasets(df, selected_column, unique_observations)  
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_avg_consistency, output_file  # Return the file name
         else:
             return df, None  # Default return value (DataFrame)

@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "U1"
@@ -29,7 +29,7 @@ class Metric:
     Find duplicated rows (what used to be known as Accuracy Type 3)
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         # Find duplicate rows
         duplicate_rows = df[df.duplicated(keep=False)]
@@ -54,7 +54,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
             
             final_df = duplicate_rows  
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return percentage_duplicate, output_file  # Return the file name
             
         else:

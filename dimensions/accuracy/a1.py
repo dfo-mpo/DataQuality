@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations, table_operations, column_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "A1"
@@ -33,18 +33,18 @@ class Metric:
     """    
     def run_metric(self):    
         # dataframes for output report reports
-        original_df = utils.read_data(self.dataset_path) # this first original dataframe is used to compute a column of NaNs that are used for the accuracy calculations in the output report
-        original_df_2 = utils.read_data(self.dataset_path) # this second original dataframe is used to write the output that needs to show what the original dataframe looked like
+        original_df = core_operations.read_data(self.dataset_path) # this first original dataframe is used to compute a column of NaNs that are used for the accuracy calculations in the output report
+        original_df_2 = core_operations.read_data(self.dataset_path) # this second original dataframe is used to write the output that needs to show what the original dataframe looked like
         
         # dataframe for computing accuracy score
-        adf = utils.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
+        adf = core_operations.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
         selected_columns = [col for col in adf.columns if col in self.a1_column_names] 
 
         all_accuracy_scores = []
         
         for column_name in selected_columns:  
             
-            non_digit_chars_per_row = utils.find_non_digits(adf, column_name)
+            non_digit_chars_per_row = column_operations.find_non_digits(adf, column_name)
             # Drop NA, null, or blank values from column  
             column_data = adf.loc[adf[f"{column_name}_new"]==0]   
             total_rows = len(column_data)  
@@ -64,8 +64,8 @@ class Metric:
             if not overall_accuracy_score :
                 return f"No valid {METRIC} results generated", None
             
-            final_df = utils.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            final_df = table_operations.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_accuracy_score, output_file  # Return the file name
             
         else:

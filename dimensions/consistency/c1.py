@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations, table_operations, column_operations, item_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "C1"
@@ -38,30 +38,30 @@ class Metric:
     """     
     def run_metric(self):    
         # Read the dataset from the provided Excel file path
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         overall_consistency_scores = []
         consistency_score_list =[]
 
         # Iterate over each specified column
         for column_name in self.c1_column_names:
             # Normalize the text in the specified column and store the results in a new column
-            df[f"Normalized {column_name}"] = df[column_name].apply(utils.normalize_text)
+            df[f"Normalized {column_name}"] = df[column_name].apply(item_operations.normalize_text)
 
             # Get unique normalized observations by removing duplicates and NaN values
             unique_observations = pd.unique(df[f"Normalized {column_name}"].dropna().values.ravel())
 
             # Calculate the cosine similarity matrix for the unique normalized observations
-            text_sim_matrix = utils.calculate_cosine_similarity(
+            text_sim_matrix = column_operations.calculate_cosine_similarity(
                 unique_observations.tolist(), unique_observations.tolist(), self.c1_stop_words)
 
             # Set the diagonal of the similarity matrix to 0 to ignore self-similarity
             np.fill_diagonal(text_sim_matrix, 0)
 
             # Combine text similarity with numeric similarity to get a final similarity matrix
-            combined_sim_matrix = utils.calculate_combined_similarity(unique_observations, text_sim_matrix)
+            combined_sim_matrix = table_operations.calculate_combined_similarity(unique_observations, text_sim_matrix)
             
             # Output the results of combined_sim_matrix into a dataframe with column names, and the next most similar column names
-            max_values_df = utils.get_max_similarity_values(combined_sim_matrix, unique_observations, column_name)
+            max_values_df = table_operations.get_max_similarity_values(combined_sim_matrix, unique_observations, column_name)
             overall_consistency_scores.append(max_values_df)
 
             # Initialize columns in the dataframe to store the recommended organization matches and all matches
@@ -90,22 +90,22 @@ class Metric:
                 best_match = "No significant match"
 
                 # Extract numbers from the current organization
-                num_list_current = utils.extract_numbers(norm_org)
+                num_list_current = item_operations.extract_numbers(norm_org)
 
                 for idx in matched_indices:
                     candidate_match = unique_observations[idx]
-                    num_list_candidate = utils.extract_numbers(candidate_match)
+                    num_list_candidate = item_operations.extract_numbers(candidate_match)
 
-                    if utils.contains_short_number(num_list_current) or utils.contains_short_number(
+                    if column_operations.contains_short_number(num_list_current) or column_operations.contains_short_number(
                         num_list_candidate
                     ):
                         # If short numbers are present, ensure they match; otherwise, skip this match
-                        if not utils.numbers_match(num_list_current, num_list_candidate):
+                        if not column_operations.numbers_match(num_list_current, num_list_candidate):
                             continue
                         # Recalculate similarity excluding short numbers
-                        norm_org_no_nums = utils.remove_short_numbers(norm_org)
-                        candidate_no_nums = utils.remove_short_numbers(candidate_match)
-                        recalculated_similarity = utils.string_similarity(
+                        norm_org_no_nums = item_operations.remove_short_numbers(norm_org)
+                        candidate_no_nums = item_operations.remove_short_numbers(candidate_match)
+                        recalculated_similarity = item_operations.string_similarity(
                             norm_org_no_nums, candidate_no_nums
                         )
                         if recalculated_similarity > best_score:
@@ -134,7 +134,7 @@ class Metric:
                 )
 
             # Calculate the overall consistency score for the current column
-            consistency_score = utils.average_c1_consistency_score(text_sim_matrix, self.c1_threshold)
+            consistency_score = table_operations.average_c1_consistency_score(text_sim_matrix, self.c1_threshold)
             consistency_score_list.append(consistency_score)
 
         # Calculate the overall consistency score as the average of individual consistency scores
@@ -149,7 +149,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
             
             final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_consistency_score, output_file  # Return the file name, add return for score
         else:
             return df, None  # Default return value (DataFrame)

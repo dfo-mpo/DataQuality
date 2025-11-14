@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "A3"
@@ -33,7 +33,7 @@ class Metric:
     """ Accuracy Type 3 (A3): Checks whether aggregated column (eg. Total) values are equal to the expected sum of their component columns.
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         # Fill NA with 0
         df_expected = df[self.a3_column_names].fillna(0)
@@ -60,7 +60,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                 
             final_df = inequal_df
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return accuracy_score, output_file  # Return the file name
                 
         else:

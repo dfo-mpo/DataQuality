@@ -1,5 +1,5 @@
 from dython.nominal import associations
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "P1"
@@ -32,7 +32,7 @@ class Metric:
     """ Completeness Type 1 (P1): Checks for whether there are blanks in the entire dataset.
     """
     def run_metric(self):
-        dataset = utils.read_data(self.dataset_path)
+        dataset = core_operations.read_data(self.dataset_path)
 
         # Exclude the 'Comment' column if it exists in the dataset  
         if 'Comment' in dataset.columns:  
@@ -63,7 +63,7 @@ class Metric:
                 return "No valid p1 results generated", None
             
             final_df = dataset2  
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return completeness_score, output_file  # Return the file name
             
         else:

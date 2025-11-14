@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 # TODO: Define metric name
@@ -40,7 +40,7 @@ class Metric:
     """    
     # TODO: Replace with the logic for this metric, where the final score should be called accessibility_score
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
 
         accessibility_score = None
 
@@ -53,7 +53,7 @@ class Metric:
             if not accessibility_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=sdf)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=sdf)
             return accessibility_score, output_file  # Return the file name
                 
         else:

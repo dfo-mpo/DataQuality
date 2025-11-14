@@ -1,6 +1,6 @@
 import numpy as np  
 import pandas as pd
-from utils import utils
+from utils import core_operations, item_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "C4" 
@@ -33,7 +33,7 @@ class Metric:
     """ Consistency Type 4 (C4): Checks whether the dataset follows standard date-time ISO 8601 formatting (or any format defined by the user).
     """
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         results = df.copy()
         all_consistency_scores = {}
 
@@ -43,7 +43,7 @@ class Metric:
             df_clean = df.dropna(subset=[column])
     
             # Calculate proportion of incorrectly formated values in each column
-            results[f"{column}_inconsistent"] = df_clean[column].apply(lambda x: utils.inconsistent_datetime(str(x), self.c4_format))
+            results[f"{column}_inconsistent"] = df_clean[column].apply(lambda x: item_operations.inconsistent_datetime(str(x), self.c4_format))
             all_consistency_scores[column] = 1 - results[f"{column}_inconsistent"].mean()
     
         # Take subset of data with inconsistent date-time formatting
@@ -62,7 +62,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                 
             final_df = inconsistent_df
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_consistency_score, output_file  # Return the file name
                 
         else:

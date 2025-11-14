@@ -1,4 +1,4 @@
-from utils import utils
+from utils import core_operations
 import os
 import importlib
 
@@ -79,20 +79,20 @@ class Completeness:
                     overall_completeness_score["value"] = completeness_score
                 
                 except FileNotFoundError as e:
-                    print(f'{utils.RED}Did not find dataset, make sure you have provided the correct name.{utils.RESET}')
+                    print(f'{core_operations.RED}Did not find dataset, make sure you have provided the correct name.{core_operations.RESET}')
                     errors = type(e).__name__  
                     test_fail_comment = str(e)
                 except Exception as e:
-                    print(f'{utils.RED} {type(e).__name__} error has occurred!{utils.RESET}')
+                    print(f'{core_operations.RED} {type(e).__name__} error has occurred!{core_operations.RESET}')
                     errors = type(e).__name__  
                     test_fail_comment = str(e)
                 
                 outputs.append(overall_completeness_score)
                
                 # output report of results
-                metric_output_log = utils.output_log_score(
+                metric_output_log = core_operations.output_log_score(
                     test_name = metric, 
-                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else utils.get_dataset_name(self.dataset_path), 
+                    dataset_name = self.uploaded_file_name if self.uploaded_file_name else core_operations.get_dataset_name(self.dataset_path), 
                     score = overall_completeness_score, 
                     selected_columns = selected_columns, 
                     excluded_columns = params.get(f"{metric.lower()}_exclude_columns", None),
@@ -110,7 +110,7 @@ class Completeness:
                 return outputs, output_logs
             return outputs
         else:
-            print(f'{utils.RED}Non valid entry for metrics.{utils.RESET}')
+            print(f'{core_operations.RED}Non valid entry for metrics.{core_operations.RESET}')
             print(f'Metric options: {self.ALL_METRICS}, inputted metrics: {metrics}')
             return -1
 

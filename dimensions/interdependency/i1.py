@@ -1,7 +1,7 @@
 import numpy as np  
 import pandas as pd
 from dython.nominal import associations
-from utils import utils
+from utils import core_operations, table_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
 METRIC = "I1" 
@@ -36,7 +36,7 @@ class Metric:
     Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
     """    
     def run_metric(self):    
-        df = utils.read_data(self.dataset_path)
+        df = core_operations.read_data(self.dataset_path)
         all_interdependency_scores = {}
 
         # Exclude the 'Comment' or 'Comments' column if it exists in the dataset  
@@ -55,7 +55,7 @@ class Metric:
     
         # Computes correlation coeff of all variables in dataset 
         corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True, cramers_v_bias_correction=False)['corr']
-        corrs_thr = utils.filter_corrs(corrs, self.i1_threshold, subset = self.i1_sensitive_columns)
+        corrs_thr = table_operations.filter_corrs(corrs, self.i1_threshold, subset = self.i1_sensitive_columns)
     
         # Compute proportion that exceeds threshold for each sensitive column
         corrs_subset = corrs[self.i1_sensitive_columns].drop(self.i1_sensitive_columns)
@@ -73,7 +73,7 @@ class Metric:
                 return f"No valid {METRIC} results generated", None
                 
             final_df = corrs_thr
-            output_file = utils.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
             return overall_interdependency_score, output_file  # Return the file name
                 
         else:
