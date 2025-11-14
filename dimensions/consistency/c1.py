@@ -163,8 +163,8 @@ def create_metadata():
     # Define instance for metric
     c1_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT)
+    c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT, default=[])
     c1_metadata.add_parameter('c1_threshold', 'C1 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
-    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.TEXT_INPUT, value='["the", "and"]', hint="Words filtered for C1 metric simularity calculations")
+    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"], hint="Words filtered for C1 metric simularity calculations")
     
     return c1_metadata 

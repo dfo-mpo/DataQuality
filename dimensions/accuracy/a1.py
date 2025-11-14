@@ -80,6 +80,6 @@ def create_metadata():
     # Define instance for metric
     a1_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    a1_metadata.add_parameter('a1_column_names', 'A1 Column Names', ParameterType.MULTI_SELECT)
+    a1_metadata.add_parameter('a1_column_names', 'A1 Column Names', ParameterType.MULTI_SELECT, default=[])
     
     return a1_metadata 

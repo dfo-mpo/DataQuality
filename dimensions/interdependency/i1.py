@@ -88,7 +88,7 @@ def create_metadata():
     # Define instance for metric
     i1_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT)
+    i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT, default=[])
     i1_metadata.add_parameter('i1_threshold', 'I1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
     
     return i1_metadata 

@@ -97,7 +97,7 @@ def create_metadata():
     # Define instance for metric
     c5_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    c5_metadata.add_parameter('c5_column_names', 'C5 Column Names', ParameterType.MULTI_SELECT)
+    c5_metadata.add_parameter('c5_column_names', 'C5 Column Names', ParameterType.MULTI_SELECT, default=[])
     c5_metadata.add_parameter('c5_region', 'C5 Region', ParameterType.SINGLE_SELECT, value=["All", "Pacific"], hint="Restricts geographic coordinates to specified DFO region.")
     
     return c5_metadata 

@@ -75,7 +75,7 @@ def create_metadata():
     # Define instance for metric
     a3_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    a3_metadata.add_parameter('a3_column_names', 'A3 Column Names', ParameterType.MULTI_SELECT)
+    a3_metadata.add_parameter('a3_column_names', 'A3 Column Names', ParameterType.MULTI_SELECT, default=[])
     a3_metadata.add_parameter('a3_agg_column', 'A3 Aggregate Column', ParameterType.SINGLE_SELECT)
     
     return a3_metadata

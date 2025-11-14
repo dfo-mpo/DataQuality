@@ -77,7 +77,7 @@ def create_metadata():
     # Define instance for metric
     c4_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT)
+    c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT, default=[])
     c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.STRING, value='%Y-%m-%d %H:%M:%S', hint="Date-time format that selected dataset columns are compared to. Use %Y (year), %M (months), and %D (days) separated by '-'. Use %H (hours), %M (minutes), and %S (seconds) separated by ':'." )
     
     return c4_metadata 

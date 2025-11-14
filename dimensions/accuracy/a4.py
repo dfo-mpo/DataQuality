@@ -81,6 +81,6 @@ def create_metadata():
     # Define instance for metric
     a4_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    a4_metadata.add_parameter('a4_column_pairs', 'A4 Column Pairs', ParameterType.TEXT_INPUT, value="", placeholder="e.g., [('col1', 'col2'), ('col3', 'col4')]", hint="Pairs of related timestamp columns used from the dataset. Use format in placeholder replacing text with names of columns from your uploaded dataset.")
+    a4_metadata.add_parameter('a4_column_pairs', 'A4 Column Pairs', ParameterType.PAIRS, value=[], hint="Pairs of related timestamp columns used from the dataset. Use format in placeholder replacing text with names of columns from your uploaded dataset.")
     
     return a4_metadata 

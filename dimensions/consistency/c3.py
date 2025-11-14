@@ -93,7 +93,7 @@ def create_metadata():
     # Define instance for metric
     c3_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    c3_metadata.add_parameter('c3_column_names', 'C3 Column Names', ParameterType.MULTI_SELECT)
+    c3_metadata.add_parameter('c3_column_names', 'C3 Column Names', ParameterType.MULTI_SELECT, default=[])
     c3_metadata.add_parameter('c3_threshold', 'C3 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
 
     return c3_metadata 

@@ -113,8 +113,8 @@ def create_metadata():
     # Define instance for metric
     a2_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    a2_metadata.add_parameter('a2_column_names', 'A2 Column Names', ParameterType.MULTI_SELECT)
-    a2_metadata.add_parameter('a2_groupby_column', 'Groupby Column(s)', ParameterType.MULTI_SELECT, hint="Used by metric A2, groupby data from selected_columns by each unique a2_groupby_column entry. Score is calculated for each groupby then averaged for a2_groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.")
+    a2_metadata.add_parameter('a2_column_names', 'A2 Column Names', ParameterType.MULTI_SELECT, default=[])
+    a2_metadata.add_parameter('a2_groupby_column', 'A2 Groupby Column(s)', ParameterType.MULTI_SELECT, hint="Groupby data from selected_columns by each unique a2_groupby_column entry. Score is calculated for each groupby then averaged for a2_groupby_column. If multiple groupby columns are provided, calculations are done on using each individual column then averaged together.")
     a2_metadata.add_parameter('a2_threshold', 'A2 Threshold', ParameterType.DECIMAL, value='1.5', step = 0.1)
     a2_metadata.add_parameter('a2_minimum_score', 'A2 Minimum Score', ParameterType.DECIMAL, value='0.85', step = 0.05)
     

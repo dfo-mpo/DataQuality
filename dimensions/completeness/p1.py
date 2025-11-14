@@ -78,7 +78,7 @@ def create_metadata():
     # Define instance for metric
     p1_metadata = MetricMetadata(dimension, METRIC)
     # Define each parameter needed for metric, use ParameterType when defining type
-    p1_metadata.add_parameter('p1_exclude_columns', 'P1 Exclude Columns', ParameterType.MULTI_SELECT)
+    p1_metadata.add_parameter('p1_exclude_columns', 'P1 Exclude Columns', ParameterType.MULTI_SELECT, default=[])
     p1_metadata.add_parameter('p1_threshold', 'P1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
     
     return p1_metadata 
