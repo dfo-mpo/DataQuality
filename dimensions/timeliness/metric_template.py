@@ -42,7 +42,7 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        timeliness_score = None None # Placeholder for calculated metric score
+        timeliness_score = None # Placeholder for calculated metric score
 
         tdf = None # Placeholder for output report (returned when return_type="dataset")
         

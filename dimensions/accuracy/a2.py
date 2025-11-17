@@ -11,7 +11,7 @@ METRIC = "A2"
     Accurate data is free from errors and is a true reflection of the actual values.
 
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric all_accuracy_scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 a2_column_names: columns used from the dataset for the A2 metric, should be all numeric columns.
