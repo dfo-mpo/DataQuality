@@ -10,15 +10,15 @@ from ui_tool.metadata import ParameterType
 import ui_tool.components as components
 
 # Import dimensions
-import dimensions.accessibility as accessibility
-import dimensions.consistency as consistency
-import dimensions.accuracy as accuracy
-import dimensions.completeness as completeness
-import dimensions.interdependency as interdependency
-import dimensions.relevance as relevance
-import dimensions.timeliness as timeliness
-import dimensions.uniqueness as uniqueness
-from dimensions.utils import calculate_dimension_score, calculate_DQ_grade, read_data, are_weights_valid
+from dimensions.accessibility.dimension_reference import Accessibility 
+from dimensions.accuracy.dimension_reference import Accuracy
+from dimensions.completeness.dimension_reference import Completeness 
+from dimensions.consistency.dimension_reference import Consistency 
+from dimensions.interdependency.dimension_reference import Interdependency 
+from dimensions.relevance.dimension_reference import Relevance 
+from dimensions.timeliness.dimension_reference import Timeliness 
+from dimensions.uniqueness.dimension_reference import Uniqueness 
+from utils.core_operations import calculate_dimension_score, calculate_DQ_grade, read_data, are_weights_valid
 
 # Title of the web app  
 st.title("Data Quality Calculator", anchor=False)
@@ -35,14 +35,14 @@ st.html("""
 
 DIMENSION_SCORES = [] # Stores the final score for each dimension used to calculate final grade
 dimensions = { # Nested dictionary to keep track of values for each given dimension durring runtime
-    "Accessibility": { "all_metrics": accessibility.ALL_METRICS, 'metadata': accessibility.create_metadata(), "parameters": {}, "instantiate": accessibility.Accessibility},
-    "Accuracy": { "all_metrics": accuracy.ALL_METRICS, 'metadata': accuracy.create_metadata(), "parameters": {}, "instantiate": accuracy.Accuracy },
-    "Completeness": { "all_metrics": completeness.ALL_METRICS, 'metadata': completeness.create_metadata(), "parameters": {}, "instantiate": completeness.Completeness},
-    "Consistency": { "all_metrics": consistency.ALL_METRICS, 'metadata': consistency.create_metadata(), "parameters": {}, "instantiate": consistency.Consistency},
-    "Interdependency": { "all_metrics": interdependency.ALL_METRICS, 'metadata': interdependency.create_metadata(), "parameters": {}, "instantiate": interdependency.Interdependency},
-    "Relevance": { "all_metrics": relevance.ALL_METRICS, 'metadata': relevance.create_metadata(), "parameters": {}, "instantiate": relevance.Relevance},
-    "Timeliness": { "all_metrics": timeliness.ALL_METRICS, 'metadata': timeliness.create_metadata(), "parameters": {}, "instantiate": timeliness.Timeliness},
-    "Uniqueness": { "all_metrics": uniqueness.ALL_METRICS, 'metadata': uniqueness.create_metadata(), "parameters": {}, "instantiate": uniqueness.Uniqueness},
+    "Accessibility": { "all_metrics": Accessibility.ALL_METRICS, 'metadata': Accessibility.collect_metadata(), "parameters": {}, "instantiate": Accessibility},
+    "Accuracy": { "all_metrics": Accuracy.ALL_METRICS, 'metadata': Accuracy.collect_metadata(), "parameters": {}, "instantiate": Accuracy},
+    "Completeness": { "all_metrics": Completeness.ALL_METRICS, 'metadata': Completeness.collect_metadata(), "parameters": {}, "instantiate": Completeness},
+    "Consistency": { "all_metrics": Consistency.ALL_METRICS, 'metadata': Consistency.collect_metadata(), "parameters": {}, "instantiate": Consistency},
+    "Interdependency": { "all_metrics": Interdependency.ALL_METRICS, 'metadata': Interdependency.collect_metadata(), "parameters": {}, "instantiate": Interdependency},
+    "Relevance": { "all_metrics": Relevance.ALL_METRICS, 'metadata': Relevance.collect_metadata(), "parameters": {}, "instantiate": Relevance},
+    "Timeliness": { "all_metrics": Timeliness.ALL_METRICS, 'metadata': Timeliness.collect_metadata(), "parameters": {}, "instantiate": Timeliness},
+    "Uniqueness": { "all_metrics": Uniqueness.ALL_METRICS, 'metadata': Uniqueness.collect_metadata(), "parameters": {}, "instantiate": Uniqueness},
 }
 
 # Instructions for the dataset upload section  
@@ -102,7 +102,7 @@ if uploaded_file is not None:
         # Run each selected dimension by creating class instance and running selected metrics to get dimension scores
         for dimension in selected_dimensions:
             dimension_dict = dimensions[dimension]
-
+            
             # Add checks to ensure parameters are entered correctly or apply defaults
             for metric in dimension_dict["metadata"]: # metric is of type MetricMetadata from metadata.py
                 # Only check metrics that have been selected for the given dimension
@@ -144,8 +144,18 @@ if uploaded_file is not None:
                             pairs = dimension_dict['parameters'][parameter.name]
                             dimension_dict['parameters'][parameter.name] = [ast.literal_eval(pair) for pair in pairs]
                 
-            # Instanciate class instance using generated parameter fields
-            dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, **dimension_dict["parameters"])
+            # Create parameter dictionary for each metric (grouped by metric name)
+            metric_params = {}
+            for metric_meta in dimension_dict["metadata"]:
+                metric_name = metric_meta.name
+                metric_params[metric_name] = {}
+                
+                for param in metric_meta.parameters:
+                    param_name = param.name
+                    metric_params[metric_name][param_name] = dimension_dict["parameters"].get(param_name)
+                    
+            # Instanciate class instance using generated parameter fields        
+            dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, metric_params=metric_params)
 
             # Run all of the metrics if not specified dimensions[dimension]["metrics"]
             scores, logs = dimension_tests.run_metrics(return_logs=True) if dimension_dict["metrics"] == [] else dimension_tests.run_metrics(dimension_dict["metrics"], return_logs=True)

@@ -78,7 +78,7 @@ def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetad
     # If more parameters are left to generate, do recursive call otherwise terminate
     numOfParamUsed = numOfColumns if not doubleColumn else numOfColumns + 1
     if len(parameters) > numOfParamUsed:
-        generateDimensionRow(dimension_dict, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
+        generateDimensionRow(dimension_dict, metric=metric, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
     else:
         return
 

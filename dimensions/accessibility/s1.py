@@ -17,9 +17,7 @@ uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 s1_has_metadata: indicates whether a metadata file exists (true if exists, else false)
 """
 class Metric:
-    # TODO: Define metric specific parameters
-    # Every additional parameter required by your metric must be added to the __init__ header
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, s1_has_metadata, threshold=None, selected_columns=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, s1_has_metadata=None, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
         self.logging_path = logging_path

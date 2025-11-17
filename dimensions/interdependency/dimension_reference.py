@@ -11,6 +11,26 @@ uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 metric_params: dictionary of additional metric specific parameters 
 """
 class Interdependency:
+    # Finds and loads all metric names defined in the interdependency folder
+    METRIC_FOLDER = os.path.dirname(__file__) 
+    ALL_METRICS = core_operations.list_metric_names(METRIC_FOLDER)
+
+    """ Collects metadata class from all metrics in the interdependency folder.
+    """
+    @classmethod
+    def collect_metadata(cls):
+        metadata = []
+
+        # Go through each metric file in this dimension's folder and import it
+        for metric_name in cls.ALL_METRICS:
+            module = importlib.import_module(f".{metric_name.lower()}", package=__package__)
+
+            # If this metric has a create_metadata() function, call it and append instance into metadata list
+            if hasattr(module, "create_metadata"):
+                metadata.append(module.create_metadata())
+
+        return metadata
+        
     def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, metric_params=None):
         self.dataset_path = dataset_path 
         self.return_type = return_type
@@ -115,20 +135,3 @@ class Interdependency:
             print(f'{core_operations.RED}Non valid entry for metrics.{core_operations.RESET}')
             print(f'Metric options: {self.ALL_METRICS}, inputted metrics: {metrics}')
             return -1
-
-    """ Collects metadata class from all metrics in the interdependency folder.
-    """
-    def collect_metadata(self):
-        metadata = []
-
-        # Go through each metric file in this dimension's folder and import it
-        for metric, metric_class in self.ALL_METRICS.items():
-            module_name = metric_class.__module__
-            module = importlib.import_module(module_name)
-
-            # If this metric has a create_metadata() function, call it and append instance into metadata list
-            if hasattr(module, "create_metadata"):
-                metric_metadata = module.create_metadata()
-                metadata.append(metric_metadata)
-    
-        return metadata

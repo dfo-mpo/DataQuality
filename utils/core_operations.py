@@ -30,6 +30,19 @@ def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
 
     return output_file
 
+"""
+- Function to get list of all metric names from filenames (without .py) in the given folder.
+"""
+def list_metric_names(metric_folder, exclude_files=None):
+    if exclude_files is None:
+        exclude_files = ["__init__.py", "dimension_reference.py", "metric_template.py"]
+    
+    return [
+        f[:-3].upper()  # strip '.py' and make uppercase
+        for f in os.listdir(metric_folder)
+        if f.endswith(".py") and f not in exclude_files
+    ]
+
 # --- Input / Output ---
 """ Reading the dataset file 
 - Function to read either csv or xlsx data. If input is already a data frame, it will return the input.
@@ -373,4 +386,3 @@ def calculate_DQ_grade(scores: list[dict], weights={}) -> str:
         return "Minimum"
     else:
         return "Needs Improvement"
-
