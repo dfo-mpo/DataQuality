@@ -25,8 +25,7 @@ class Metric:
         self.threshold = None
         self.selected_columns = None 
     
-    """ Uniqueness Type 1 (U1):
-    Find duplicated rows (what used to be known as Accuracy Type 3)
+    """ Uniqueness Type 1 (U1): Find duplicated rows (what used to be known as Accuracy Type 3)
     """
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
@@ -46,15 +45,15 @@ class Metric:
         # Print percentage of duplicate rows
         print(f"\nDuplication Score: {percentage_duplicate*100}%")
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return percentage_duplicate, None
         elif self.return_type == "dataset":
             if not total_rows :
                 return f"No valid {METRIC} results generated", None
             
-            final_df = duplicate_rows  
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            udf = duplicate_rows  
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=udf)
             return percentage_duplicate, output_file  # Return the file name
             
         else:

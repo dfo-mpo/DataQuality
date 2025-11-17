@@ -48,22 +48,21 @@ class Metric:
         columns_to_keep = is_null_percentage[is_null_percentage <= self.p1_threshold].index  
 
         # Keep columns that exceed the threshold of non-null values  
-        dataset2 = dataset[columns_to_keep]  
+        pdf = dataset[columns_to_keep]  
 
         # Calculate the actual percentage of non-missing values in the dataset  
-        total_non_missing = dataset2.notna().sum().sum()  
-        total_obs = dataset2.shape[0] * dataset2.shape[1]  
+        total_non_missing = pdf.notna().sum().sum()  
+        total_obs = pdf.shape[0] * pdf.shape[1]  
         completeness_score = total_non_missing / total_obs
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return completeness_score, None
         elif self.return_type == "dataset":
             if not total_non_missing : # if there are not rows with data
                 return "No valid p1 results generated", None
             
-            final_df = dataset2  
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=pdf)
             return completeness_score, output_file  # Return the file name
             
         else:

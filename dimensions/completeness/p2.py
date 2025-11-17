@@ -54,15 +54,15 @@ class Metric:
         # Compute score 
         completeness_score = (1 - (len(corrs_thr) / n_pairs)) if corrs_thr is not None else None
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return completeness_score, None
         elif self.return_type == "dataset":
             if not completeness_score: 
                 return "No valid p2 results generated", None
             
-            final_df = corrs_thr
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            pdf = corrs_thr
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=pdf)
             return completeness_score, output_file  # Return the file name
             
         else:

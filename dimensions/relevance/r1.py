@@ -18,7 +18,8 @@ uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 class Metric:
     # TODO: Define metric specific parameters
     # Every additional parameter required by your metric must be added to the __init__ header
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, threshold=None, selected_columns=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, # --- Add metric specific parameters here ---
+                 threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
         self.logging_path = logging_path
@@ -26,24 +27,24 @@ class Metric:
 
         # TODO: Assign metric specific attributes to a self variable 
         # Example:
-        # self.r#_column_names = r#_column_names
+        # self.r1_column_names = r1_column_names
 
         # TODO: Set threshold and selected columns for this metric (used in summary output) 
         self.threshold = None
         self.selected_columns = None 
     
-    """ Relevance Type # (R#): 
+    """ Relevance Type 1 (R1): 
     TODO: Provide a description of what this script does.
     """
     # TODO: Replace with the logic for this metric, where the final score should be called relevance_score
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        relevance_score = None
+        rdf = None # Placeholder for output report (returned when return_type="dataset")
 
-        rdf = None
+        relevance_score = None # Placeholder for calculated metric score
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return relevance_score, None
         elif self.return_type == "dataset":

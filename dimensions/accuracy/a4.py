@@ -37,9 +37,8 @@ class Metric:
         all_accuracy_scores = {}
         
         # Check whether column pairs are in chronological order (flags those not in chronological order)
-        # assumes entries are datetime
         for start_col, end_col in self.a4_column_pairs:
-    
+            # Assumes entries are datetime
             col_name = f"{start_col}_after_{end_col}"
             results[col_name] = ~(
                 (df[end_col] >= df[start_col]) | 
@@ -53,21 +52,20 @@ class Metric:
         # Take subset of data not in chronological order
         check_columns = list(all_accuracy_scores.keys())
         invalid = results[check_columns].any(axis=1)
-        invalid_df = results[invalid].copy()
+        adf = results[invalid].copy()
         
         # Compute average score
-        overall_accuracy_score = sum(all_accuracy_scores.values()) / len(all_accuracy_scores)
+        accuracy_score = sum(all_accuracy_scores.values()) / len(all_accuracy_scores)
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_accuracy_score, None
+            return accuracy_score, None
         elif self.return_type == "dataset":
-            if not overall_accuracy_score: 
+            if not accuracy_score: 
                 return f"No valid {METRIC} results generated", None
-                
-            final_df = invalid_df
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_accuracy_score, output_file  # Return the file name
+
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=adf)
+            return accuracy_score, output_file  # Return the file name
                 
         else:
             return df, None  # Default return value (DataFrame)

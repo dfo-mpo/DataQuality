@@ -66,22 +66,22 @@ class Metric:
             all_consistency_scores.append(column_consistency_score)
 
         # Calculate the average of all consistency scores
-        overall_avg_consistency = (
+        consistency_score = (
             sum(all_consistency_scores) / len(all_consistency_scores)
             if all_consistency_scores
             else None
         )
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_avg_consistency, None
+            return consistency_score, None
         elif self.return_type == "dataset":
-            if not overall_avg_consistency :
+            if not consistency_score:
                 return f"No valid {METRIC} results generated", None
             
-            final_df = column_operations.compare_datasets(df, selected_column, unique_observations)  
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_avg_consistency, output_file  # Return the file name
+            cdf = column_operations.compare_datasets(df, selected_column, unique_observations)  
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=cdf)
+            return consistency_score, output_file  # Return the file name
         else:
             return df, None  # Default return value (DataFrame)
        

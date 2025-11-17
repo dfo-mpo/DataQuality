@@ -42,11 +42,11 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        consistency_score = None
+        cdf = None # Placeholder for output report (returned when return_type="dataset")
 
-        cdf = None
+        consistency_score = None # Placeholder for calculated metric score
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return consistency_score, None
         elif self.return_type == "dataset":

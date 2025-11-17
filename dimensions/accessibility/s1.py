@@ -35,9 +35,9 @@ class Metric:
         # Add new metric asking if user has a meta data file
         accessibility_score = 1 if self.s1_has_metadata == True else 0
 
-        adf = False
+        sdf = False
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return accessibility_score, None
         elif self.return_type == "dataset":
@@ -48,7 +48,7 @@ class Metric:
             return accessibility_score, output_file  # Return the file name
                 
         else:
-            return adf, None  # Default return value (DataFrame)
+            return sdf, None  # Default return value (DataFrame)
        
 """ Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
 Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension

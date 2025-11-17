@@ -42,11 +42,11 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        timeliness_score = None
+        timeliness_score = None None # Placeholder for calculated metric score
 
-        tdf = None
-
-        # add conditional return logic
+        tdf = None # Placeholder for output report (returned when return_type="dataset")
+        
+        # Conditional return logic
         if self.return_type == "score":
             return timeliness_score, None
         elif self.return_type == "dataset":

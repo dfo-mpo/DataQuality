@@ -42,11 +42,11 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        completeness_score = None
+        completeness_score = None # Placeholder for calculated metric score
 
-        pdf = None
+        pdf = None # Placeholder for output report (returned when return_type="dataset")
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return completeness_score, None
         elif self.return_type == "dataset":

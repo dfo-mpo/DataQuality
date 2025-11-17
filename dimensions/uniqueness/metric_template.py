@@ -42,18 +42,18 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        uniqueness_score = None
+        uniqueness_score = None # Placeholder for calculated metric score
+        
+        udf = None # Placeholder for output report (returned when return_type="dataset")
 
-        tdf = None
-
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return uniqueness_score, None
         elif self.return_type == "dataset":
             if not uniqueness_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=tdf)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=udf)
             return uniqueness_score, output_file  # Return the file name
                 
         else:

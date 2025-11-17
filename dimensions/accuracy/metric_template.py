@@ -41,12 +41,12 @@ class Metric:
     # TODO: Replace with the logic for this metric, where the final score should be called accuracy_score
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
+     
+        accuracy_score = None # Placeholder for calculated metric score
+        
+        adf = None # Placeholder for output report (returned when return_type="dataset")
 
-        accuracy_score = None
-
-        adf = None
-
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return accuracy_score, None
         elif self.return_type == "dataset":

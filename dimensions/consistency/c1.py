@@ -134,23 +134,23 @@ class Metric:
                 )
 
             # Calculate the overall consistency score for the current column
-            consistency_score = table_operations.average_c1_consistency_score(text_sim_matrix, self.c1_threshold)
-            consistency_score_list.append(consistency_score)
+            score = table_operations.average_c1_consistency_score(text_sim_matrix, self.c1_threshold)
+            consistency_score_list.append(score)
 
         # Calculate the overall consistency score as the average of individual consistency scores
-        overall_consistency_score = np.mean(consistency_score_list)
-        df['Overall Consistency Score'] = overall_consistency_score
+        consistency_score = np.mean(consistency_score_list)
+        df['Overall Consistency Score'] = consistency_score
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_consistency_score, None
+            return consistency_score, None
         elif self.return_type == "dataset":
             if not overall_consistency_scores:
                 return f"No valid {METRIC} results generated", None
             
-            final_df = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_consistency_score, output_file  # Return the file name, add return for score
+            cdf = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=cdf)
+            return consistency_score, output_file  # Return the file name, add return for score
         else:
             return df, None  # Default return value (DataFrame)
        

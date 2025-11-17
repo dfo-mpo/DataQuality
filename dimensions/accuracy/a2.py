@@ -11,7 +11,7 @@ METRIC = "A2"
     Accurate data is free from errors and is a true reflection of the actual values.
 
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only metric all_accuracy_scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 a2_column_names: columns used from the dataset for the A2 metric, should be all numeric columns.
@@ -34,14 +34,13 @@ class Metric:
         self.threshold = self.a2_threshold
         self.selected_columns = self.a2_column_names
     
-    """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range
+    """ Accuracy Type 2 (A2): Find outliers that are 1.5 (or any threshold) times away from the inter-quartile range.
     The threshold for how many inter-quartile range is considered to be an outlier and percentage of the column selected that passes can be customized.
     """
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
         outliers_dict = {}
-        scores = {} # keep incase we want to view the final scores by column
-        avg_score = 0
+        all_accuracy_scores = {}
 
         # Detect outliers of given data
         def detect_outliers(x):
@@ -65,12 +64,12 @@ class Metric:
                 outliers_dict[column] = (1 - outliers.groupby(self.a2_groupby_column).mean())
 
                 # Compute final score
-                scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score) / total_groups if total_groups > 0 else 0
-                avg_score += scores[column]
+                all_accuracy_scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score) / total_groups if total_groups > 0 else 0
+
         else:
             # Perform the IQR calculation on the whole column if no groupby column is specified  
             for column in self.a2_column_names: 
-                # Convert to numeric, remove none numeric values TODO: Do we keep this or adopt a different solution? 
+                # Convert to numeric, remove none numeric values
                 column_data = pd.to_numeric(df[column], errors='coerce').dropna()  
                 
                 # Apply the outlier detection
@@ -78,28 +77,27 @@ class Metric:
                 outliers_dict[column] = (1 - outliers.mean())  
 
                 # Compute final score
-                scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score)  
-                avg_score += scores[column] 
+                all_accuracy_scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score)  
         
-        # Compute average of final scores across selected columns  
-        avg_score = avg_score / len(self.a2_column_names)
+        # Compute average score  
+        accuracy_score = sum(all_accuracy_scores.values())) / len(self.a2_column_names)
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return avg_score, None
+            return accuracy_score, None
         elif self.return_type == "dataset":
-            if not outliers_dict :
+            if not outliers_dict:
                 return f"No valid {METRIC} results generated", None
 
-            final_df = pd.DataFrame()
+            adf = pd.DataFrame()
             if self.a2_groupby_column is not None: 
-                final_df = final_df.from_dict(outliers_dict)
-                final_df.reset_index(inplace=True)
-                final_df.rename(columns={'index': 'GroupName'}, inplace=True)
+                adf = adf.from_dict(outliers_dict)
+                adf.reset_index(inplace=True)
+                adf.rename(columns={'index': 'GroupName'}, inplace=True)
             else:
-                final_df = pd.DataFrame([outliers_dict])
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return avg_score, output_file  # Return the file name
+                adf = pd.DataFrame([outliers_dict])
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=adf)
+            return accuracy_score, output_file  # Return the file name
             
         else:
             return df, None  # Default return value (DataFrame)  

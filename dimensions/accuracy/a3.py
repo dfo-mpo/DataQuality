@@ -47,20 +47,19 @@ class Metric:
     
         # Take subset of data where aggregated != expected
         inequal = matched.any(axis=1)
-        inequal_df = df[inequal].copy()
+        adf = df[inequal].copy()
         
         # Compute score
         accuracy_score = 1 - (matched.sum() / len(matched)).iloc[0]
 
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return accuracy_score, None
         elif self.return_type == "dataset":
             if not accuracy_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            final_df = inequal_df
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=adf)
             return accuracy_score, output_file  # Return the file name
                 
         else:

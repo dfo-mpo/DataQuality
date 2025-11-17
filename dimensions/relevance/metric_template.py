@@ -42,11 +42,11 @@ class Metric:
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
 
-        relevance_score = None
+        rdf = None # Placeholder for output report (returned when return_type="dataset")
 
-        rdf = None
-
-        # add conditional return logic
+        relevance_score = None # Placeholder for calculated metric score
+        
+        # Conditional return logic
         if self.return_type == "score":
             return relevance_score, None
         elif self.return_type == "dataset":

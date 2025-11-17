@@ -41,12 +41,12 @@ class Metric:
     # TODO: Replace with the logic for this metric, where the final score should be called accessibility_score
     def run_metric(self):    
         df = core_operations.read_data(self.dataset_path)
+        
+        accessibility_score = None # Placeholder for calculated metric score
 
-        accessibility_score = None
+        sdf = None # Placeholder for output report (returned when return_type="dataset")
 
-        sdf = None
-
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
             return accessibility_score, None
         elif self.return_type == "dataset":

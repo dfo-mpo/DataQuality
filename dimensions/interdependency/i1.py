@@ -63,18 +63,18 @@ class Metric:
             all_interdependency_scores[column] = 1 - (sum(1 for corr in corrs_subset[column] if corr > self.i1_threshold) / n_non_sensitive)
         
         # Compute average score 
-        overall_interdependency_score = sum(all_interdependency_scores.values()) / len(all_interdependency_scores)
+        interdependency_score = sum(all_interdependency_scores.values()) / len(all_interdependency_scores)
   
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_interdependency_score, None
+            return interdependency_score, None
         elif self.return_type == "dataset":
-            if not overall_interdependency_score: 
+            if not interdependency_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            final_df = corrs_thr
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_interdependency_score, output_file  # Return the file name
+            idf = corrs_thr
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=idf)
+            return interdependency_score, output_file  # Return the file name
                 
         else:
             return df, None  # Default return value (DataFrame)

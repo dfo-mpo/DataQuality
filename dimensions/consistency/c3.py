@@ -61,25 +61,24 @@ class Metric:
         # Take subset of data inconsistent with reference data 
         comparison_columns = [f"Normalized {col}_comparison" for col in self.c3_column_names]
         inconsistent = ~compare_df[comparison_columns].all(axis=1)
-        inconsistent_df = compare_df[inconsistent].copy() 
+        cdf = compare_df[inconsistent].copy() 
             
         # Compute average score
-        avg_score = (
+        consistency_score = (
             sum(all_consistency_scores) / len(all_consistency_scores)
             if all_consistency_scores
             else None
         )
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return avg_score, None
+            return consistency_score, None
         elif self.return_type == "dataset":
-            if not avg_score: 
+            if not consistency_score: 
                 return f"No valid {METRIC} results generated", None
-                    
-            final_df = inconsistent_df
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return avg_score, output_file  # Return the file name
+
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=cdf)
+            return consistency_score, output_file  # Return the file name
                     
         else:
             return df, None  # Default return value (DataFrame)

@@ -111,7 +111,7 @@ class Consistency:
 
                 outputs.append(overall_consistency_score)
                
-                # output report of results
+                # Output report of results
                 metric_output_log = core_operations.output_log_score(
                     test_name = metric, 
                     dataset_name = self.uploaded_file_name if self.uploaded_file_name else core_operations.get_dataset_name(self.dataset_path), 

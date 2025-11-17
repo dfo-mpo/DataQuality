@@ -32,12 +32,12 @@ class Metric:
     Make the column a string, find symbols, and calculate the accuracy scores for multiple columns.
     """    
     def run_metric(self):    
-        # dataframes for output report reports
-        original_df = core_operations.read_data(self.dataset_path) # this first original dataframe is used to compute a column of NaNs that are used for the accuracy calculations in the output report
-        original_df_2 = core_operations.read_data(self.dataset_path) # this second original dataframe is used to write the output that needs to show what the original dataframe looked like
+        # Dataframes for output report reports
+        original_df = core_operations.read_data(self.dataset_path) # This first original dataframe is used to compute a column of NaNs that are used for the accuracy calculations in the output report
+        original_df_2 = core_operations.read_data(self.dataset_path) # This second original dataframe is used to write the output that needs to show what the original dataframe looked like
         
-        # dataframe for computing accuracy score
-        adf = core_operations.read_data(self.dataset_path) # dataframe that will be used to compute the accuracy score
+        # Dataframe for computing accuracy score
+        adf = core_operations.read_data(self.dataset_path) # Dataframe that will be used to compute the accuracy score
         selected_columns = [col for col in adf.columns if col in self.a1_column_names] 
 
         all_accuracy_scores = []
@@ -49,24 +49,24 @@ class Metric:
             column_data = adf.loc[adf[f"{column_name}_new"]==0]   
             total_rows = len(column_data)  
             
-            if total_rows > 0:  # to avoid division by zero  
+            if total_rows > 0:  # To avoid division by zero  
                 non_numerical_count = non_digit_chars_per_row[column_name].apply(lambda x: np.where(pd.isna(x), 1, 0)).sum()   
                 accuracy_score = (total_rows - non_numerical_count) / total_rows  
                 all_accuracy_scores.append(accuracy_score)   
 
-        # compute final score
-        overall_accuracy_score = sum(all_accuracy_scores) / len(all_accuracy_scores) if all_accuracy_scores else None
+        # Compute final score
+        accuracy_score = sum(all_accuracy_scores) / len(all_accuracy_scores) if all_accuracy_scores else None
         
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_accuracy_score, None
+            return accuracy_score, None
         elif self.return_type == "dataset":
-            if not overall_accuracy_score :
+            if not accuracy_score:
                 return f"No valid {METRIC} results generated", None
             
-            final_df = table_operations.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_accuracy_score, output_file  # Return the file name
+            adf = table_operations.add_only_numbers_columns(original_df, selected_columns, original_df_2)  
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=adf)
+            return accuracy_score, output_file  # Return the file name
             
         else:
             return adf, None  # Default return value (DataFrame)  

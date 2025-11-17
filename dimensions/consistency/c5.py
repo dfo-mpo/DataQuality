@@ -69,21 +69,20 @@ class Metric:
         # Take subset of data with invalid coordinates 
         comparison_columns = [f"{col}_invalid" for col in self.c5_column_names]
         invalid = results[comparison_columns].any(axis=1)
-        invalid_df = results[invalid].copy()
+        cdf = results[invalid].copy()
     
         # Compute average score
-        overall_consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
+        consistency_score = sum(all_consistency_scores.values()) / len(all_consistency_scores)
     
-        # add conditional return logic
+        # Conditional return logic
         if self.return_type == "score":
-            return overall_consistency_score, None
+            return consistency_score, None
         elif self.return_type == "dataset":
-            if not overall_consistency_score: 
+            if not consistency_score: 
                 return f"No valid {METRIC} results generated", None
                 
-            final_df = invalid_df
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=final_df)
-            return overall_consistency_score, output_file  # Return the file name
+            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=cdf)
+            return consistency_score, output_file  # Return the file name
                 
         else:
             return df, None  # Default return value (DataFrame)
