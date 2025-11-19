@@ -80,7 +80,7 @@ class Metric:
                 all_accuracy_scores[column] = np.sum(outliers_dict[column] > self.a2_minimum_score)  
         
         # Compute average score  
-        accuracy_score = sum(all_accuracy_scores.values())) / len(self.a2_column_names)
+        accuracy_score = sum(all_accuracy_scores.values()) / len(self.a2_column_names)
 
         # Conditional return logic
         if self.return_type == "score":

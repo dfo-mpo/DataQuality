@@ -41,8 +41,8 @@ class Metric:
         if self.return_type == "score":
             return accessibility_score, None
         elif self.return_type == "dataset":
-            if not accessibility_score: 
-                return f"No valid {METRIC} results generated", None
+            #if not accessibility_score: 
+                #return f"No valid {METRIC} results generated", None
             df = pd.DataFrame({"Score": [accessibility_score]})    
             output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=df)
             return accessibility_score, output_file  # Return the file name
