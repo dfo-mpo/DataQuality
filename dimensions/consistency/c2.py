@@ -41,12 +41,12 @@ class Metric:
         df = core_operations.read_data(self.dataset_path)
 
         # Initialize ref_df if a ref dataset is provided
-        if self.ref_dataset_path:
+        if self.ref_dataset_path is not None:
             df_ref = core_operations.read_data(self.ref_dataset_path)
             ref_data = True  # Flag to indicate we are using a ref dataset
         else:
             ref_data = False  # No ref dataset, compare within the same dataset
-
+        
         all_consistency_scores = []
 
         for selected_column, m_selected_column in self.c2_column_mapping.items():
