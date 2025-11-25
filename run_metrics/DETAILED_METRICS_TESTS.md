@@ -23,7 +23,12 @@ Additional variables specific to each metric will be described in their respecti
 Goal: Ensure that data is easily accessible to authorized users when needed. Accessible data is stored in a way that makes it easy to retrieve and use, while also being secure from unauthorized access.
 
 #### Accessibility Type 1 (S1)
-Currently an empty template test.
+S1 gives a score based on whether a metadata file exists for the given dataset.
+
+**Variables Users Can Define:**
+| Variable               | Description                                   | Example         |
+|------------------------|-----------------------------------------------|-----------------|
+| `S1 Has Metadata` | Indicates whether a metadata file exists. |   |
 
 ### Accuracy
 Goal: Ensure that the data correctly represents the real-world values it is intended to model. Accurate data is free from errors and is a true reflection of the actual values.
@@ -47,7 +52,7 @@ A column or group is flagged as inaccurate if the proportion of non-outliers fal
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `A2 Column Names` | Column(s) to test for outliers. | `col1` `col2` |
-| `Groupby Column(s)` | Column(s) to group data by. | `groupby_col` |
+| `A2 Groupby Column(s)` | Column(s) to group data by. | `groupby_col` |
 | `A2 Threshold` | Threshold multiplier for IQR-based outlier detections. Default is `1.5`. | `1.5` |
 | `A2 Minimum Score` | Minimum acceptable proportion of non-outliers in a column or group. Default is `0.85`. | `0.85` |
 
@@ -70,7 +75,7 @@ A record is flagged as inaccurate if the start timestamp is later than the corre
 **Variables Users Can Define:**
 | Variable          | Description                                   | Example         |
 |-------------------|-----------------------------------------------|-----------------|
-| `A4 Column Pairs` | List of timestamp column pairs to check. The first column in each pair is assumed to be the start timestamp. | `[('start_col1', 'end_col1'), ('start_col2', 'end_col2')]` |
+| `A4 Column Pairs` | List of timestamp column pairs to check. The first column in each pair is assumed to be the start timestamp. | `('start_col1', 'end_col1')` `('start_col2', 'end_col2')` |
 
 ### Completeness
 Goal: Ensure that all required data is available and that there are no missing values. Complete data includes all necessary records and fields needed for the intended use.
@@ -101,7 +106,7 @@ P2 serves as a secondary test for users interested in exploring whether missingn
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `P2 Threshold` | Correlation coefficient threshold for flagging pairs of columns with associated missingness. Default is `0.75`. | `0.75` |
+| `P2 Threshold` | Correlation coefficient threshold for flagging pairs of columns with associated missingness. Default is `0.50`. | `0.50` |
 
 ### Consistency
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
@@ -124,7 +129,7 @@ A record is flagged as inconsistent if it has a near-duplicate entry with a simi
 |------------------------|-----------------------------------------------|-----------------|
 | `C1 Column Names` | Column(s) to test for similarity. | `col1` `col2` |
 | `C1 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
-| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["the", "and"]`. | `["the", "and"]` |
+| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `the` `and`. | `the` `and` |
 
 #### Consistency Type 2 (C2) 
 C2 checks whether string values in selected columns consistently follow naming conventions found in a reference dataset. If no reference dataset is provided, the test compares values within the dataset itself. Similarity between test and reference values is measured using cosine similarity based on a user-defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
@@ -137,7 +142,7 @@ A record is flagged as inconsistent if none of its similarity scores to referenc
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `C2 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
-| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["activity"]`. | `["activity"]` |
+| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `activity`. | `activity` |
 | `Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
 | `C2 Column Mapping` | Mapping of test column(s) to reference column(s) for comparison. | `{'col1':'ref_col1','col2':'ref_col2'}` |
 
@@ -161,7 +166,7 @@ A record is flagged as inconsistent if its similarity to any official province o
 | `C3 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
 
 #### Consistency Type 4 (C4)
-C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 18601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A record is flagged as inconsistent if it does not match the specified date-time format or contains out of bounds values, such as a month greater than 12 or a day outside the valid range. 
  

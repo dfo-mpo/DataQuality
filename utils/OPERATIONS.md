@@ -12,7 +12,7 @@ Operations are organized by level of application:
 | [Table](#Table-Operations) | Applied to an entire dataset or multiple rows and columns at once. |
 | [Core](#Core-Operations) | Handles tasks such as reading/writing data, grading, and logging results |
 
-Each type of operation is implemented in its respective files under the [utils](../utils) folder:
+Each type of operation is implemented in its respective files under the [utils/](../utils) folder:
  - [items_operations.py](item_operations.py)
  - [column_operations.py](column_operations.py)
  - [table_operations.py](table_operations.py)
@@ -20,14 +20,14 @@ Each type of operation is implemented in its respective files under the [utils](
 
 ## Using Operations
 1. Import the operation module at the top of your metric file:
-```
-from utils import item_operations # or column_operations, table_operations
-```
+    ```
+    from utils import item_operations # or column_operations, table_operations
+    ```
 2. Call the desired operations using the module name as a prefix:
-```
-numbers = item_operations.extract_numbers("ID 123")
-print(numbers) # Output: ['123']
-```
+    ```
+    numbers = item_operations.extract_numbers("ID 123")
+    print(numbers) # Output: ['123']
+    ```
 This same approach works for Column and Table operations; use the corresponding module name.
 
 ## Creating Custom Operations
@@ -37,7 +37,7 @@ Contributors can add custom operations to support the metrics they implement.
    - `Item` for individual values or cells
    - `Column` for single columns or lists of values
    - `Table` for entire datasets of multiple rows/columns
-2. Implement your operation in the chosen file under [utils](../utils).
+2. Implement your operation in the chosen file under [utils/](../utils).
 3. Use your custom operations in a metric following the steps in [Using Operations](#Using-Operations).
 
 ## Item Operations
