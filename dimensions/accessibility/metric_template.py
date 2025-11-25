@@ -59,8 +59,7 @@ class Metric:
         else:
             return df, None  # Default return value (DataFrame)
        
-""" Create metadata: Will create instances of metadata classes for each metric's parameters to allow the UI tool to generate input feilds.
-Returns list of MetricMetadata objects or [] if there are no addtional input parameters required for this dimension
+""" Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
 """
 def create_metadata():
     dimension = "Accessibility"
@@ -72,5 +71,6 @@ def create_metadata():
     # TODO: Define each parameter needed for metric, use ParameterType when defining type
     # Example:
     # s#_metadata.add_parameter('s#_column_names', 'S# Column Names', ParameterType.MULTI_SELECT)
-    
+
+    # TODO: Replace "s#" with the metric name, e.g., "s1"
     return s#_metadata 

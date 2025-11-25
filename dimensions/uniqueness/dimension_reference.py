@@ -15,7 +15,8 @@ class Uniqueness:
     METRIC_FOLDER = os.path.dirname(__file__) 
     ALL_METRICS = core_operations.list_metric_names(METRIC_FOLDER)
 
-    """ Collects metadata class from all metrics in the uniqueness folder.
+    """ Collects metadata class from all metrics in the accessibility folder.
+        Returns a list of MetricMetadata objects, one per metric, or [] if no metrics define additional input parameters.
     """
     @classmethod
     def collect_metadata(cls):
@@ -54,7 +55,8 @@ class Uniqueness:
                 metrics[module_name.upper()] = module.Metric
         return metrics
         
-    """ Run metrics: Will run specified metrics or all uniqueness metrics by default. return_logs returns the logging data so the UI can visualize test output details.
+    """ Runs specified metrics or all accessibility metrics by default. 
+        return_logs returns the logging data so the UI can visualize test output details.
     """
     def run_metrics(self, metrics=None, return_logs=False):
         if metrics is None:
