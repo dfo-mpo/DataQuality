@@ -64,7 +64,9 @@ def create_metadata():
 
     # Define instance for metric, replace with metric that requires parameters
     r1_metadata = MetricMetadata(dimension, METRIC)
-    # Define each parameter needed for metric, use ParameterType when defining type
-    # r1_metadata.add_parameter()
+    
+    # TODO: Define each parameter needed for metric, use ParameterType when defining type
+    # Example:
+    # r1_metadata.add_parameter('r1_column_names', 'R1 Column Names', ParameterType.MULTI_SELECT)
     
     return r1_metadata

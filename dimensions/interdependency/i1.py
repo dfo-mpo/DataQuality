@@ -1,6 +1,8 @@
 import numpy as np  
 import pandas as pd
+import warnings
 from dython.nominal import associations
+from pandas.api.types import is_datetime64_any_dtype, is_object_dtype
 from utils import core_operations, table_operations
 from ui_tool.metadata import MetricMetadata, ParameterType
 
@@ -35,7 +37,7 @@ class Metric:
     Proxy variables indirectly capture information about sensitive features, often used as substitutes for other variables. 
     Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
     """    
-    def run_metric(self):    
+    def run_metric(self):  
         df = core_operations.read_data(self.dataset_path)
         all_interdependency_scores = {}
 
@@ -45,11 +47,20 @@ class Metric:
         elif 'Comments' in df.columns:
             df = df.drop(columns=['Comments'])
 
-        # Convert timestamp columns to int for computational purposes (formatted as yyyymmdd)
-        for col in df.columns:
-            if pd.api.types.is_datetime64_any_dtype(df[col]):
-                df[col] = df[col].dt.strftime('%Y%m%d').astype('Int64')
-                
+        # Convert timestamp columns to int for computational purposes
+        for col in df.columns: 
+            if is_datetime64_any_dtype(df[col]):
+                # Numbers of seconds since jan 1, 1970 (unix epoch)
+                df[col] = df[col].astype('int64') // 10**9
+            elif is_object_dtype(df[col]):
+                # Suppresses warning about unclear/ not specified date formats 
+                with warnings.catch_warnings():
+                    warnings.simplefilter("ignore", category=UserWarning)
+                    # Converts mixed datetime values in object dtype columns (only if at least one valid datetime)
+                    col_dt = pd.to_datetime(df[col], errors='coerce')
+                if col_dt.notna().any(): 
+                    df[col] = col_dt.astype('int64') // 10**9
+                    
         # Number of non-sensitive features
         n_non_sensitive = len(df.columns) - len(self.i1_sensitive_columns)
     
