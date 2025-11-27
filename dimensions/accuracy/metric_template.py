@@ -43,21 +43,12 @@ class Metric:
         df = core_operations.read_data(self.dataset_path)
      
         accuracy_score = None # Placeholder for calculated metric score
-        
-        adf = None # Placeholder for output report (returned when return_type="dataset")
 
         # Conditional return logic
-        if self.return_type == "score":
-            return accuracy_score, None
-        elif self.return_type == "dataset":
-            if not accuracy_score: 
-                return f"No valid {METRIC} results generated", None
-                
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=adf)
-            return accuracy_score, output_file  # Return the file name
-                
-        else:
-            return df, None  # Default return value (DataFrame)
+        if not accuracy_score: 
+            return f"No valid {METRIC} results generated", None
+        else:      
+             return accuracy_score, None
        
 """ Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
 """
