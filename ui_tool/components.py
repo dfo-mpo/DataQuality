@@ -10,6 +10,7 @@ if str(COMPONENTS_DIR) not in sys.path:
 from ui_tool.metadata import ParameterMetadata, ParameterType
 from streamlit_tags import st_tags # Community component
 from streamlit_pairs import st_pairs # Custom component
+from streamlit_weights import st_weights # Custom component
 import streamlit as st
 
 """ Generate first row containing parameters required for all dimensions, inputs are stored in the provided dictionary object. 
@@ -24,9 +25,10 @@ def generateFirstDimensionRow(dimension_dict):
     with col_1:  
         dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
     with col_2:  
-        dimension_dict["weights"] = st.text_input("Weights", value="", 
-                                    placeholder="e.g., {"+example_weights+"}", 
-                                    help="If left empty, weighting will be equal. Weights must add up to 1.")
+        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", label="Weights", value={"A1": 0.5, "A2": 0.5, "A3": 0}, step=0.05, min=0, max=1.0 )
+        # st.text_input("Weights", value="", 
+                                    # placeholder="e.g., {"+example_weights+"}", 
+                                    # help="If left empty, weighting will be equal. Weights must add up to 1.")
         
 
 def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
@@ -104,6 +106,8 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
         case ParameterType.PAIRS:
             suggestions = parameter.suggestions if parameter.suggestions != [] else df_columns
             return st_pairs(label=parameter.title, text='Enter column name', value=parameter.value, suggestions=suggestions)
+        case ParameterType.WEIGHTS:
+            return st_weights(label=parameter.title, text='Enter column name', value=parameter.value)
         # Fall through if invalid ParameterType found
         case _:
             st.error("None valid ParameterType found when generating fields from dimension class metadata.")

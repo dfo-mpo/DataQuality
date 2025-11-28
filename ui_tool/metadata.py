@@ -14,6 +14,7 @@ class ParameterType(Enum):
     FILE_UPLOAD = "file-upload"
     STRING_LIST = "string-list" # output is a list of strings
     PAIRS = "pairs" # output list of string pairs, each value list entry is structured as a string double, ('col1', 'col2')
+    WEIGHTS = "weights"
 
 """ Class to represent the properties of the parameters required for a given metric. Used by the UI tool to generate parameter input boxes/feilds.
 
