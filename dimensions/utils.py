@@ -616,6 +616,7 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
                 weights = {}
                 print(f'{RED}Weights do not add up to 1.0, using default weights instead!{RESET}')
                 return weights, False
+            print("Total weight"+total_weight)
     except:
         print(f'{RED}Provided weights are not structured properly, ensure correct names and format is used. Using default weights instead!{RESET}')
         return {}, False

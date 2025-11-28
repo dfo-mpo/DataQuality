@@ -45,7 +45,7 @@ else:
 # `declare_component` and call it done. The wrapper allows us to customize
 # our component's API: we can pre-process its input args, post-process its
 # output value, and add a docstring for users.
-def st_weights(value: list = [],
+def st_weights(value: dict = {}, # Dict[str, float] 
             label: str = "Enter Weights",
             step: float = 0.05,
             min: float = None,

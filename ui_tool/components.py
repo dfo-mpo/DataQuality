@@ -25,11 +25,21 @@ def generateFirstDimensionRow(dimension_dict):
     with col_1:  
         dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
     with col_2:  
-        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", label="Weights", value={"A1": 0.5, "A2": 0.5, "A3": 0}, step=0.05, min=0, max=1.0 )
+        weights = generateWeightsDict(dimension_dict["metrics"], dimension_dict.get("weights",{}))
+        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
         # st.text_input("Weights", value="", 
                                     # placeholder="e.g., {"+example_weights+"}", 
                                     # help="If left empty, weighting will be equal. Weights must add up to 1.")
         
+def generateWeightsDict(keys, oldDict):
+    newWeights = {}
+    for key in keys:
+        if not key in oldDict:
+            newWeights[key] = 0
+        else:
+            newWeights[key] = oldDict[key]
+    
+    return newWeights
 
 def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:

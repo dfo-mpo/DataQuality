@@ -101,7 +101,13 @@ export const WeightsInput = ({
     newWeights[key] = next;
     setWeights(newWeights);
     setTotalWeight(Number(Object.values(weights).reduce((sum, v) => sum + v, 0).toFixed(decimals)));
+    onChange && onChange(weights);
   }
+
+  // Sync when parent prop changes (e.g., metrics added/removed)
+  useEffect(() => {
+    setWeights(value ?? {});
+  }, [value]);
 
   useEffect(() => {
     setTotalWeight(Number(Object.values(weights).reduce((sum, v) => sum + v, 0).toFixed(decimals)));  
