@@ -87,7 +87,7 @@ def average_c1_consistency_score(cosine_sim_matrix, threshold=0.91):
     num_rows, num_columns = cosine_sim_matrix.shape  
     inconsistency = 0  
     for i in range(num_rows):  
-        if np.any((cosine_sim_matrix[i] > threshold) & (cosine_sim_matrix[i] <= 1.0000000)):  
+        if np.any(cosine_sim_matrix[i] > threshold):
             inconsistency += 1  
     return (num_rows - inconsistency) / num_rows  
 

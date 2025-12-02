@@ -164,13 +164,13 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
 
             return "The following columns contain a score above the threshold " + filtered_sources_str + "."
         elif (metric == 'C2'):
-            columns = df.columns
+            comparison_columns = [col for col in df.columns if col.endswith('_comparison')]
 
-            # Find columns with _comparison and a first entry value of 'False'
+            # Find columns with _comparison equivalents that contains a 'False' value
             simular_columns = []  
-            for column in columns:
-                if f"{column}_comparison" in columns and df[f"{column}_comparison"].iloc[0] == 'False':  
-                    simular_columns.append(column)
+            for column in comparison_columns:
+                if (df[column] == False).sum() > 0: 
+                    simular_columns.append(column[:-len("_comparison")])
             simular_columns_str = ', '.join(simular_columns)
 
             return "The following columns may have names that do not resemble a reference data column: " + simular_columns_str + "."
@@ -213,15 +213,14 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             else:
                 return "Metadata does not exist for given dataset"
         elif (metric == 'A1'):
-            columns = df.columns
-
+            comparison_columns = [col for col in df.columns if col.endswith('_Only_Numbers')]
+            
             # Find columns with _ONLY_NUMBERS equivalents that contains a 'False' value 
             columns_with_equivalents = []  
-            for column in columns:
-                if f"{column}_Only_Numbers" in columns and df[f"{column}_Only_Numbers"].iloc[0] == 'False':  
-                    columns_with_equivalents.append(column)
+            for column in comparison_columns:
+                if (df[column] == False).sum() > 0:
+                    columns_with_equivalents.append(column[:-len("_Only_Numbers")])
             columns_with_equivalents_str = ', '.join(columns_with_equivalents)
-
             return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
         elif (metric == 'A2'):
             columns_below_threshold = []

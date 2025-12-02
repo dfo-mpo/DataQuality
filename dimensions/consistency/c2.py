@@ -19,7 +19,7 @@ c2_threshold: threshold for consistency score that is acceptable for C2 metric.
 ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 metric.
 """
 class Metric:
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=0.91, c2_stop_words=["activity"], ref_dataset_path=None, threshold=None, selected_columns=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=1, c2_stop_words=["activity"], ref_dataset_path=None, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
         self.logging_path = logging_path
