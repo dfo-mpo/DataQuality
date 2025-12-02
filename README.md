@@ -31,5 +31,5 @@ Set up the repository and run metrics.
     cd DataQuality
     ```
 2. **Choose how to run metrics**
-    - [Run metrics with the notebook](run_metrics/RUN_METRICS.md#Run-Metrics-with-the-Notebook)
-    - [Run metrics with the UI tool](run_metrics/RUN_METRICS.md#Run-Metrics-with-the-UI)
+    - [Run metrics with the notebook](run_metrics/README.md#Run-Metrics-with-the-Notebook)
+    - [Run metrics with the UI tool](run_metrics/README.md#Run-Metrics-with-the-UI)

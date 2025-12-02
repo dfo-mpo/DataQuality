@@ -18,3 +18,5 @@
 | Relevance | [R1](dimensions/relevance/r1.py)     | Currently an empty template metric. |
 | Timeliness | [T1](dimensions/timeliness/t1.py)     | Currently an empty template metric. |
 | Uniqueness | [U1](dimensions/uniqueness/u1.py)     | Detects duplicate rows across the entire specified dataset. |
+
+See the [Detailed Metrics](run_metrics/DETAILED_METRICS_TESTS.md) page for an in-depth overview of the data quality metrics, along with variables that users can define.

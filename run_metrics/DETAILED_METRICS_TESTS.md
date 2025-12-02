@@ -1,15 +1,15 @@
-# Detailed Metrics/Tests
-This page provides an in-depth overview of the data quality metrics/tests, along with variables that users can define. All tests used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness.
+# Detailed Metrics
+This page provides an in-depth overview of the data quality metrics, along with variables that users can define. All metrics used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness.
 
 To compute the final data quality grade for a given dataset, weights can be assigned to each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `{'Accessibility': 0.3,'Consistency': 0.4,'Uniqueness': 0.3}` |
 
-## Metric Tests 
-Metrics are tests used to determine how well a given dataset satisfies the given dimension. Each metric returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given metric. 
+## Metrics 
+Metrics are used to determine how well a given dataset satisfies the given dimension. Each metric returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given metric. 
 
-For tests applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information. In the case of Completeness (P2) and Interdependency (I1), the output report includes pairs of column names along with their corresponding correlation coefficients, which meet or exceed a defined threshold.
+For metrics applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information. In the case of Completeness (P2) and Interdependency (I1), the output report includes pairs of column names along with their corresponding correlation coefficients, which meet or exceed a defined threshold.
 
 The following variables are generic and can be defined for each dimension:
 | Variable               | Description                                   | Example         |
@@ -34,7 +34,7 @@ S1 gives a score based on whether a metadata file exists for the given dataset.
 Goal: Ensure that the data correctly represents the real-world values it is intended to model. Accurate data is free from errors and is a true reflection of the actual values.
 
 #### Accuracy Type 1 (A1) 
-A1 checks for letters or symbols in columns that should contain only numeric values. All entries in the selected columns are converted to strings and examined character by character. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
+A1 checks for letters or symbols in columns that should contain only numeric values. All entries in the selected columns are converted to strings and examined character by character. This metric can be applied to one or more columns at the same time, with scores averaged across selected columns. 
 
 A record is flagged as a data entry mistake if any non-numeric character is found within a numeric column.
 
@@ -44,7 +44,7 @@ A record is flagged as a data entry mistake if any non-numeric character is foun
 | `A1 Column Names` | Column(s) to test for non-numeric characters. | `col1` `col2` |
 
 #### Accuracy Type 2 (A2)
-A2 detects outliers in numeric columns using the interquartile range (IQR) method. A value is considered an outlier if it falls below `Q1 - (threshold * IQR)` or above `Q3 + (threshold * IQR)`. The default threshold is 1.5, but it can be adjusted based on the dataset. This test can be applied to one or more numeric columns at the same time, with scores averaged across selected columns. Users can also specify grouping columns to find outliers within subgroups, with results computed per group and then averaged. 
+A2 detects outliers in numeric columns using the interquartile range (IQR) method. A value is considered an outlier if it falls below `Q1 - (threshold * IQR)` or above `Q3 + (threshold * IQR)`. The default threshold is 1.5, but it can be adjusted based on the dataset. This metric can be applied to one or more numeric columns at the same time, with scores averaged across selected columns. Users can also specify grouping columns to find outliers within subgroups, with results computed per group and then averaged. 
 
 A column or group is flagged as inaccurate if the proportion of non-outliers falls below or above the specified range. 
 
@@ -57,7 +57,7 @@ A column or group is flagged as inaccurate if the proportion of non-outliers fal
 | `A2 Minimum Score` | Minimum acceptable proportion of non-outliers in a column or group. Default is `0.85`. | `0.85` |
 
 #### Accuracy Type 3 (A3) 
-A3 checks whether values in an aggregated column (e.g., Total) match the sum of their respective component columns. Blank or NULL entries in selected columns are replaced with zeros for calculation and comparison purposes. This test can be applied to one aggregated column against multiple component columns at the same time. 
+A3 checks whether values in an aggregated column (e.g., Total) match the sum of their respective component columns. Blank or NULL entries in selected columns are replaced with zeros for calculation and comparison purposes. This metric can be applied to one aggregated column against multiple component columns at the same time. 
 
 A record is flagged as inaccurate if the aggregated value does not equal the sum of its components.
 
@@ -68,7 +68,7 @@ A record is flagged as inaccurate if the aggregated value does not equal the sum
 | `A3 Aggregated Column` | Column containing the total value to validate. | `total_col` |
 
 #### Accuracy Type 4 (A4) 
-A4 verifies whether related timestamp columns are in chronological order (i.e., the start timestamp occurs on or before the end timestamp). Missing values in these columns are treated as valid to account for records that are still in progress, awaiting updates, or have no start date on record. This test can be applied to one or more column pairs at the same time, with scores averaged across selected pairs.
+A4 verifies whether related timestamp columns are in chronological order (i.e., the start timestamp occurs on or before the end timestamp). Missing values in these columns are treated as valid to account for records that are still in progress, awaiting updates, or have no start date on record. This metric can be applied to one or more column pairs at the same time, with scores averaged across selected pairs.
 
 A record is flagged as inaccurate if the start timestamp is later than the corresponding end timestamp.
 
@@ -97,7 +97,7 @@ A record is flagged as incomplete if it contains a blank or NULL value in any of
 | `P1 Threshold` | Maximum allowable proportion of missing values in a column. Default is `0.75`. | `0.75` |
 
 #### Completeness Type 2 (P2)
-P2 finds pairs of columns whose missing values tend to occur together, with an absolute value of the correlation exceeding a specified threshold. Each data point is labelled `true` if it is missing and `false` otherwise. The correlation coefficient is then calculated between these true/false values for each pair of columns. This test is applied to columns with one or more missing values, excluding comments intended for comments, which are considered less informative.
+P2 finds pairs of columns whose missing values tend to occur together, with an absolute value of the correlation exceeding a specified threshold. Each data point is labelled `true` if it is missing and `false` otherwise. The correlation coefficient is then calculated between these true/false values for each pair of columns. This metric is applied to columns with one or more missing values, excluding comments intended for comments, which are considered less informative.
 
 The correlation coefficient ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship. The default threshold is 0.5, which serves as a midpoint to detect potential associations. Users may increase this threshold (e.g., to 0.75) to explore stronger missingness correlations.
 
@@ -118,7 +118,7 @@ C1 detects near-duplicate entries in selected columns that likely refer to the s
 - Removing short numbers (fewer than two digits)
 - Filtering out stop words to focus on meaningful terms
 
-Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. This metric can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A default threshold of 0.91 was predetermined after manual review of test data. Scores at or above this threshold generally indicate the same entity with minor naming variations, while lower scores suggest distinct entries with similar names.
 
@@ -132,7 +132,7 @@ A record is flagged as inconsistent if it has a near-duplicate entry with a simi
 | `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `the` `and`. | `the` `and` |
 
 #### Consistency Type 2 (C2) 
-C2 checks whether string values in selected columns consistently follow naming conventions found in a reference dataset. If no reference dataset is provided, the test compares values within the dataset itself. Similarity between test and reference values is measured using cosine similarity based on a user-defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
+C2 checks whether string values in selected columns consistently follow naming conventions found in a reference dataset. If no reference dataset is provided, the metric compares values within the dataset itself. Similarity between test and reference values is measured using cosine similarity based on a user-defined threshold. This metric can be applied to one or more columns at the same time, with scores averaged across selected columns. 
 
 A default threshold of 0.91 was predetermined through manual review of test data. Scores at or above this threshold typically indicate a close match to a reference entry, with slight naming variations.
 
@@ -153,7 +153,7 @@ C3 compares string values to official province or territory names using the Leve
 - Stripping whitespaces
 - Removing non-alphanumeric characters
 
-Each entry is then compared against all official names, and the highest similarity score is used for evaluation against a defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
+Each entry is then compared against all official names, and the highest similarity score is used for evaluation against a defined threshold. This metric can be applied to one or more columns at the same time, with scores averaged across selected columns. 
 
 A default threshold of 0.91 was chosen after manual review of test data. Scores at or above this threshold largely resemble an official name with minor spelling differences.
 
@@ -166,7 +166,7 @@ A record is flagged as inconsistent if its similarity to any official province o
 | `C3 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
 
 #### Consistency Type 4 (C4)
-C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This metric can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A record is flagged as inconsistent if it does not match the specified date-time format or contains out of bounds values, such as a month greater than 12 or a day outside the valid range. 
  
@@ -177,7 +177,7 @@ A record is flagged as inconsistent if it does not match the specified date-time
 | `C4 Format` | Python datetime format specifier to compare entries against. Default is `%Y-%m-%d %H:%M:%S`. | `%Y-%m-%d %H:%M:%S` |
 
 #### Consistency Type 5 (C5) 
-C5 verifies that geographic coordinates follow Decimal Degrees (DD) formatting and represent valild latitude and longitude values. Users can optionally restrict validation to coordinates that fall within DFO's administrative Pacific Region. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+C5 verifies that geographic coordinates follow Decimal Degrees (DD) formatting and represent valild latitude and longitude values. Users can optionally restrict validation to coordinates that fall within DFO's administrative Pacific Region. This metric can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A record is flagged as inconsistent if its geographic coordinate falls outside the defined bounds.
 
@@ -191,17 +191,17 @@ A record is flagged as inconsistent if its geographic coordinate falls outside t
 Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. Interdependent data can be effectively combined and used together without discrepancies.
 
 #### Interdependency Type 1 (I1) 
-I1 identifies proxy variables, which indirectly capture information about sensitive features and are often used as substitutes for other variables. Sensitive features refer to protected data that, if exposed or mishandled, can lead to legal consequences. For this test, these features can include personal or business identifiers (e.g., name, address, or licence number). Non-sensitive features do not require the same level of protection and cannot be used to uniquely identify an individual or business. This test is applied to user-defined sensitive features, while all other columns are treated as non-sensitive features. Comment columns are excluded by default, as they are considered less informative. 
+I1 identifies proxy variables, which indirectly capture information about sensitive features and are often used as substitutes for other variables. Sensitive features refer to protected data that, if exposed or mishandled, can lead to legal consequences. For this metric, these features can include personal or business identifiers (e.g., name, address, or licence number). Non-sensitive features do not require the same level of protection and cannot be used to uniquely identify an individual or business. This metric is applied to user-defined sensitive features, while all other columns are treated as non-sensitive features. Comment columns are excluded by default, as they are considered less informative. 
 
 Proxy variables can have both positive and negative implications, depending on their use: 
 - They enable analysis when sensitive features are excluded.
 - They may also pose privacy and confidentiality risks if they are strongly related to, or can be used to infer protected data.
 
-For the purpose of this test, proxy variables are treated as neutral. Interpretation of the test scores may vary based on user objectives:
+For the purpose of this metric, proxy variables are treated as neutral. Interpretation of the metric scores may vary based on user objectives:
 - High scores may suggest better privacy protection but could also indicate that many non-sensitive features are less suitable as proxies, which may limit their usefulness for analytics. 
 - Low scores may enable more informative analysis without directly using sensitive data, while potentially increasing privacy risks if these proxies reveal sensitive information. 
 
-The test flags pairs of columns where the absolute value of the correlation coefficient between a non-sensitive and a sensitive feature exceeds 0.75, or any user-defined threshold. Since correlation ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship, a threshold of 0.75 suggests a high level of association. 
+The metric flags pairs of columns where the absolute value of the correlation coefficient between a non-sensitive and a sensitive feature exceeds 0.75, or any user-defined threshold. Since correlation ranges from -1 to 1, where 1 suggests a perfect association and 0 suggests no relationship, a threshold of 0.75 suggests a high level of association. 
 
 I1 serves to identify proxy variables that capture similar patterns, enabling meaningful analysis without directly using sensitive data.
 
@@ -215,19 +215,19 @@ I1 serves to identify proxy variables that capture similar patterns, enabling me
 Goal: Ensure that the data is relevant and useful for the intended purposes. Relevant data meets the needs of the users and supports the business processes.
 
 #### Relevance Type 1 (R1)
-Currently an empty template test.
+Currently an empty template metric.
 
 ### Timeliness
 Goal: Ensure that the data is up-to-date and available when needed. Timely data is delivered at the right time to support decision-making processes.
 
 #### Timeliness Type 1 (T1)
-Currently an empty template test.
+Currently an empty template metric.
 
 ### Uniqueness
 Goal: Ensure that each record in the dataset is unique and there are no duplicate entries. Unique data means there are no redundant records.
 
 #### Uniqueness Type 1 (U1)
-U1 finds duplicate rows across the entire dataset. This test is applied to all columns.
+U1 finds duplicate rows across the entire dataset. This metric is applied to all columns.
 
 A record is flagged as not unique if it exactly matches another row in the data.
 
