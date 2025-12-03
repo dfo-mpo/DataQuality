@@ -17,7 +17,7 @@ You can run data quality metrics using either of the following:
 2. **Open the notebook**
 
     Open the [Data Quality Complete](Data%20Quality%20Complete.ipynb) notebook and choose your dataset file (CSV or XLSX):
-    - In **Setup**, set `GLOBAL_USER` and `DATA_FILE_PATH` in the last code cell.
+    - In **Setup**, set `DATA_FILE_PATH` in the last code cell.
     - Dataset requirements:
         - The data must be on the **first sheet** in the Excel document.  
         - The **first row** must be the column names.  
