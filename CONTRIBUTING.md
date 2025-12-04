@@ -58,8 +58,8 @@ Add a new metric or customize an existing one by copying the metric template and
    - **Optional**: Define metric metadata and parameter types in `create_metadata()` to run your metric in the **UI tool**. Skip this step if using **only the notebook**.
         - Set each parameter's type using `ParameterType.[TYPE]` (see available types [here](TODO:add-link)).
 5. **Import any required operation modules** from [utils/](/utils) at the top of your metric file (e.g., `from utils import item_operations, column_operations, table_operations`).
-   - See [Operations](utils/OPERATIONS.md) for a list of available operations.
-   - See [Adding New Operations](utils/OPERATIONS.md#Adding-New-Operations) to add custom operations.
+   - See [Operations](utils/README.md) for a list of available operations.
+   - See [Creating Custom Operations](utils/README.md#Creating-Custom-Operations) to add custom operations.
 
 
 ## Testing your Changes
