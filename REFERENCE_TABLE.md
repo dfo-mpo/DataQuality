@@ -1,6 +1,6 @@
-# Metrics Reference Table
+# Tests Reference Table
 
-| Dimension     | Metric | Description                                  |
+| Dimension     | Test | Description                                  |
 |---------------|--------|----------------------------------------------|
 | Accessibility | [S1](dimensions/accessibility/s1.py)     | Gives a score based on whether a metadata file exists for the specified dataset. |
 | Accuracy | [A1](dimensions/accuracy/a1.py)     | Checks whether letters or symbols exist in the specified numeric column(s). |
@@ -19,4 +19,4 @@
 | Timeliness | [T1](dimensions/timeliness/t1.py)     | Currently an empty template metric. |
 | Uniqueness | [U1](dimensions/uniqueness/u1.py)     | Detects duplicate rows across the entire specified dataset. |
 
-See the [Detailed Metrics](run_metrics/DETAILED_METRICS_TESTS.md) page for an in-depth overview of the data quality metrics, along with variables that users can define.
+See the [Detailed Tests](run_tests/DETAILED_TESTS.md) page for an in-depth overview of the data quality tests, along with variables that users can define.

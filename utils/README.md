@@ -1,5 +1,5 @@
 # Operations
-This page provides an overview of the operations used throughout the framework. Operations are reusable helper and utility functions that support metric logic and repetitive processing tasks.
+This page provides an overview of the operations used throughout the framework. Operations are reusable helper and utility functions that support test logic and repetitive processing tasks.
 
 Contributors can reuse existing operations or create custom ones. For guidelines on adding custom operations, see the [Creating Custom Operations](#Creating-Custom-Operations) section.
 
@@ -19,7 +19,7 @@ Each type of operation is implemented in its respective files under the [utils/]
  - [core_operations.py](core_operations.py)
 
 ## Using Operations
-1. Import the operation module at the top of your metric file:
+1. Import the operation module at the top of your test file:
     ```
     from utils import item_operations # or column_operations, table_operations
     ```
@@ -31,14 +31,14 @@ Each type of operation is implemented in its respective files under the [utils/]
 This same approach works for Column and Table operations; use the corresponding module name.
 
 ## Creating Custom Operations
-Contributors can add custom operations to support the metrics they implement.
+Contributors can add custom operations to support the test they implement.
 
 1. Choose the appropriate operation type:
    - `Item` for individual values or cells
    - `Column` for single columns or lists of values
    - `Table` for entire datasets of multiple rows/columns
 2. Implement your operation in the chosen file under [utils/](../utils).
-3. Use your custom operations in a metric following the steps in [Using Operations](#Using-Operations).
+3. Use your custom operations in a test following the steps in [Using Operations](#Using-Operations).
 
 ## Item Operations
 Item operations are applied to individual values or cells in a dataset.
@@ -87,11 +87,11 @@ Core operations handle tasks such as reading/writing data, grading, and logging 
 
 | Operation               | Description                                   |
 |------------------------|-----------------------------------------------|
-| `are_weights_valid` | Determines whether the given set of weights meet the following criteria: the number of weights match the number of metrics/dimensions, and the weights sum up to 1. |
-| `calculate_dimension_score` | Calculates the total score for a dimension from a list of metric scores and returns a dictionary with the dimension and overall score. |        
+| `are_weights_valid` | Determines whether the given set of weights meet the following criteria: the number of weights match the number of tests/dimensions, and the weights sum up to 1. |
+| `calculate_dimension_score` | Calculates the total score for a dimension from a list of test scores and returns a dictionary with the dimension and overall score. |        
 | `calculate_DQ_grade` | Determines a data quality grade from a list of dimension score, where each entry contains the dimension name and total score. |
 | `df_to_csv` | Converts a DataFrame to CSV, returning the CSV filename if a logging path is defined, otherwise returns the CSV in memory. |
-| `list_metric_names` | Gets a list of all metric names from filenames in the specified folder, excluding the `.py` extension. |
+| `list_test_names` | Gets a list of all test names from filenames in the specified folder, excluding the `.py` extension. |
 | `output_log_score` | Logs a new row into the `DQS_Output_Log_xx.xlsx` file |        
 | `read_data` |  Reads data from a CSV or XLSX file or returns the input if already a DataFrame. |
 | `RED` | Colors console output as red text. |

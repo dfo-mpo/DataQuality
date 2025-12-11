@@ -1,12 +1,12 @@
 # Data Quality Framework
-This repository contains scripts to calculate data quality for datasets used in the Pacific Salmon Strategy Initiative (PSSI) Data Portal. Metrics are organized into dimensions, and each metric can be run using a Jupyter Notebook or a no-code UI tool on CSV or XLSX datasets.
+This repository contains scripts to calculate data quality for datasets used in the Pacific Salmon Strategy Initiative (PSSI) Data Portal. Tests are organized into dimensions, and when multiple tests evaluate similar aspects of data quality, the framework groups them and refers to them as *metrics*. Each test can be run using a Jupyter Notebook or a no-code UI tool on CSV or XLSX datasets. 
 
-For instructions on setting up the repository and running metrics, see the [Getting Started](#Getting-Started) section.
+For instructions on setting up the repository and running tests, see the [Getting Started](#Getting-Started) section.
 
-This framework is **open source**, and contributions are welcome. Check out the [CONTRIBUTING](CONTRIBUTING.md) page to add new metrics or customize existing ones.  
+This framework is **open source**, and contributions are welcome. Check out the [CONTRIBUTING](CONTRIBUTING.md) page to add new tests or customize existing ones.  
   
-## Dimensions and Metrics 
-Data quality metrics are divided into 8 dimensions:
+## Dimensions and Tests 
+Data quality tests are divided into 8 dimensions:
 1. Accessibility
 2. Accuracy
 3. Completeness
@@ -16,9 +16,9 @@ Data quality metrics are divided into 8 dimensions:
 7. Timeliness
 8. Uniqueness
 
-See the [Metrics Reference Table](REFERENCE_TABLE.md) for a complete list of runnable metrics.
+See the [Tests Reference Table](REFERENCE_TABLE.md) for a complete list of runnable tests.
 
-For full details on each metric, see the [Detailed Metrics](run_metrics/DETAILED_METRICS_TESTS.md) page.
+For full details on each test, see the [Detailed Tests](run_tests/DETAILED_TESTS.md) page.
 
 ## Getting Started
 Set up the repository and run metrics.
@@ -30,6 +30,6 @@ Set up the repository and run metrics.
     git clone https://github.com/dfo-mpo/DataQuality.git
     cd DataQuality
     ```
-2. **Choose how to run metrics**
-    - [Run metrics with the notebook](run_metrics/README.md#Run-Metrics-with-the-Notebook)
-    - [Run metrics with the UI tool](run_metrics/README.md#Run-Metrics-with-the-UI)
+2. **Choose how to run tests**
+    - [Run tests with the notebook](run_tests/README.md#Run-Tests-with-the-Notebook)
+    - [Run tests with the UI tool](run_tests/README.md#Run-Tests-with-the-UI)
