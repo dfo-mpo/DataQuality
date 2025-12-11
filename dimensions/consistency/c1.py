@@ -1,24 +1,24 @@
 import numpy as np  
 import pandas as pd
 from utils import core_operations, table_operations, column_operations, item_operations
-from ui_tool.metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import TestMetadata, ParameterType
 
-METRIC = "C1"
+TEST = "C1"
 
-""" Class to represent an individual metric for the Consistency dimension.
+""" Class to represent an individual test for the Consistency dimension.
     
     Goal: Ensure that data is consistent across different datasets and systems. 
     Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
     
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only test scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
-c1_column_names: columns used from the dataset for the C1 metric.
-c1_threshold: threshold for simulatrity score that is acceptable for C1 metric.
-c1_stop_words: Words filtered for C1 metric simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
+c1_column_names: columns used from the dataset for the C1 test.
+c1_threshold: threshold for simulatrity score that is acceptable for C1 test.
+c1_stop_words: Words filtered for C1 test simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
 """
-class Metric:
+class Test:
     def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c1_column_names=[], c1_threshold=0.91, c1_stop_words=["the", "and"], threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
@@ -36,7 +36,7 @@ class Metric:
     Process the dataset, normalize the text, and calculate the similarity scores for multiple columns.
     Limitations: It will not check for differences in capitalization of the same word (since all the words will be changed to lower case before the similarity score is calculated).
     """     
-    def run_metric(self):    
+    def run_test(self):    
         # Read the dataset from the provided Excel file path
         df = core_operations.read_data(self.dataset_path)
         overall_consistency_scores = []
@@ -146,24 +146,24 @@ class Metric:
             return consistency_score, None
         elif self.return_type == "dataset":
             if not overall_consistency_scores:
-                return f"No valid {METRIC} results generated", None
+                return f"No valid {TEST} results generated", None
             
             cdf = pd.concat(overall_consistency_scores, ignore_index=True)  # Merge all results
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=cdf)
+            output_file = core_operations.df_to_csv(self.logging_path, test=TEST.lower(), final_df=cdf)
             return consistency_score, output_file  # Return the file name, add return for score
         else:
             return df, None  # Default return value (DataFrame)
        
-""" Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
+""" Creates a TestMetadata instance for a single test, defining any parameters used by the UI to generate input fields.
 """
 def create_metadata():
     dimension = "Consistency"
 
-    # Define instance for metric
-    c1_metadata = MetricMetadata(dimension, METRIC)
-    # Define each parameter needed for metric, use ParameterType when defining type
+    # Define instance for test
+    c1_metadata = TestMetadata(dimension, TEST)
+    # Define each parameter needed for test, use ParameterType when defining type
     c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT, default=[])
     c1_metadata.add_parameter('c1_threshold', 'C1 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
-    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"], hint="Words filtered for C1 metric simularity calculations")
+    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"], hint="Words filtered for C1 test simularity calculations")
     
     return c1_metadata 

@@ -15,11 +15,11 @@ RESET = "\033[0m"
 """
 - Function to convert dataframe in CSV, 
     if a logging path is defined: Return is the name of the csv file created
-    if no loggin path defined: Return the csv in memory
+    if no logging path defined: Return the csv in memory
 """
-def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
+def df_to_csv(logging_path: None|str, test: str, final_df: pd.DataFrame):
     # Define csv file name
-    base_filename=f"{logging_path}{metric}_output"
+    base_filename=f"{logging_path}{test}_output"
     version = 1
     while os.path.exists(f"{base_filename}_v{version}.csv"):
         version += 1
@@ -31,15 +31,15 @@ def df_to_csv(logging_path: None|str, metric: str, final_df: pd.DataFrame):
     return output_file
 
 """
-- Function to get list of all metric names from filenames (without .py) in the given folder.
+- Function to get list of all test names from filenames (without .py) in the given folder.
 """
-def list_metric_names(metric_folder, exclude_files=None):
+def list_test_names(dimension_folder, exclude_files=None):
     if exclude_files is None:
-        exclude_files = ["__init__.py", "dimension_reference.py", "metric_template.py"]
+        exclude_files = ["__init__.py", "dimension_reference.py", "test_template.py"]
     
     return [
         f[:-3].upper()  # strip '.py' and make uppercase
-        for f in os.listdir(metric_folder)
+        for f in os.listdir(dimension_folder)
         if f.endswith(".py") and f not in exclude_files
     ]
 
@@ -71,7 +71,7 @@ def read_data(dataset_path, dataset_name=None):
 
 # Function to log a new row into the DQS_Output_Log_xx.xlsx file
 def output_log_score(test_name, dataset_name, score, selected_columns, excluded_columns, isStandardTest, test_fail_comment, 
-                     errors, dimension, metric_log_csv, threshold=None, minimum_score=None, return_log=False):
+                     errors, dimension, test_log_csv, threshold=None, minimum_score=None, return_log=False):
     # Convert score to a percentage
     try:
         percentage_score = f"{float(score['value']) * 100:.2f}%" if score['value'] else '0%'
@@ -96,7 +96,7 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
         # Convert selected_columns list to a string if specific columns are provided
         columns_tested = ", ".join(selected_columns)
     
-    # If isStandard then the test is a standard metric test, otherwise it is a custom test (not created by the SDPA team)
+    # If isStandard then the test is a standard test test, otherwise it is a custom test (not created by the SDPA team)
     standard_or_custom_value = "Standard" if isStandardTest else "Custom"
     
     # Including dimension (which may have to be defined by what class this data is in, but for testing purposes, it's hardcoded for now)
@@ -119,7 +119,7 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
         "Score": [percentage_score],
         "Run_Time_and_Date": [datetime.now().strftime('%Y-%m-%d %H:%M:%S')],
         "New_or_Existing_Test": [standard_or_custom_value],
-        "One_Line_Summary": [get_onesentence_summary(test_name, metric_log_csv, selected_columns, threshold=minimum_score if minimum_score != None else threshold_value)] if metric_log_csv else None,
+        "One_Line_Summary": [get_onesentence_summary(test_name, test_log_csv, selected_columns, threshold=minimum_score if minimum_score != None else threshold_value)] if test_log_csv else None,
         "Errors": [errors], # TODO: expand
         "Why_Did_the_Test_Fail": [test_fail_comment] # TODO: expand
     })
@@ -130,7 +130,7 @@ def output_log_score(test_name, dataset_name, score, selected_columns, excluded_
     # Save the updated DataFrame back to the Excel file
     df.to_excel(log_file, index=False)
 
-    # If return_log is set to true return the row, this allows the UI to visualize logs from metrics run
+    # If return_log is set to true return the row, this allows the UI to visualize logs from tests run
     if return_log:
         return new_row
     else:
@@ -147,9 +147,9 @@ def get_dataset_name(dataset_path):
     return dataset_name
 
 """
-- Function to read metric log if it exists
+- Function to read test log if it exists
 """
-def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_columns: list[str], threshold: int | None) -> str:
+def get_onesentence_summary(test: str, logging_path: str|io.BytesIO, selected_columns: list[str], threshold: int | None) -> str:
     try:
         # Incase logging_path is an in memory file, reset its internal pointer first
         if not isinstance(logging_path, str):
@@ -157,13 +157,13 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
         df = pd.read_csv(logging_path)
 
         # Create 1 sentence summary
-        if (metric == 'C1'):
+        if (test == 'C1'):
             max_scores = df.groupby('Column Source')['Similarity Score'].max()
             filtered_sources = max_scores[max_scores > threshold]
             filtered_sources_str = ', '.join(filtered_sources.index.tolist()) 
 
             return "The following columns contain a score above the threshold " + filtered_sources_str + "."
-        elif (metric == 'C2'):
+        elif (test == 'C2'):
             comparison_columns = [col for col in df.columns if col.endswith('_comparison')]
 
             # Find columns with _comparison equivalents that contains a 'False' value
@@ -174,7 +174,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             simular_columns_str = ', '.join(simular_columns)
 
             return "The following columns may have names that do not resemble a reference data column: " + simular_columns_str + "."
-        elif (metric == "C3"):
+        elif (test == "C3"):
             inconsistent_columns = []
 
             # Find columns with Normalized {column}_comparison and 'False' entries
@@ -185,7 +185,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                     inconsistent_columns.append(column[len("Normalized "):-len("_comparison")])         
             
             return "The following columns may have names that do not resemble a province/territory: " + ', '.join(inconsistent_columns) + "."
-        elif (metric == "C4"):
+        elif (test == "C4"):
             inconsistent_columns = []
 
             # Find columns with _inconsistent and 'True' entries
@@ -196,7 +196,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                     inconsistent_columns.append(column[:-len("_inconsistent")])   
             
             return "The following columns may have dates inconsistent with a date-time formatting: " + ', '.join(inconsistent_columns) + "."
-        elif (metric == "C5"):
+        elif (test == "C5"):
             invalid_columns = []
 
             # Find columns with _invalid and 'True' entries
@@ -207,12 +207,12 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                     invalid_columns.append(column[:-len("_invalid")])   
             
             return "The following columns may have invalid latitude/longitude coordinates: " + ', '.join(invalid_columns) + "."
-        elif (metric == "S1"):
+        elif (test == "S1"):
             if df.iloc[0, 0] > 0:
                 return "Metadata exists for given dataset"
             else:
                 return "Metadata does not exist for given dataset"
-        elif (metric == 'A1'):
+        elif (test == 'A1'):
             comparison_columns = [col for col in df.columns if col.endswith('_Only_Numbers')]
             
             # Find columns with _ONLY_NUMBERS equivalents that contains a 'False' value 
@@ -222,7 +222,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                     columns_with_equivalents.append(column[:-len("_Only_Numbers")])
             columns_with_equivalents_str = ', '.join(columns_with_equivalents)
             return "Columns that may contain symbols: " + columns_with_equivalents_str + "."
-        elif (metric == 'A2'):
+        elif (test == 'A2'):
             columns_below_threshold = []
             # Get groupby columns
             end_index = len(df.columns) - len(selected_columns) 
@@ -240,12 +240,12 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             
             # Output the results  
             return "There are at least 15% outliers existing in the following columns: "+ columns_below_threshold_str + "."
-        elif (metric == "A3"):
+        elif (test == "A3"):
             component_columns = ', '.join(selected_columns[:-1])
             agg_column = selected_columns[-1]
             
             return "The aggregated column " + agg_column + " may contain values not equal to the sums of its component columns: " + component_columns + "." if len(df) > 2 else "The aggregated column " + agg_column + " equals the sum of its component columns: " + component_columns + "."
-        elif (metric == "A4"):
+        elif (test == "A4"):
             invalid_pairs = []
 
             # Find column pairs not in chronological order
@@ -258,11 +258,11 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             invalid_pairs_list = [tuple(s.split("_after_")) for s in invalid_pairs] 
 
             return "Column pairs that may contain dates not in chronological order: " + ", ".join(f"({a}, {b})" for a, b in invalid_pairs_list) + "."
-        elif (metric == 'P1'):
+        elif (test == 'P1'):
             columns = ', '.join(df.columns)
 
             return "Columns that exceed the threshold of non-null values: " + columns + "."
-        elif (metric == 'P2'):
+        elif (test == 'P2'):
             strength = ""
             
             if threshold < 0.5:
@@ -275,31 +275,31 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
                 strength = "a possibly strong"
                 
             return f"There are {len(df['features'])} feature pair(s) with " + strength + f" association in missingness, given a correlation threshold of {threshold}."
-        elif (metric == 'I1'):
+        elif (test == 'I1'):
             columns_above_threshold = ", ".join(df['var1'].unique())
         
             return f"Proxy variables whose correlation with sensitive features is higher than {threshold}: " + columns_above_threshold + "."
-        elif (metric == 'U1'):
+        elif (test == 'U1'):
 
             return "Duplicate rows found in the dataset." if len(df.columns) > 0 else "No duplicate rows found in the dataset."
         else: 
             return None
     except Exception as e:
-        print(f"When trying to create one line summary for {metric}, the following error occurred: {e}")
+        print(f"When trying to create one line summary for {test}, the following error occurred: {e}")
         return None
 
 # --- Scoring / Validation ---
 """
 - Determines if the given set of weights meet the follwing criteria
-    - The number of weights match the number of metrics/dimensions
+    - The number of weights match the number of tests/dimensions
     - The weights add up to 1
     weights: the weights to evaluate.
-    scores: a list of dictionaries containing each metric and the score from it.
-    type: if set to 'metric' will using metrics in error message, otherwise uses dimensions.
+    scores: a list of dictionaries containing each test and the score from it.
+    type: if set to 'test' will using tests in error message, otherwise uses dimensions.
     Return: Tuple of weights and boolean indicating if the weights needed to be set to default.
 """
-def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple:
-    weight_type = 'metrics' if type == 'metric' else 'dimensions'
+def are_weights_valid(weights: dict, scores: list[dict], type='test') -> tuple:
+    weight_type = 'tests' if type == 'test' else 'dimensions'
 
     # Handle string inputes
     if weights == '' or weights == '{}':
@@ -314,7 +314,7 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
             return {}, False
 
     try:
-        # Ensure number of weights is the name as the number of metric run (else use default weights)
+        # Ensure number of weights is the name as the number of test run (else use default weights)
         if len(weights) != len(scores):
             weights = {}
             print(f'{RED}Number of weights does not match number of {weight_type} run, using default weights instead!{RESET}')
@@ -323,7 +323,7 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
         # Ensure weights add to 1
         else:
             total_weight = 0
-            for metric, weight in weights.items():
+            for test, weight in weights.items():
                 total_weight += weight
             if total_weight < 1.0:
                 weights = {}
@@ -335,9 +335,9 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
     
     return weights, True
 
-""" Takes a list of scores from all metrics in a given dimension and calculates the dimension total score
+""" Takes a list of scores from all tests in a given dimension and calculates the dimension total score
     dimension_type: the name of the dimension being evaluated.
-    scores: a list of dictionaries containing each metric and the score from it.
+    scores: a list of dictionaries containing each test and the score from it.
     weights: a multiply
     Return: Dictionary with dimension (the dimension's name) and score (the overall score for the dimension)
 """
@@ -350,9 +350,9 @@ def calculate_dimension_score(dimension_type: str, scores: list[dict], weights: 
     for score in scores:
         try:
             numeric_score = 0 if not score['value'] else score['value'] # If test failed make the score 0
-            weight = weights[score['metric']] if score['metric'] in weights else 1.0 / len(scores)
+            weight = weights[score['test']] if score['test'] in weights else 1.0 / len(scores)
             score_value += numeric_score * weight
-        except: # Case where value from metric is 'No valid XX results generated
+        except: # Case where value from test is 'No valid XX results generated
             score_value += 0
     
     return {"dimension": dimension_type, "score": score_value}

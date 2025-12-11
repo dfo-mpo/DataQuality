@@ -1,22 +1,22 @@
 from dython.nominal import associations
 from utils import core_operations
-from ui_tool.metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import TestMetadata, ParameterType
 
-METRIC = "P1"
+TEST = "P1"
 
-""" Class to represent an individual metric for the Completeness dimension.
+""" Class to represent an individual test for the Completeness dimension.
     
     Goal: Ensure that all required data is available and that there are no missing values. 
     Complete data includes all necessary records and fields needed for the intended use.
 
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only test scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 p1_exclude_columns: columns to ingore for the P1 test.
 p1_threshold: threshold for acceptible percentance of null values in a given column for P1 test
 """
-class Metric:
+class Test:
     def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, p1_exclude_columns=[], p1_threshold=0.75, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
@@ -31,7 +31,7 @@ class Metric:
     
     """ Completeness Type 1 (P1): Checks for whether there are blanks in the entire dataset.
     """
-    def run_metric(self):
+    def run_test(self):
         dataset = core_operations.read_data(self.dataset_path)
 
         # Exclude the 'Comment' column if it exists in the dataset  
@@ -62,20 +62,20 @@ class Metric:
             if not total_non_missing : # if there are not rows with data
                 return "No valid p1 results generated", None
             
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=pdf)
+            output_file = core_operations.df_to_csv(self.logging_path, test=TEST.lower(), final_df=pdf)
             return completeness_score, output_file  # Return the file name
             
         else:
             return dataset, None  # Default return value (DataFrame) 
        
-""" Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
+""" Creates a TestMetadata instance for a single test, defining any parameters used by the UI to generate input fields.
 """
 def create_metadata():
     dimension = "Completeness"
 
-    # Define instance for metric
-    p1_metadata = MetricMetadata(dimension, METRIC)
-    # Define each parameter needed for metric, use ParameterType when defining type
+    # Define instance for test
+    p1_metadata = TestMetadata(dimension, TEST)
+    # Define each parameter needed for test, use ParameterType when defining type
     p1_metadata.add_parameter('p1_exclude_columns', 'P1 Exclude Columns', ParameterType.MULTI_SELECT, default=[])
     p1_metadata.add_parameter('p1_threshold', 'P1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
     

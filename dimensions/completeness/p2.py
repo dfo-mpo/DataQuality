@@ -1,21 +1,21 @@
 from dython.nominal import associations
 from utils import core_operations, table_operations
-from ui_tool.metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import TestMetadata, ParameterType
 
-METRIC = "P2"
+TEST = "P2"
 
-""" Class to represent an individual metric for the Completeness dimension.
+""" Class to represent an individual test for the Completeness dimension.
 
     Goal: Ensure that all required data is available and that there are no missing values. 
     Complete data includes all necessary records and fields needed for the intended use.
 
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only test scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 p2_threshold: threshold for correlation coefficient that is acceptable for P2 test.
 """
-class Metric:
+class Test:
     def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, p2_threshold=0.5, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
@@ -30,7 +30,7 @@ class Metric:
     """ Completeness Type 2 (P2): Finds column pairs with missing values whose correlation coefficient is higher than 0.5 (or any threshold).
     Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.5 will be used as a midpoint threshold to investigate whether an association exists. 
     """ 
-    def run_metric(self):
+    def run_test(self):
         df = core_operations.read_data(self.dataset_path)
 
         # Exclude the 'Comment' or 'Comments' column if it exists in the dataset  
@@ -62,20 +62,20 @@ class Metric:
                 return "No valid p2 results generated", None
             
             pdf = corrs_thr
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=pdf)
+            output_file = core_operations.df_to_csv(self.logging_path, test=TEST.lower(), final_df=pdf)
             return completeness_score, output_file  # Return the file name
             
         else:
             return df, None  # Default return value (DataFrame)
        
-""" Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
+""" Creates a TestMetadata instance for a single test, defining any parameters used by the UI to generate input fields.
 """
 def create_metadata():
     dimension = "Completeness"
 
-    # Define instance for metric
-    p2_metadata = MetricMetadata(dimension, METRIC)
-    # Define each parameter needed for metric, use ParameterType when defining type
+    # Define instance for test
+    p2_metadata = TestMetadata(dimension, TEST)
+    # Define each parameter needed for test, use ParameterType when defining type
     p2_metadata.add_parameter('p2_threshold', 'P2 Threshold', ParameterType.DECIMAL, value='0.5', step = 0.05)
     
     return p2_metadata 

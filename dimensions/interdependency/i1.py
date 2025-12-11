@@ -4,23 +4,23 @@ import warnings
 from dython.nominal import associations
 from pandas.api.types import is_datetime64_any_dtype, is_object_dtype
 from utils import core_operations, table_operations
-from ui_tool.metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import TestMetadata, ParameterType
 
-METRIC = "I1" 
+TEST = "I1" 
 
-""" Class to represent an individual metric for the Interdependency dimension.
+""" Class to represent an individual test for the Interdependency dimension.
 
     Goal: Ensure that data across different systems and datasets are harmonized and can be integrated. 
     Interdependent data can be effectively combined and used together without discrepancies.
 
 dataset_path: path of the csv/xlsx to evaluate.
-return_type: either score to return only metric scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
+return_type: either score to return only test scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
-i1_sensitive_columns: sensitive columns used from the dataset for the I1 metric.
+i1_sensitive_columns: sensitive columns used from the dataset for the I1 test.
 i1_threshold: threshold for correlation coefficient that is acceptable for I1 test.
 """
-class Metric:
+class Test:
     def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, i1_sensitive_columns=[], i1_threshold=0.75, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
@@ -37,7 +37,7 @@ class Metric:
     Proxy variables indirectly capture information about sensitive features, often used as substitutes for other variables. 
     Given that correlation ranges from -1 to 1 (1 suggests perfect association, 0 suggests no relation), 0.75 will be used as threshold to suggest a high level of association.
     """    
-    def run_metric(self):  
+    def run_test(self):  
         df = core_operations.read_data(self.dataset_path)
         all_interdependency_scores = {}
 
@@ -81,23 +81,23 @@ class Metric:
             return interdependency_score, None
         elif self.return_type == "dataset":
             if not interdependency_score: 
-                return f"No valid {METRIC} results generated", None
+                return f"No valid {TEST} results generated", None
                 
             idf = corrs_thr
-            output_file = core_operations.df_to_csv(self.logging_path, metric=METRIC.lower(), final_df=idf)
+            output_file = core_operations.df_to_csv(self.logging_path, test=TEST.lower(), final_df=idf)
             return interdependency_score, output_file  # Return the file name
                 
         else:
             return df, None  # Default return value (DataFrame)
        
-""" Creates a MetricMetadata instance for a single metric, defining any parameters used by the UI to generate input fields.
+""" Creates a TestMetadata instance for a single test, defining any parameters used by the UI to generate input fields.
 """
 def create_metadata():
     dimension = "Interdependency"
 
-    # Define instance for metric
-    i1_metadata = MetricMetadata(dimension, METRIC)
-    # Define each parameter needed for metric, use ParameterType when defining type
+    # Define instance for test
+    i1_metadata = TestMetadata(dimension, TEST)
+    # Define each parameter needed for test, use ParameterType when defining type
     i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT, default=[])
     i1_metadata.add_parameter('i1_threshold', 'I1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
     
