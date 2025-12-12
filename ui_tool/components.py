@@ -17,19 +17,19 @@ dimension: The name of the given dimension.
 dimension_dict: The dictionary representing the given dimension.
 """
 def generateFirstDimensionRow(dimension_dict):
-    all_metrics = dimension_dict["all_metrics"]
-    example_weights = f"'{all_metrics[0]}': 0.3, '{all_metrics[0][0]}2': 0.7"
+    all_tests = dimension_dict["all_tests"]
+    example_weights = f"'{all_tests[0]}': 0.3, '{all_tests[0][0]}2': 0.7"
     col_1, col_2 = st.columns(2)
 
     with col_1:  
-        dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
+        dimension_dict["tests"] = st.multiselect("Tests", all_tests)
     with col_2:  
         dimension_dict["weights"] = st.text_input("Weights", value="", 
                                     placeholder="e.g., {"+example_weights+"}", 
                                     help="If left empty, weighting will be equal. Weights must add up to 1.")
         
 
-def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
+def generateDimensionRow(dimension_dict, test, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:
         return
 
@@ -78,7 +78,7 @@ def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetad
     # If more parameters are left to generate, do recursive call otherwise terminate
     numOfParamUsed = numOfColumns if not doubleColumn else numOfColumns + 1
     if len(parameters) > numOfParamUsed:
-        generateDimensionRow(dimension_dict, metric=metric, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
+        generateDimensionRow(dimension_dict, test=test, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
     else:
         return
 
@@ -93,7 +93,7 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
             return st.selectbox(parameter.title, options=options, help=parameter.hint)
         case ParameterType.DECIMAL:
             return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
-        case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running metrics
+        case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running tests
             return st.text_input(parameter.title, value=parameter.value, placeholder=parameter.placeholder, help=parameter.hint)
         case ParameterType.CHECKBOX:
             return st.checkbox(parameter.title, value=parameter.value, help=parameter.hint)
