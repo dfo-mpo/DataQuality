@@ -19,7 +19,7 @@ c2_threshold: threshold for consistency score that is acceptable for C2 test.
 ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 test.
 """
 class Test:
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=1, c2_stop_words=["activity"], ref_dataset_path=None, threshold=None, selected_columns=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=1.00, c2_stop_words=["activity"], ref_dataset_path=None, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
         self.logging_path = logging_path
@@ -93,7 +93,7 @@ def create_metadata():
     # Define instance for test
     c2_metadata = TestMetadata(dimension, TEST)
     # Define each parameter needed for test, use ParameterType when defining type
-    c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
+    c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='1.00', step = 0.01)
     c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.STRING_LIST, value=["activity"], suggestions=["activity"], hint="Words filtered for C2 test simularity calculations")
     c2_metadata.add_parameter('ref_dataset_path', 'Reference Dataset File', ParameterType.FILE_UPLOAD)
     c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2'}")

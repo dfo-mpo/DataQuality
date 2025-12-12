@@ -32,7 +32,7 @@ Before contributing, ensure you have forked the repository and cloned it locally
    TODO: Set a standard for merging changes to main repo
    
 ## Code Structure
-The framework organizes tests into dimensions, where tests that evaluate similar aspects are grouped and referred to as *metrics*. Each dimension is stored in its own folder, containing all files needed to define, manage, and load its tests.
+The framework organizes tests into dimensions, where tests that evaluate similar aspects of data quality are conceptually grouped as *metrics*. Each dimension is stored in its own folder, containing all files needed to define, manage, and load its tests.
 
 ### Files in each Dimension Folder
 - `dimension_reference.py`: Manages and loads all tests in a dimension, collects their metadata, and provides `run_tests()` to execute selected or all tests with their specific parameters.

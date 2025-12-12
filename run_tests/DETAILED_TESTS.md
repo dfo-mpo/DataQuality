@@ -7,7 +7,7 @@ To compute the final data quality grade for a given dataset, weights can be assi
 | `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `{'Accessibility': 0.3,'Consistency': 0.4,'Uniqueness': 0.3}` |
 
 ## Tests 
-Tests are used to determine how well a given dataset satisfies the given dimension. When these tests evaluate similar aspects of data quality, the framework groups them and refers to them as *metrics*. Each test returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given test. 
+Tests are used to determine how well a given dataset satisfies the given dimension. When these tests evaluate similar aspects of data quality, the framework conceptually groups them as *metrics*. Each test returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given test. 
 
 For tests applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information.
 

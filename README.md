@@ -1,5 +1,5 @@
 # Data Quality Framework
-This repository contains scripts to calculate data quality for datasets used in the Pacific Salmon Strategy Initiative (PSSI) Data Portal. Tests are organized into dimensions, and when multiple tests evaluate similar aspects of data quality, the framework groups them and refers to them as *metrics*. Each test can be run using a Jupyter Notebook or a no-code UI tool on CSV or XLSX datasets. 
+This repository contains scripts to calculate data quality for datasets used in the Pacific Salmon Strategy Initiative (PSSI) Data Portal. Tests are organized into dimensions, and tests that evaluate similar aspects of data quality are conceptually grouped as *metrics*. Each test can be run using a Jupyter Notebook or a no-code UI tool on CSV or XLSX datasets. 
 
 For instructions on setting up the repository and running tests, see the [Getting Started](#Getting-Started) section.
 
