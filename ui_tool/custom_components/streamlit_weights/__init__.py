@@ -47,6 +47,7 @@ else:
 # output value, and add a docstring for users.
 def st_weights(value: dict = {}, # Dict[str, float] 
             label: str = "Enter Weights",
+            placeholder: str = "Once valid options a selected weight selections will appear here.",
             step: float = 0.05,
             min: float = None,
             max: float = None,
@@ -60,6 +61,7 @@ def st_weights(value: dict = {}, # Dict[str, float]
     :return: Tags
     '''
     component_value = _component_func(label=label,
+                                      placeholder=placeholder,
                                       initialValue=value,
                                       step=step,
                                       min=min,

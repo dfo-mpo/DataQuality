@@ -7,6 +7,7 @@ from enum import Enum
 class ParameterType(Enum):
     MULTI_SELECT = "multi-select" # uses dataset as options if no value is provided
     SINGLE_SELECT = "single-select"
+    SINGLE_SELECT_CUSTOM_INPUT = "single-select-custom-input" # single select but allows user to have an enter custom feild option, value can be list of strings or list of objects used to map visiable name to a specific value
     DECIMAL = "decimal"
     TEXT_INPUT = "text"
     STRING = "string"

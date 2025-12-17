@@ -496,7 +496,9 @@ def create_metadata():
     c4_metadata = MetricMetadata(dimension, "C4")
     # Define each parameter needed for metric, use ParameterType when defining type
     c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT, default=[])
-    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.STRING, value='%Y-%m-%d %H:%M:%S', hint="Date-time format that selected dataset columns are compared to. Use %Y (year), %M (months), and %D (days) separated by '-'. Use %H (hours), %M (minutes), and %S (seconds) separated by ':'." )
+    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.SINGLE_SELECT_CUSTOM_INPUT, 
+                              value=['2001 (YYYY)', ' 2001-03-14 (YYYY-MM-DD)', '14-Mar-01 (DD-MMM-YY)', '03/14/2001 (MM/DD/YYYY)', '14/03/2001 (DD/MM/YYYY)', '20010314 (YYYYMMDD)', '2001-03-14 13:30:55 (YYYY-MM-DD HH:MM:SS)', '14-Mar-01 13:30:55 (DD-MMM-YY HH:MM:SS)', '03/14/2001 13:30:55 (MM/DD/YYYY HH:MM:SS)', '14/03/2001 13:30:55 (DD/MM/YYYY HH:MM:SS)', '20010314 13:30:55 (YYYYMMDD HH:MM:SS)' ], 
+                              hint=" Enter a Python date-time format string using strftime codes (e.g., %Y-%m-%d %H:%M:%S). \n For a full list of format codes: \n https://docs.python.org/3.11/library/datetime.html?utm_source=chatgpt.com#format-codes" )
     # Append instance into metadata list
     metadata.append(c4_metadata)
 

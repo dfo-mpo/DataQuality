@@ -19,7 +19,7 @@ const tagStyles = css({
   borderRadius: "var(--rtiRadius)",
   display: "inline-flex",
   justifyContent: "center",
-  padding: "2px 8px",
+  padding: "4px 10px",
 });
 
 const weightContainerStyles = css({

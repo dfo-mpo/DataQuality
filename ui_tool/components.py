@@ -26,7 +26,7 @@ def generateFirstDimensionRow(dimension_dict):
         dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
     with col_2:  
         weights = generateWeightsDict(dimension_dict["metrics"], dimension_dict.get("weights",{}))
-        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
+        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", placeholder="First select the metrics you wish to run.", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
         # st.text_input("Weights", value="", 
                                     # placeholder="e.g., {"+example_weights+"}", 
                                     # help="If left empty, weighting will be equal. Weights must add up to 1.")
@@ -103,6 +103,8 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
         case ParameterType.SINGLE_SELECT:
             options = parameter.value if parameter.value else df_columns
             return st.selectbox(parameter.title, options=options, help=parameter.hint)
+        case ParameterType.SINGLE_SELECT_CUSTOM_INPUT:
+            return st.selectbox(parameter.title, placeholder="Choose or add option e.g., %Y%m%d" , options=parameter.value, accept_new_options=True, help=parameter.hint)
         case ParameterType.DECIMAL:
             return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
         case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running metrics

@@ -152,7 +152,6 @@ if uploaded_file is not None:
             output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
-            print(dimension_dict["weights"])
             weights, valid = are_weights_valid(dimension_dict["weights"], scores)
             if not valid:
                 st.error(f'Weights entered for {dimension} are not valid, using defualt weights intead.')

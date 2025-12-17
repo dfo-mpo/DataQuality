@@ -6,6 +6,7 @@ import "./styles.css";
 
 interface PythonArgs {
   label: string
+  placeholder: string
   initialValue: Record<string, number>
   step: number
   min?: number
@@ -15,7 +16,7 @@ interface PythonArgs {
 const CustomKeywords = (props: ComponentProps) => {
   // Destructure using Typescript interface
   // This ensures typing validation for received props from Python
-  let { label, initialValue, step, min, max}: PythonArgs = props.args;
+  let { label, placeholder, initialValue, step, min, max}: PythonArgs = props.args;
   const [value, setValue] = useState(initialValue);
   const rootRef = useRef<HTMLDivElement>(null);
 
@@ -57,6 +58,7 @@ const CustomKeywords = (props: ComponentProps) => {
   return (
     <div ref={rootRef}>
         <WeightsInput
+          placeholder={placeholder}
           value={value}
           onChange= {(value) => onSubmit(value)}
           name={label}

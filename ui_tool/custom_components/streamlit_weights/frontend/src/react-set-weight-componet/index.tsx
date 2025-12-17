@@ -1,18 +1,18 @@
 import { css, setup, CSSAttribute } from "goober";
 import React, { useEffect, useState } from "react";
+import "@fontsource/source-sans-3";
 
 import cc from "./classnames";
 import Weight from "./weight";
 
 export interface WeightsInputProps {
   name?: string;
+  placeholder: string;
   value: Record<string, number>;
   step: number;
   onChange?: (weights: Record<string, number>) => void;
   min?: number;
   max?: number;
-  onBlur?: any;
-  onExisting?: (tag: string) => void;
 }
 
 // initialize goober once
@@ -40,7 +40,7 @@ const RTIContainer = css({
   flexWrap: "wrap",
   gap: "var(--rtiS)",
   lineHeight: 1.4,
-  padding: "0.365rem var(--rtiS)",
+  padding: "0.425rem var(--rtiS)",
 
   "&:focus-within": {
     // borderColor: "var(--rtiMain)",
@@ -50,9 +50,9 @@ const RTIContainer = css({
 
 const label = css({
   fontSize: "0.875rem",
-  marginBottom: "6px",
+  marginBottom: "5.5px",
   lineHeight: 1.6,
-  fontFamily: '"Source Sans", sans-serif',
+  fontFamily: "Source Sans 3",
 });
 
 const totalDisplay = css({
@@ -63,7 +63,9 @@ const totalDisplay = css({
 
   "& p": {
     paddingLeft: '7%',
-    paddingRight: '2%'
+    paddingRight: '2%',
+    marginBottom: '-3px',
+    lineHeight: '17px'
   }
 });
 
@@ -73,13 +75,12 @@ const redText = css({
 
 export const WeightsInput = ({
   name,
+  placeholder,
   value,
   step,
   onChange,
   min,
   max,
-  onBlur,
-  onExisting,
 }: WeightsInputProps) => {
   let [weights, setWeights] = useState(value ?? {});
   const [totalWeight, setTotalWeight] = useState(0)
@@ -121,12 +122,16 @@ export const WeightsInput = ({
         {Object.entries(weights).map(([key, val]) => (
           <Weight text={key} value={val} step={step} onInputChange={handleInputChange} min={min} max={max} decimals={decimals}/>
         ))}
-        <div className={totalDisplay}>
-          <p>Total</p>
-          <p className={totalWeight === 1.0 ? '' : redText}>
-            {totalWeight === 1.0 ? totalWeight : `${totalWeight}; Weights do not add up to 1.0, using default weights instead!`}
-          </p>
-        </div>
+        {(Object.keys(weights).length === 0)?
+          <div style={{lineHeight:"25px"}}>{placeholder}</div>
+        :
+          <div className={totalDisplay}>
+            <p>Total</p>
+            <p className={totalWeight === 1.0 ? '' : redText}>
+              {totalWeight === 1.0 ? totalWeight : `${totalWeight}; Weights do not add up to 1.0, using default weights instead!`}
+            </p>
+          </div>
+        }
       </div>
     </>
   );
