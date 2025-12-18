@@ -479,7 +479,7 @@ def create_metadata():
     # Define each parameter needed for metric, use ParameterType when defining type
     c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
     c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.STRING_LIST, value=["activity"], suggestions=["activity"], hint="Words filtered for C2 metric simularity calculations")
-    c2_metadata.add_parameter('ref_dataset_path', 'Reference Dataset File', ParameterType.FILE_UPLOAD)
+    c2_metadata.add_parameter('ref_dataset_path', 'C2 Reference Dataset File', ParameterType.FILE_UPLOAD)
     c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2'}")
     # Append instance into metadata list
     metadata.append(c2_metadata)
@@ -496,9 +496,14 @@ def create_metadata():
     c4_metadata = MetricMetadata(dimension, "C4")
     # Define each parameter needed for metric, use ParameterType when defining type
     c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT, default=[])
-    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.SINGLE_SELECT_CUSTOM_INPUT, 
-                              value=['2001 (YYYY)', ' 2001-03-14 (YYYY-MM-DD)', '14-Mar-01 (DD-MMM-YY)', '03/14/2001 (MM/DD/YYYY)', '14/03/2001 (DD/MM/YYYY)', '20010314 (YYYYMMDD)', '2001-03-14 13:30:55 (YYYY-MM-DD HH:MM:SS)', '14-Mar-01 13:30:55 (DD-MMM-YY HH:MM:SS)', '03/14/2001 13:30:55 (MM/DD/YYYY HH:MM:SS)', '14/03/2001 13:30:55 (DD/MM/YYYY HH:MM:SS)', '20010314 13:30:55 (YYYYMMDD HH:MM:SS)' ], 
-                              hint=" Enter a Python date-time format string using strftime codes (e.g., %Y-%m-%d %H:%M:%S). \n For a full list of format codes: \n https://docs.python.org/3.11/library/datetime.html?utm_source=chatgpt.com#format-codes" )
+    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.SINGLE_SELECT, placeholder="Choose option or enter custom date-time format...",
+                                value={'2001 (YYYY)': '%Y', '2001-03-14 (YYYY-MM-DD)': '%Y-%m-%d', '14-Mar-01 (DD-MMM-YY)': '%d-%b-%y', '03/14/2001 (MM/DD/YYYY)': '%m/%d/%Y',
+                                    '14/03/2001 (DD/MM/YYYY)': '%d/%m/%Y', '20010314 (YYYYMMDD)': '%Y%m%d', '2001-03-14 13:30:55 (YYYY-MM-DD HH:MM:SS)': '%Y-%m-%d %H:%M:%S',
+                                    '14-Mar-01 13:30:55 (DD-MMM-YY HH:MM:SS)': '%d-%b-%y %H:%M:%S', '03/14/2001 13:30:55 (MM/DD/YYYY HH:MM:SS)': '%m/%d/%Y %H:%M:%S',
+                                    '14/03/2001 13:30:55 (DD/MM/YYYY HH:MM:SS)': '%d/%m/%Y %H:%M:%S', '20010314 13:30:55 (YYYYMMDD HH:MM:SS)': '%Y%m%d %H:%M:%S'
+                                }, 
+                                accept_new_options=True,
+                                hint=" Enter a Python date-time format string using strftime codes (e.g., %Y-%m-%d %H:%M:%S). \n For a full list of format codes: \n https://docs.python.org/3.11/library/datetime.html?utm_source=chatgpt.com#format-codes" )
     # Append instance into metadata list
     metadata.append(c4_metadata)
 

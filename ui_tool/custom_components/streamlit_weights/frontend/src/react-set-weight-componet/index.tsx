@@ -36,8 +36,6 @@ const RTIContainer = css({
   bg: "var(--rtiBg)",
   border: "1px solid var(--rtiBorder)",
   borderRadius: "var(--rtiRadius)",
-  display: "flex",
-  flexWrap: "wrap",
   gap: "var(--rtiS)",
   lineHeight: 1.4,
   padding: "0.425rem var(--rtiS)",
@@ -52,18 +50,17 @@ const label = css({
   fontSize: "0.875rem",
   marginBottom: "5.5px",
   lineHeight: 1.6,
-  fontFamily: "Source Sans 3",
 });
 
 const totalDisplay = css({
   display: "flex",
   flexDirection: "row",
   width: '100%',
-  paddingTop: "5px",
+  paddingTop: "var(--rtiS)",
 
   "& p": {
-    paddingLeft: '7%',
-    paddingRight: '2%',
+    paddingLeft: '7.5%',
+    paddingRight: '2.25%',
     marginBottom: '-3px',
     lineHeight: '17px'
   }
@@ -71,6 +68,13 @@ const totalDisplay = css({
 
 const redText = css({
   color: 'rgb(255, 75, 75)',
+});
+
+const grid = css({
+  display: "grid",
+  gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+  gap: '0.5rem',
+  width: '100%'
 });
 
 export const WeightsInput = ({
@@ -119,9 +123,11 @@ export const WeightsInput = ({
     <>
       <p className={cc("rti--label", label)}>{name}</p> 
       <div aria-labelledby={name} className={cc("rti--container", RTIContainer)}>
-        {Object.entries(weights).map(([key, val]) => (
-          <Weight text={key} value={val} step={step} onInputChange={handleInputChange} min={min} max={max} decimals={decimals}/>
-        ))}
+        <div className={grid}>
+          {Object.entries(weights).map(([key, val]) => (
+            <Weight text={key} value={val} step={step} onInputChange={handleInputChange} min={min} max={max} decimals={decimals}/>
+          ))}
+        </div>
         {(Object.keys(weights).length === 0)?
           <div style={{lineHeight:"25px"}}>{placeholder}</div>
         :

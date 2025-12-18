@@ -19,7 +19,6 @@ dimension_dict: The dictionary representing the given dimension.
 """
 def generateFirstDimensionRow(dimension_dict):
     all_metrics = dimension_dict["all_metrics"]
-    example_weights = f"'{all_metrics[0]}': 0.3, '{all_metrics[0][0]}2': 0.7"
     col_1, col_2 = st.columns(2)
 
     with col_1:  
@@ -40,6 +39,10 @@ def generateWeightsDict(keys, oldDict):
             newWeights[key] = oldDict[key]
     
     return newWeights
+
+def generateDimensionWeights(selected_dimensions):
+    weights = generateWeightsDict(selected_dimensions, {})
+    return st_weights(key=f"Dimensions", placeholder="First select the dimensions you wish to run.", label="Dimension Weights", value=weights, step=0.05, min=0, max=1.0 )
 
 def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:
@@ -90,7 +93,7 @@ def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetad
     # If more parameters are left to generate, do recursive call otherwise terminate
     numOfParamUsed = numOfColumns if not doubleColumn else numOfColumns + 1
     if len(parameters) > numOfParamUsed:
-        generateDimensionRow(dimension_dict, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
+        generateDimensionRow(dimension_dict, metric, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
     else:
         return
 
@@ -98,13 +101,18 @@ def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetad
 def generateParameterField(parameter: ParameterMetadata, df_columns: list):
     match parameter.type:
         case ParameterType.MULTI_SELECT:
+            # If value is not provided, use provided dataset columns as select options
             options = parameter.value if parameter.value else df_columns
+
             return st.multiselect(parameter.title, options=options, default=[], help=parameter.hint)
         case ParameterType.SINGLE_SELECT:
+            # If value is not provided, use provided dataset columns as select options
             options = parameter.value if parameter.value else df_columns
-            return st.selectbox(parameter.title, options=options, help=parameter.hint)
-        case ParameterType.SINGLE_SELECT_CUSTOM_INPUT:
-            return st.selectbox(parameter.title, placeholder="Choose or add option e.g., %Y%m%d" , options=parameter.value, accept_new_options=True, help=parameter.hint)
+            # If options is a dictionary rather than a list, create a list using the keys
+            options = list(options.keys()) if isinstance(options, dict) else options
+            
+            selectbox_value =  st.selectbox(parameter.title, placeholder=parameter.placeholder, options=options, index=parameter.index, accept_new_options=parameter.accept_new_options, help=parameter.hint)
+            return options[selectbox_value] if isinstance(options, dict) and selectbox_value in options else selectbox_value
         case ParameterType.DECIMAL:
             return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
         case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running metrics
@@ -118,7 +126,7 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
         case ParameterType.PAIRS:
             suggestions = parameter.suggestions if parameter.suggestions != [] else df_columns
             return st_pairs(label=parameter.title, text='Enter column name', value=parameter.value, suggestions=suggestions)
-        case ParameterType.WEIGHTS:
+        case ParameterType.WEIGHTS: # TODO: update with new feilds needed
             return st_weights(label=parameter.title, text='Enter column name', value=parameter.value)
         # Fall through if invalid ParameterType found
         case _:

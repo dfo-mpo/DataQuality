@@ -6,8 +6,7 @@ from enum import Enum
 # file upload is only csv or xlsx types
 class ParameterType(Enum):
     MULTI_SELECT = "multi-select" # uses dataset as options if no value is provided
-    SINGLE_SELECT = "single-select"
-    SINGLE_SELECT_CUSTOM_INPUT = "single-select-custom-input" # single select but allows user to have an enter custom feild option, value can be list of strings or list of objects used to map visiable name to a specific value
+    SINGLE_SELECT = "single-select" # input can be a list of strings or a dictionary. If dictionary is used, keys are displayed to user while values are passed onto the metric test (or inputted value by user if custom input is allowed)
     DECIMAL = "decimal"
     TEXT_INPUT = "text"
     STRING = "string"
@@ -30,9 +29,9 @@ class MetricMetadata:
         self.parameters = []
 
     # Creates a new ParameterMetadata instance and appends it to the parameters list
-    def add_parameter(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, suggestions = [], step = 0.01, hint = None):
+    def add_parameter(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, hint = None):
 
-        self.parameters.append(ParameterMetadata(name, title, type, value, default, placeholder, suggestions, step, hint))
+        self.parameters.append(ParameterMetadata(name, title, type, value, default, placeholder, index, accept_new_options, suggestions, step, hint))
 
 
 """ Class to represent the properties of a parameter. Used by the UI tool to generate parameter input boxes/feilds.
@@ -43,19 +42,23 @@ type: Type of parameter input to generate in the UI. Can be any option defined i
 value: Value is the inital value used by the metric, it is changed based on user input. For select options value is the set of available options. 
        Note that ParameterType MULTI_SELECT will use the dataset column names if no value is provided.
 default: Value used if input provided is not in a valid format (ParameterType TEXT_INPUT) or if no user input is provided (ParameterType MULTI_SELECT).
-placeholder: If type is Text, placeholder is a greyed out text shown when box is empty.
+placeholder: If type is Text, placeholder is a greyed out text shown when box is empty. If type is SINGLE_SELECT, placeholder will overwrite the greyed out default text shown when no option is selected.
+index: If type is SINGLE_SELECT, it is the index of the preselected option. Defaults to None.
+accept_new_options: If type is SINGLE_SELECT, allows a user to type in a new option when set to True.
 suggestions: List of autofill options for string inputs for ParameterTypes STRING_LIST and PAIRS. For PAIRS default value will use dataset columns unless default is overwritten with any list or None.
 step: If type is Decimal, step is the increment/decrement amounts when the arrow keys are used to change the value.
 hint: Helper message that can provide more context to how the user should enter this parameter value (not available for ParameterTypes STRING_LIST and PAIRS).
 """
 class ParameterMetadata:
-    def __init__(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, suggestions = [], step = 0.01, hint = None):
+    def __init__(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, hint = None):
         self.name = name
         self.title = title
         self.type = type
         self.value = value
         self.default = default
         self.placeholder = placeholder
+        self.index = index
+        self.accept_new_options = accept_new_options
         self.suggestions = suggestions
         self.step = step
         self.hint = hint

@@ -92,9 +92,7 @@ if uploaded_file is not None:
                             st.error(e)
                     
     # Run Tests button
-    dim_weights = st.text_input("Dimension Weights", value="", 
-                                          placeholder="e.g., {'Accessibility': 0.3, 'Consistency': 0.4, 'Uniqueness': 0.3}", 
-                                          help="If left empty, weighting will be equal. Weights must add up to 1.")
+    dim_weights = components.generateDimensionWeights(selected_dimensions)
     if st.button("Calculate Data Quality"):  
         # st.write(f"Running the following dimensions: {selected_dimensions}")
         output_logs = []

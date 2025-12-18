@@ -17,8 +17,10 @@ const inputContainerStyles = css({
   borderRadius: "var(--rtiRadius)",
   display: "inline-flex",
   justifyContent: "center",
+//   marginLeft: "var(--rtiS)",
   paddingLeft: "var(--rtiS)",
   width: "70%",
+  minWidth: '155px',
   overflow: "hidden",
   backgroundColor: "var(--weight-input-background-color)",
 
@@ -76,6 +78,7 @@ const inputStyles = css({
 const svgStyles = css({
     width: '8px',
     height: '8px',
+    color: 'var(--button-color)',
 
     "&:focus": {
         outline: 'none'
@@ -89,7 +92,7 @@ export default function Input({ initialValue, step, decimals, onChange, min, max
     const clamp = (n: number) => Math.max(min ?? -Infinity, Math.min(max ?? Infinity, n));
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const str = e.target.value; // it's a string
+        const str = e.target.value.trim(); // it's a string
         // if (str === "") return; // ignore empty clears in a controlled input
         const n = Number(str);
         if (!Number.isNaN(n)) {

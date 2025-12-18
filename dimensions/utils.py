@@ -494,7 +494,7 @@ def get_onesentence_summary(metric: str, logging_path: str|io.BytesIO, selected_
             return "The following columns may have invalid latitude/longitude coordinates: " + ', '.join(invalid_columns) + "."
         elif (metric == "S1"):
             columns = df.columns
-            if columns[0][0] > 0:
+            if int(df[columns[0]][0]) > 0:
                 return "Metadata exists for given dataset"
             else:
                 return "Metadata does not exist for given dataset"
@@ -616,7 +616,6 @@ def are_weights_valid(weights: dict, scores: list[dict], type='metric') -> tuple
                 weights = {}
                 print(f'{RED}Weights do not add up to 1.0, using default weights instead!{RESET}')
                 return weights, False
-            print("Total weight"+total_weight)
     except:
         print(f'{RED}Provided weights are not structured properly, ensure correct names and format is used. Using default weights instead!{RESET}')
         return {}, False
