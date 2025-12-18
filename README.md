@@ -5,7 +5,7 @@ Install required packages
 ```
 streamlit run app.py
 ```
-## System Architect
+## System Architecture
 ```mermaid
 graph TB
 
