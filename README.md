@@ -1,7 +1,7 @@
 # Data Quality Coding Agent
 Install required packages
 
-## TO Run App:
+## To Run App:
 ```
 streamlit run app.py
 ```
@@ -29,6 +29,8 @@ end
 
 ```
 
-## To update vectorstore so Agent has more domain knowledge:
+## Update/Build vectorstore
+
+To update or build vectorstore so Agent has more domain knowledge:
 
 Use notebook Notebook_to_build_vectorstore
