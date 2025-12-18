@@ -21,6 +21,7 @@ const tagStyles = css({
     borderRadius: "50%",
     cursor: "pointer",
     lineHeight: "inherit",
+    marginTop:'2px',
     padding: "0 var(--rtiS)",
     fontSize: "0.625em",
     fontWeight: "600",

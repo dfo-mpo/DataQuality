@@ -1,6 +1,7 @@
 import React from "react"
 import ReactDOM from "react-dom"
 import CustomKeywords from "./keywords"
+import "@fontsource/source-sans-3";
 
 // Lots of import to define a Styletron engine and load the light theme of baseui
 // @ts-ignore

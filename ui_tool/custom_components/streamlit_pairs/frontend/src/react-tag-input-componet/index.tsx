@@ -73,7 +73,7 @@ const label = css({
   fontSize: "0.875rem",
   marginBottom: "5px",
   lineHeight: 1.6,
-  fontFamily: '"Source Sans", sans-serif',
+  fontFamily: '"Source Sans 3", sans-serif',
 
 });
 
@@ -84,6 +84,7 @@ const pair_input = css({
 
   button: {
     color: "var(--text-color)",
+    fontFamily: '"Source Sans 3", sans-serif',
     borderRadius: "0.5rem",
     lineHeight: 1.2,
     fontSize: "0.875rem",
