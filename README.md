@@ -33,4 +33,4 @@ end
 
 To update or build vectorstore so Agent has more domain knowledge:
 
-Use notebook Notebook_to_build_vectorstore
+Use notebook Notebook_to_build_vectorstore.ipynb
