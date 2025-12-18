@@ -65,14 +65,14 @@ const RTIInput = css({
   outline: 0,
   fontSize: "inherit",
   lineHeight: "inherit",
-  // width: "200%",
+  width: "100%",
 });
 
 const label = css({
   fontSize: "0.875rem",
   marginBottom: "5px",
   lineHeight: 1.6,
-  fontFamily: '"Source Sans", sans-serif',
+  fontFamily: '"Source Sans 3", sans-serif',
 
 });
 

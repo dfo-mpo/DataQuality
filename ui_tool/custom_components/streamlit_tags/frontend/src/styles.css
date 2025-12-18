@@ -1,4 +1,6 @@
 :root {
+    --font-family: "Source Sans 3", sans-serif;
+
     color-scheme: light dark;
 
     /* Colors – light defaults */
@@ -15,20 +17,20 @@
 
 
 html {
-    font-family: var(--font) !important;
+    font-family: var(--font-family) !important;
     background-color: var(--page-background-color);
 }
 .rti--container {
   max-width: inherit;
   --rtiTag: var(--primary-color) !important;
   background-color: var(--secondary-background-color);
-  font: var(--font);
+  font: var(--font-family);
   line-height: 1.4;
 }
 body{
     color: var(--text-color);
     background-color: inherit !important;
-    font: var(--font);
+    font: var(--font-family);
 }
 h3{
     color: var(--text-color);
@@ -36,7 +38,7 @@ h3{
 }
 span{
     color: #ffffff;
-    font: var(--font);
+    font: var(--font-family);
 }
 button{
     color: #ffffff
@@ -52,4 +54,5 @@ button{
 .rah-hint-wrapper{
     color: var(--text-color) !important;
     opacity: 0.8;
+    width: 100%;
 }

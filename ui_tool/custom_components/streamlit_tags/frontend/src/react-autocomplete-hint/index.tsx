@@ -239,7 +239,8 @@ export const Hint: React.FC<IHintProps> = props => {
         <div
             className="rah-input-wrapper"
             style={{
-                position: 'relative'
+                position: 'relative',
+                minWidth: '200px',
             }}>
             {
                 disableHint
