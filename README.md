@@ -22,7 +22,7 @@ subgraph DQ Agent
     R --"Retrieve Relevant Info"--> F[Coding Agent]
 end
 
-subgraph Insurance Analysis
+subgraph Realtime result
     A -- "Upload Dataset" --> K[Generate Functions] --"Run Function in Realtime"--> M[Display Result]
     
 end
