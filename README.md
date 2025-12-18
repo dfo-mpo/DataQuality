@@ -1,5 +1,5 @@
 # Data Quality Coding Agent
-Install required packages
+Set up virtual evironment and install required packages
 
 ## To Run App:
 ```
