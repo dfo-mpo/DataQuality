@@ -15,10 +15,10 @@ end
 
 
 
-subgraph RAG
+subgraph DQ Agent
     D --> F[Coding Agent] --> K[Generate Functions]
-    F --> T[Tool]
-    T --> R[RAG to Data Quality Framework] --> V[FAISS vectorstore]
+    F --> T[Langgraph Tool Decoration]
+    T --> R[RAG ] --> V[FAISS vectorstore storing Data Quality Framework]
     R --"Retrieve Relevant Info"--> F[Coding Agent]
 end
 
