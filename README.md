@@ -1,5 +1,5 @@
 # Data Quality Coding Agent
-Set up virtual evironment and install required packages
+Set up virtual evironment, activate it, install required packages, set env variable in .env.example and rename it to .env
 
 ## To Run App:
 ```
