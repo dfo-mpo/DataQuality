@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd 
 import re
 from . import utils
-from metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['C1', 'C2', 'C3', 'C4', 'C5']
 
@@ -468,9 +468,9 @@ def create_metadata():
     # Define instance for metric  c3_column_names, c4_column_names, c5_column_names,  c2_threshold=0.91, c3_threshold=0.91, c2_stop_words=["activity"], c4_format='%Y-%m-%d %H:%M:%S', c5_region=None, ref_dataset_path=None,
     c1_metadata = MetricMetadata(dimension, "C1")
     # Define each parameter needed for metric, use ParameterType when defining type
-    c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT)
+    c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT, default=[])
     c1_metadata.add_parameter('c1_threshold', 'C1 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
-    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.TEXT_INPUT, value='["the", "and"]', hint="Words filtered for C1 metric simularity calculations")
+    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"], hint="Words filtered for C1 metric simularity calculations")
     # Append instance into metadata list
     metadata.append(c1_metadata)
 
@@ -478,16 +478,16 @@ def create_metadata():
     c2_metadata = MetricMetadata(dimension, "C2")
     # Define each parameter needed for metric, use ParameterType when defining type
     c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
-    c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.TEXT_INPUT, value='["activity"]', hint="Words filtered for C2 metric simularity calculations")
-    c2_metadata.add_parameter('ref_dataset_path', 'Reference Dataset File', ParameterType.FILE_UPLOAD)
-    c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2',}")
+    c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.STRING_LIST, value=["activity"], suggestions=["activity"], hint="Words filtered for C2 metric simularity calculations")
+    c2_metadata.add_parameter('ref_dataset_path', 'C2 Reference Dataset File', ParameterType.FILE_UPLOAD)
+    c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2'}")
     # Append instance into metadata list
     metadata.append(c2_metadata)
 
     # Define instance for metric
     c3_metadata = MetricMetadata(dimension, "C3")
     # Define each parameter needed for metric, use ParameterType when defining type
-    c3_metadata.add_parameter('c3_column_names', 'C3 Column Names', ParameterType.MULTI_SELECT)
+    c3_metadata.add_parameter('c3_column_names', 'C3 Column Names', ParameterType.MULTI_SELECT, default=[])
     c3_metadata.add_parameter('c3_threshold', 'C3 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
     # Append instance into metadata list
     metadata.append(c3_metadata)
@@ -495,15 +495,22 @@ def create_metadata():
     # Define instance for metric
     c4_metadata = MetricMetadata(dimension, "C4")
     # Define each parameter needed for metric, use ParameterType when defining type
-    c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT)
-    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.STRING, value='%Y-%m-%d %H:%M:%S', hint="Date-time format that selected dataset columns are compared to. Use %Y (year), %M (months), and %D (days) separated by '-'. Use %H (hours), %M (minutes), and %S (seconds) separated by ':'." )
+    c4_metadata.add_parameter('c4_column_names', 'C4 Column Names', ParameterType.MULTI_SELECT, default=[])
+    c4_metadata.add_parameter('c4_format', 'C4 Format', ParameterType.SINGLE_SELECT, placeholder="Choose option or enter custom date-time format...",
+                                value={'2001 (YYYY)': '%Y', '2001-03-14 (YYYY-MM-DD)': '%Y-%m-%d', '14-Mar-01 (DD-MMM-YY)': '%d-%b-%y', '03/14/2001 (MM/DD/YYYY)': '%m/%d/%Y',
+                                    '14/03/2001 (DD/MM/YYYY)': '%d/%m/%Y', '20010314 (YYYYMMDD)': '%Y%m%d', '2001-03-14 13:30:55 (YYYY-MM-DD HH:MM:SS)': '%Y-%m-%d %H:%M:%S',
+                                    '14-Mar-01 13:30:55 (DD-MMM-YY HH:MM:SS)': '%d-%b-%y %H:%M:%S', '03/14/2001 13:30:55 (MM/DD/YYYY HH:MM:SS)': '%m/%d/%Y %H:%M:%S',
+                                    '14/03/2001 13:30:55 (DD/MM/YYYY HH:MM:SS)': '%d/%m/%Y %H:%M:%S', '20010314 13:30:55 (YYYYMMDD HH:MM:SS)': '%Y%m%d %H:%M:%S'
+                                }, 
+                                accept_new_options=True,
+                                hint=" Enter a Python date-time format string using strftime codes (e.g., %Y-%m-%d %H:%M:%S). \n For a full list of format codes: \n https://docs.python.org/3.11/library/datetime.html?utm_source=chatgpt.com#format-codes" )
     # Append instance into metadata list
     metadata.append(c4_metadata)
 
     # Define instance for metric
     c5_metadata = MetricMetadata(dimension, "C5")
     # Define each parameter needed for metric, use ParameterType when defining type
-    c5_metadata.add_parameter('c5_column_names', 'C5 Column Names', ParameterType.MULTI_SELECT)
+    c5_metadata.add_parameter('c5_column_names', 'C5 Column Names', ParameterType.MULTI_SELECT, default=[])
     c5_metadata.add_parameter('c5_region', 'C5 Region', ParameterType.SINGLE_SELECT, value=["All", "Pacific"], hint="Restricts geographic coordinates to specified DFO region.")
     # Append instance into metadata list
     metadata.append(c5_metadata)

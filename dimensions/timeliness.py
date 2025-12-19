@@ -1,7 +1,7 @@
 import numpy as np  
 import pandas as pd 
 from . import utils
-from metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['T1']
 

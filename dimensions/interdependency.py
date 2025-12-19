@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd 
 from . import utils
 from dython.nominal import associations
-from metadata import MetricMetadata, ParameterType
+from ui_tool.metadata import MetricMetadata, ParameterType
 
 ALL_METRICS = ['I1']
 
@@ -142,7 +142,7 @@ def create_metadata():
     # Define instance for metric
     i1_metadata = MetricMetadata(dimension, "I1")
     # Define each parameter needed for metric, use ParameterType when defining type
-    i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT)
+    i1_metadata.add_parameter('i1_sensitive_columns', 'I1 Sensitive Columns', ParameterType.MULTI_SELECT, default=[])
     i1_metadata.add_parameter('i1_threshold', 'I1 Threshold', ParameterType.DECIMAL, value='0.75', step = 0.05)
     # Append instance into metadata list
     metadata.append(i1_metadata)
