@@ -1,0 +1,8 @@
+Column Source,Names Tested,Highest Similarity Names,Similarity Score
+PROJ_NAME,emily lk,goldstream r,0.3
+PROJ_NAME,halalt band,chehalis band,0.6666666666666666
+PROJ_NAME,glenora project,goldstream r,0.2962962962962963
+PROJ_NAME,goldstream r,cowichan r,0.36363636363636365
+PROJ_NAME,cowichan r,goldstream r,0.36363636363636365
+PROJ_NAME,chehalis band,halalt band,0.6666666666666666
+PROJ_NAME,nan,cowichan r,0.3076923076923077

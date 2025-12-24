@@ -82,4 +82,11 @@ Each test run generates results in the [DQS_Output_Log_Test.xlsx](DQS_Output_Log
 - **Errors**: Error type, if any
 - **Why_Did_the_Test_Fail**: Reason for error, if any
   
-To generate the "One_Line_Summary" in the notebook, set the dimenion's return type to `"Dataset"` instead of `"Score"`.
+To generate the "One_Line_Summary" and an output report in the notebook, set the dimenion's return type to `"Dataset"` instead of `"Score"`.
+
+### Output Reports
+Output reports are used when a data steward wants to understand why a dataset received a certain score. 
+
+Most reports consist of the subset of the data that is erroneous. For tests applied to multiple columns, the report includes additional indicator columns that identify the source of errors, which can be filtered to look at column-specific information. Some tests produce output reports that differ from this standard structure.
+
+The [example_reports/](example_reports) folder contains **sample output reports** for reference.
