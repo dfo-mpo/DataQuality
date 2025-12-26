@@ -48,7 +48,7 @@ Item operations are applied to individual values or cells in a dataset.
 | `extract_numbers` | Extracts all numbers from the input text and returns them as a list of strings. |
 | `inconsistent_datetime` | Checks whether a given string date-time entry matches a specified format. | 
 | `normalize_text` | Normalizes input text by converting to lowercase, stripping whitespace, replacing province abbreviations with full names, and removing non-alphanumeric characters. Optionally removes numbers based on the `remove_numbers` flag. |
-| `remove_short_numbers` | Removes numbers with one or two digits from the input text. |
+| `remove_short_numbers` | Removes numbers with one to four digits from the input text. |
 | `province_abbreviations` | Dictionary mapping province abbreviations to their full names. |
 | `string_similarity` | Calculates the similarity between two strings using `SequenceMatcher` from `difflib` and returns the similarity ratio. |              
 
@@ -60,7 +60,7 @@ Column operations are applied to entire columns or lists of values.
 | `calculate_cosine_similarity` | Calculates the cosine similarity between lists of texts using TF-IDF vectorization. |
 | `calculate_levenshtein_similarity` | Calculates the levenshtein similarity ratio between lists of texts. |        
 | `compare_datasets` | Compares whether a column being tested resembles a reference data column and creates a DataFrame with new column(s) added. |
-| `contains_short_number` | Checks whether any number in the list has one or two digits. |
+| `contains_short_number` | Checks whether any number in the list has one to four digits. |
 | `find_non_digits` | Uses the new null flag column to find symbols in numeric columns, changes existing nulls to `True` to prepare any output dataset that only flags symbols in numeric columns, and replaces symbols in numerics with `NaN`. |
 | `get_names_used_for_column` | Extracts unique non-null values from a specified column. |        
 | `new_column` | Creates a new column that flags previously existing nulls and empty strings, preventing false positives by not counting them as symbols in numeric columns. |

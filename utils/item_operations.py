@@ -36,7 +36,7 @@ def normalize_text(text, remove_numbers=False):
     return " ".join(text.split())  
 
 """
-Remove numbers with 1 or 2 digits from the input text.
+Remove numbers with 1 to 4 digits from the input text.
 """
 def remove_short_numbers(text):  
     return re.sub(r"\b\d{1,4}\b", "", text)  

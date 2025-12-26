@@ -115,10 +115,8 @@ Goal: Ensure that data is consistent across different datasets and systems. Cons
 C1 detects near-duplicate entries in selected columns that likely refer to the same entity despite minor differences in spelling or naming conventions. Before generating a unique list of entries, all text is normalized by:
 - Converting to lowercase
 - Replacing abbreviations with full province or territory names
-- Removing short numbers (fewer than two digits)
-- Filtering out stop words to focus on meaningful terms
 
-Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. During this calculation, stop words and short numbers (fewer than four digits) are temporarily ignored to focus on meaningful terms. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A default threshold of 0.91 was predetermined after manual review of test data. Scores at or above this threshold generally indicate the same entity with minor naming variations, while lower scores suggest distinct entries with similar names.
 

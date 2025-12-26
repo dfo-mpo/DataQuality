@@ -43,7 +43,7 @@ def get_names_used_for_column(df, column_name):
     return unique_observations  
 
 """
-Check if any number in the list has 1 or 2 digits.
+Check if any number in the list has 1 to 4 digits.
 """
 def contains_short_number(num_list):
     return any(len(num) <= 4 for num in num_list)
