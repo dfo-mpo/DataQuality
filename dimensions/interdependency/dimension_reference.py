@@ -1,6 +1,7 @@
 from utils import core_operations
 import os
 import importlib
+from natsort import natsorted
 
 """ Class to manage and run all tests for the Interdependency dimension. 
 
@@ -23,7 +24,7 @@ class Interdependency:
         metadata = []
 
         # Go through each test file in this dimension's folder and import it
-        for test_name in cls.ALL_TESTS:
+        for test_name in natsorted(cls.ALL_TESTS):
             module = importlib.import_module(f".{test_name.lower()}", package=__package__)
 
             # If this test has a create_metadata() function, call it and append instance into metadata list
@@ -48,7 +49,7 @@ class Interdependency:
         tests = {}
         folder = os.path.dirname(__file__)
         # Go through every python file in this dimension's folder, find all test files and import it
-        for file in os.listdir(folder):
+        for file in natsorted(os.listdir(folder)):
             if file.endswith(".py") and file not in ("__init__.py", "dimension_reference.py", "test_template.py"):
                 module_name = file[:-3]
                 module = importlib.import_module(f".{module_name}", package=__package__)
@@ -61,7 +62,7 @@ class Interdependency:
     def run_tests(self, tests=None, return_logs=False):
         if tests is None:
             # Run all tests by default
-            tests = self.ALL_TESTS
+            tests = natsorted(self.ALL_TESTS)
             
         # Verify that inputed tests is valid
         if set(tests).issubset(set(self.ALL_TESTS)):

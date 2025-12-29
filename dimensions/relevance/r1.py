@@ -14,6 +14,7 @@ dataset_path: path of the csv/xlsx to evaluate.
 return_type: either score to return only test scores, or dataset to also return a csv used to calculate the score (is used for one line summary in output logs).
 logging_path: path to store csv of what test used to calculate score, if set to None (default) it is kept in memory only.
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
+# TODO: Add description of test specific parameters here
 """
 class Test:
     # TODO: Define test specific parameters

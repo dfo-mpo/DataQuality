@@ -1,5 +1,6 @@
 import sys  
 from pathlib import Path  
+from natsort import natsorted
   
 # Set path for local custom components 
 BASE_DIR = Path(__file__).resolve().parent  
@@ -22,7 +23,7 @@ def generateFirstDimensionRow(dimension_dict):
     col_1, col_2 = st.columns(2)
 
     with col_1:  
-        dimension_dict["tests"] = st.multiselect("Tests", all_tests)
+        dimension_dict["tests"] = st.multiselect("Tests", natsorted(all_tests))
     with col_2:  
         dimension_dict["weights"] = st.text_input("Weights", value="", 
                                     placeholder="e.g., {"+example_weights+"}", 
