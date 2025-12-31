@@ -3,6 +3,7 @@ import streamlit as st
 import random
 import time
 import pandas as pd
+from pathlib import Path
 
 TIMEOUT_SECONDS = 600
 
@@ -76,6 +77,109 @@ with col1:
             st.markdown(message["content"])
 
         
+    dimensions = [
+        "Accessibility",
+        "Accuracy",
+        "Consistency",
+        "Completeness",
+        "Interdependency",
+        "Relevance",
+        "Timeliness",
+        "Uniqueness"
+    ]
+    dimension_selected = st.selectbox("Select a Data Quality Dimension", dimensions)
+    st.session_state['selected_dimension'] = dimension_selected
+
+
+    def generate_response_from_graph(text: str, dimension: str, template_file: str):
+        
+        agent = st.session_state['agent']
+
+        # load template
+        template_path = Path(template_file)
+        if not template_path.exists():
+            raise FileNotFoundError(f"Template not found: {template_file}")
+        
+        template_content = template_path.read_text(encoding="utf-8")
+
+        # build prompt with constraints
+        full_prompt = f"""
+        You are a STRICT code-generation agent. Follow these rules exactly.
+
+        1. Template Rules:
+        - Return the template exactly as provided.
+        - Fill in all TODO blocks.
+        - Do not change function names, parameters, imports, or structure.
+        - Do not add or remove any functions.
+        - Output ONLY valid Python code.
+        - Do not include explanations, markdown, or comments outside the template.
+
+        2. Test Naming:
+        - Each test MUST have a unique name.
+        - Check the knowledge base to see which test names already exist.
+        - Test names MUST follow the format <DimensionCode><Number>.
+        - Dimension codes: Accessibility:S, Accuracy:A, Completeness:P, Consistency:C, Interdependency:I, Relevance:R, Timeliness:T, Uniqueness:U.
+        - Example: A1, C2, U3.
+        - Do NOT add words, reuse existing names, or change the format.
+        - Assign the next available number for the dimension.
+
+        3. Threshold Parameter:
+        - Default threshold = None.
+        - Only set a value if the user specifies it.
+        - Do NOT guess or infer threshold values.
+
+        4. UI Parameters:
+        - Use the `.add_parameter(...)` method from the knowledge base.
+        - Parameter types MUST be one of: MULTI_SELECT, SINGLE_SELECT, DECIMAL, TEXT_INPUT, STRING, CHECKBOX, FILE_UPLOAD, STRING_LIST, PAIRS.
+        - Do NOT invent new parameter types.
+        - Each parameter MUST have a name, title, value, default, and description (hint).
+        - The description must explain the parameter clearly.
+
+        5. Initialization Parameters:
+        - Initialization parameter names MUST follow the convention `<test_name>_parameter_name`.
+        - Example: for test name A5, a column list parameter could be named `A5_column_list`.
+        - `x#` is a placeholder in the template; replace it with the actual test name.
+        - All parameters MUST have a description using the `hint` argument.
+        - Do NOT leave parameters undocumented or ambiguously named.
+
+        6. Column List Parameters:
+        - Any column parameter MUST be a list of strings: ['col1'] or ['col1', 'col2'].
+        - Single columns must still be a list.
+        - Column list parameters MUST use `ParameterType.SINGLE_SELECT' for a single column or `ParameterType.MUTLI_SELECT' for multiple columns.
+        - Always iterate over the list in the logic.
+
+        7. Score:
+        - Return a score as a proportion (0.0 to 1.0).
+        - Score = proportion of records passing the test.
+        - Do NOT return percentages, counts, or booleans.
+
+        Dimension:
+        {dimension}
+
+        User intent:
+        {text}
+
+        TEMPLATE (DO NOT MODIFY STRUCTURE):
+        ----------------------------------
+        {template_content}
+        ----------------------------------
+        """
+
+
+        inputs = {"messages": [{"role": "user", "content": full_prompt}]}
+        
+        function_list = []
+        response = agent.invoke(inputs)
+
+        try:
+            for f in response['structured_response'].function_list:
+                function_list.append(f.python_function)
+        except:
+            function_list.append("# No functions generated")
+
+        return function_list
+        
+        
 
     # Accept user input
     if prompt := st.chat_input("Asking data quality code?"):
@@ -86,8 +190,42 @@ with col1:
             
         # Add user message to chat history
         # st.session_state.messages.append({"role": "user", "content": prompt})
-        pass
+        #pass
+
+        # Get selected dimension, default to first in list (Accessibility)
+        dimension = st.session_state.get('selected_dimension', 'Accessibility')
+
+        # Map to corresponding template file
+        template_file = f"templates/{dimension.lower()}_test_template.py"
+
         
+        if prompt:
+            with st.chat_message("assistant"):
+                with st.spinner("Thinking...", show_time=True):
+                    # Generate function using full prompt
+                    dimension = st.session_state.get('selected_dimension', 'Accessibility')
+                    template_file = f"templates/{dimension.lower()}_test_template.py"
+                    #full_prompt = f"Dimension: {dimension}\nUser request: {prompt}\nTemplate file: {template_file}"
+                    
+                    functions = generate_response_from_graph(prompt, dimension, template_file)
+
+                    if functions != "# No functions generated":
+                        st.write("GENERATED FUNCTION:")
+                        for f in functions:
+                            st.code(f)
+                            f_name = f.split("def ")[-1].split("(")[0]
+                            st.session_state['function'][f_name] = f
+        elif "function" in st.session_state and st.session_state['function']:
+            st.write("STORED FUNCTION:")
+            for stored_f in st.session_state['function'].values():
+                st.code(stored_f)
+          
+                        # response = st.write_stream(stream(generate_response(prompt)))
+            # Add assistant response to chat history
+                    # st.session_state.messages.append({"role": "assistant", "content": res})
+
+
+            
 
     # def generate_response_from_client(text):
         
@@ -122,24 +260,6 @@ with col1:
     #     return function_list
 
 
-    def generate_response_from_graph(text):
-        
-        agent = st.session_state['agent']
-        inputs = {"messages": [{"role": "user", "content": text}]}
-        
-        function_list = []
-        response = agent.invoke(inputs)
-
-        try:
-            for f in response['structured_response'].function_list:
-                function_list.append(f.python_function)
-        except:
-            function_list.append("# No functions generated")
-
-        return function_list
-        
-        
-
     def stream(resp):
         import time 
         
@@ -151,37 +271,7 @@ with col1:
     #     st.session_state.last_activity = datetime.datetime.now()
 
         
-    if prompt:
-        with st.chat_message("assistant"):
-            with st.spinner("Thinking...", show_time=True):
-                functions = generate_response_from_graph(prompt)
-                
-                if functions!="# No functions generated":
-                    st.write("GENERATED FUNCTION:")
-                    for f in functions:
-                        
-                        st.code(f)
-                        f_name = f.split("def ")[-1].split("(")[0]
-                      
-
-                        if "function" in st.session_state:
-            
-            
-                            st.session_state['function'][f_name]=f
-                            # st.session_state['function'] = list(set(st.session_state['function']))
-                        
-                    res = "\n\n".join(functions)
-    elif "function" in st.session_state:
-        st.write("STORED FUNCTION:")
-        for stored_f in st.session_state['function'].values():
-            
-            st.code(stored_f)            
-                    # response = st.write_stream(stream(generate_response(prompt)))
-        # Add assistant response to chat history
-                # st.session_state.messages.append({"role": "assistant", "content": res})
-
-
-        
+    
 with col2:
      
     
