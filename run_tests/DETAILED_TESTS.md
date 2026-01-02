@@ -1,29 +1,34 @@
-# Detailed Metrics/Tests
-This page provides an in-depth overview of the data quality metrics/tests, along with variables that users can define. All tests used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness.
+# Detailed Tests
+This page provides an in-depth overview of the data quality tests, along with variables that users can define. All tests used to calculate a data quality score are divided into 8 dimensions: accessibility, accuracy, completeness, consistency, interdependency, relevance, timeliness, and uniqueness.
 
 To compute the final data quality grade for a given dataset, weights can be assigned to each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `{'Accessibility': 0.3,'Consistency': 0.4,'Uniqueness': 0.3}` |
 
-## Metric Tests 
-Metrics are tests used to determine how well a given dataset satisfies the given dimension. Each metric returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given metric. 
+## Tests 
+Tests are used to determine how well a given dataset satisfies the given dimension. When these tests evaluate similar aspects of data quality, the framework conceptually groups them as *metrics*. Each test returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given test. 
 
-For tests applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information. In the case of Completeness (P2) and Interdependency (I1), the output report includes pairs of column names along with their corresponding correlation coefficients, which meet or exceed a defined threshold.
+For tests applied across multiple columns, the returned CSV includes additional indicator columns to identify the source of errors. These can be filtered to look at column-specific information.
 
 The following variables are generic and can be defined for each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `Metrics` | Metrics to run within a dimension. By default, all metrics are run. | `A1` `A2` |
-| `Weights` | Weights assigned to metrics within a dimension. By default, all metrics are weighted equally. Weights must add up to 1. | `{'A1': 0.3,'A2': 0.7}` |
+| `Tests` | Tests to run within a dimension. By default, all tests are run. | `A1` `A2` |
+| `Weights` | Weights assigned to tests within a dimension. By default, all tests are weighted equally. Weights must add up to 1. | `{'A1': 0.3,'A2': 0.7}` |
 
-Additional variables specific to each metric will be described in their respective sections below.
+Additional variables specific to each test will be described in their respective sections below.
 
 ### Accessibility
 Goal: Ensure that data is easily accessible to authorized users when needed. Accessible data is stored in a way that makes it easy to retrieve and use, while also being secure from unauthorized access.
 
 #### Accessibility Type 1 (S1)
-Currently an empty template test.
+S1 gives a score based on whether a metadata file exists for the given dataset.
+
+**Variables Users Can Define:**
+| Variable               | Description                                   | Example         |
+|------------------------|-----------------------------------------------|-----------------|
+| `S1 Has Metadata` | Indicates whether a metadata file exists. |   |
 
 ### Accuracy
 Goal: Ensure that the data correctly represents the real-world values it is intended to model. Accurate data is free from errors and is a true reflection of the actual values.
@@ -47,7 +52,7 @@ A column or group is flagged as inaccurate if the proportion of non-outliers fal
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `A2 Column Names` | Column(s) to test for outliers. | `col1` `col2` |
-| `Groupby Column(s)` | Column(s) to group data by. | `groupby_col` |
+| `A2 Groupby Column(s)` | Column(s) to group data by. | `groupby_col` |
 | `A2 Threshold` | Threshold multiplier for IQR-based outlier detections. Default is `1.5`. | `1.5` |
 | `A2 Minimum Score` | Minimum acceptable proportion of non-outliers in a column or group. Default is `0.85`. | `0.85` |
 
@@ -70,7 +75,7 @@ A record is flagged as inaccurate if the start timestamp is later than the corre
 **Variables Users Can Define:**
 | Variable          | Description                                   | Example         |
 |-------------------|-----------------------------------------------|-----------------|
-| `A4 Column Pairs` | List of timestamp column pairs to check. The first column in each pair is assumed to be the start timestamp. | `[('start_col1', 'end_col1'), ('start_col2', 'end_col2')]` |
+| `A4 Column Pairs` | List of timestamp column pairs to check. The first column in each pair is assumed to be the start timestamp. | `('start_col1', 'end_col1')` `('start_col2', 'end_col2')` |
 
 ### Completeness
 Goal: Ensure that all required data is available and that there are no missing values. Complete data includes all necessary records and fields needed for the intended use.
@@ -101,7 +106,7 @@ P2 serves as a secondary test for users interested in exploring whether missingn
 **Variables Users Can Define:**
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `P2 Threshold` | Correlation coefficient threshold for flagging pairs of columns with associated missingness. Default is `0.75`. | `0.75` |
+| `P2 Threshold` | Correlation coefficient threshold for flagging pairs of columns with associated missingness. Default is `0.50`. | `0.50` |
 
 ### Consistency
 Goal: Ensure that data is consistent across different datasets and systems. Consistent data follows the same formats, standards, and definitions, and there are no contradictions within the dataset.
@@ -110,10 +115,8 @@ Goal: Ensure that data is consistent across different datasets and systems. Cons
 C1 detects near-duplicate entries in selected columns that likely refer to the same entity despite minor differences in spelling or naming conventions. Before generating a unique list of entries, all text is normalized by:
 - Converting to lowercase
 - Replacing abbreviations with full province or territory names
-- Removing short numbers (fewer than two digits)
-- Filtering out stop words to focus on meaningful terms
 
-Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+Cosine similarity combined with sequence matching is then calculated between pairs of unique entries against a threshold. During this calculation, stop words and short numbers (fewer than four digits) are temporarily ignored to focus on meaningful terms. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A default threshold of 0.91 was predetermined after manual review of test data. Scores at or above this threshold generally indicate the same entity with minor naming variations, while lower scores suggest distinct entries with similar names.
 
@@ -124,7 +127,7 @@ A record is flagged as inconsistent if it has a near-duplicate entry with a simi
 |------------------------|-----------------------------------------------|-----------------|
 | `C1 Column Names` | Column(s) to test for similarity. | `col1` `col2` |
 | `C1 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
-| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["the", "and"]`. | `["the", "and"]` |
+| `C1 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `the` `and`. | `the` `and` |
 
 #### Consistency Type 2 (C2) 
 C2 checks whether string values in selected columns consistently follow naming conventions found in a reference dataset. If no reference dataset is provided, the test compares values within the dataset itself. Similarity between test and reference values is measured using cosine similarity based on a user-defined threshold. This test can be applied to one or more columns at the same time, with scores averaged across selected columns. 
@@ -137,7 +140,7 @@ A record is flagged as inconsistent if none of its similarity scores to referenc
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `C2 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
-| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `["activity"]`. | `["activity"]` |
+| `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `activity`. | `activity` |
 | `Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
 | `C2 Column Mapping` | Mapping of test column(s) to reference column(s) for comparison. | `{'col1':'ref_col1','col2':'ref_col2'}` |
 
@@ -161,7 +164,7 @@ A record is flagged as inconsistent if its similarity to any official province o
 | `C3 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
 
 #### Consistency Type 4 (C4)
-C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 18601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A record is flagged as inconsistent if it does not match the specified date-time format or contains out of bounds values, such as a month greater than 12 or a day outside the valid range. 
  

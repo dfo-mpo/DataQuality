@@ -16,13 +16,13 @@ class ParameterType(Enum):
     PAIRS = "pairs" # output list of string pairs, each value list entry is structured as a string double, ('col1', 'col2')
     WEIGHTS = "weights"
 
-""" Class to represent the properties of the parameters required for a given metric. Used by the UI tool to generate parameter input boxes/feilds.
+""" Class to represent the properties of the parameters required for a given test. Used by the UI tool to generate parameter input boxes/feilds.
 
-dimension_name: Name of the dimension the metric is under.
-name: Name of the metric for the metadata class.
-parameters: List of ParameterMetadata objects for each parameter in the given metric.
+dimension_name: Name of the dimension the test is under.
+name: Name of the test for the metadata class.
+parameters: List of ParameterMetadata objects for each parameter in the given test.
 """
-class MetricMetadata:
+class TestMetadata:
     def __init__(self, dimension_name, name):
         self.dimension_name = dimension_name
         self.name = name
@@ -39,7 +39,7 @@ class MetricMetadata:
 name: Parameter represented, must match parameter name use in class definition.
 title: Title for parameter shown in UI.
 type: Type of parameter input to generate in the UI. Can be any option defined in the ParameterType class.
-value: Value is the inital value used by the metric, it is changed based on user input. For select options value is the set of available options. 
+value: Value is the inital value used by the test, it is changed based on user input. For select options value is the set of available options. 
        Note that ParameterType MULTI_SELECT will use the dataset column names if no value is provided.
 default: Value used if input provided is not in a valid format (ParameterType TEXT_INPUT) or if no user input is provided (ParameterType MULTI_SELECT).
 placeholder: If type is Text, placeholder is a greyed out text shown when box is empty. If type is SINGLE_SELECT, placeholder will overwrite the greyed out default text shown when no option is selected.

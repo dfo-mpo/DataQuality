@@ -10,15 +10,15 @@ from ui_tool.metadata import ParameterType
 import ui_tool.components as components
 
 # Import dimensions
-import dimensions.accessibility as accessibility
-import dimensions.consistency as consistency
-import dimensions.accuracy as accuracy
-import dimensions.completeness as completeness
-import dimensions.interdependency as interdependency
-import dimensions.relevance as relevance
-import dimensions.timeliness as timeliness
-import dimensions.uniqueness as uniqueness
-from dimensions.utils import calculate_dimension_score, calculate_DQ_grade, read_data, are_weights_valid
+from dimensions.accessibility.dimension_reference import Accessibility 
+from dimensions.accuracy.dimension_reference import Accuracy
+from dimensions.completeness.dimension_reference import Completeness 
+from dimensions.consistency.dimension_reference import Consistency 
+from dimensions.interdependency.dimension_reference import Interdependency 
+from dimensions.relevance.dimension_reference import Relevance 
+from dimensions.timeliness.dimension_reference import Timeliness 
+from dimensions.uniqueness.dimension_reference import Uniqueness 
+from utils.core_operations import calculate_dimension_score, calculate_DQ_grade, read_data, are_weights_valid
 
 # Title of the web app  
 st.title("Data Quality Calculator", anchor=False)
@@ -35,14 +35,14 @@ st.html("""
 
 DIMENSION_SCORES = [] # Stores the final score for each dimension used to calculate final grade
 dimensions = { # Nested dictionary to keep track of values for each given dimension durring runtime
-    "Accessibility": { "all_metrics": accessibility.ALL_METRICS, 'metadata': accessibility.create_metadata(), "parameters": {}, "instantiate": accessibility.Accessibility},
-    "Accuracy": { "all_metrics": accuracy.ALL_METRICS, 'metadata': accuracy.create_metadata(), "parameters": {}, "instantiate": accuracy.Accuracy },
-    "Completeness": { "all_metrics": completeness.ALL_METRICS, 'metadata': completeness.create_metadata(), "parameters": {}, "instantiate": completeness.Completeness},
-    "Consistency": { "all_metrics": consistency.ALL_METRICS, 'metadata': consistency.create_metadata(), "parameters": {}, "instantiate": consistency.Consistency},
-    "Interdependency": { "all_metrics": interdependency.ALL_METRICS, 'metadata': interdependency.create_metadata(), "parameters": {}, "instantiate": interdependency.Interdependency},
-    "Relevance": { "all_metrics": relevance.ALL_METRICS, 'metadata': relevance.create_metadata(), "parameters": {}, "instantiate": relevance.Relevance},
-    "Timeliness": { "all_metrics": timeliness.ALL_METRICS, 'metadata': timeliness.create_metadata(), "parameters": {}, "instantiate": timeliness.Timeliness},
-    "Uniqueness": { "all_metrics": uniqueness.ALL_METRICS, 'metadata': uniqueness.create_metadata(), "parameters": {}, "instantiate": uniqueness.Uniqueness},
+    "Accessibility": { "all_tests": Accessibility.ALL_TESTS, 'metadata': Accessibility.collect_metadata(), "parameters": {}, "instantiate": Accessibility},
+    "Accuracy": { "all_tests": Accuracy.ALL_TESTS, 'metadata': Accuracy.collect_metadata(), "parameters": {}, "instantiate": Accuracy},
+    "Completeness": { "all_tests": Completeness.ALL_TESTS, 'metadata': Completeness.collect_metadata(), "parameters": {}, "instantiate": Completeness},
+    "Consistency": { "all_tests": Consistency.ALL_TESTS, 'metadata': Consistency.collect_metadata(), "parameters": {}, "instantiate": Consistency},
+    "Interdependency": { "all_tests": Interdependency.ALL_TESTS, 'metadata': Interdependency.collect_metadata(), "parameters": {}, "instantiate": Interdependency},
+    "Relevance": { "all_tests": Relevance.ALL_TESTS, 'metadata': Relevance.collect_metadata(), "parameters": {}, "instantiate": Relevance},
+    "Timeliness": { "all_tests": Timeliness.ALL_TESTS, 'metadata': Timeliness.collect_metadata(), "parameters": {}, "instantiate": Timeliness},
+    "Uniqueness": { "all_tests": Uniqueness.ALL_TESTS, 'metadata': Uniqueness.collect_metadata(), "parameters": {}, "instantiate": Uniqueness},
 }
 
 # Instructions for the dataset upload section  
@@ -69,26 +69,26 @@ if uploaded_file is not None:
     # Selection for dimensions to use for tests
     st.subheader("Select Dimensions to Include ", anchor=False)
     st.markdown("""  
-      Documentation for dimensions and the metric tests within can be found in the [README file](https://github.com/dfo-mpo/DataQuality/blob/main/README.md#dimensions-and-metric-tests).  
+      Documentation for dimensions and the test tests within can be found in the [README file](https://github.com/dfo-mpo/DataQuality/blob/main/README.md#dimensions-and-test-tests).  
     """)
     selected_dimensions = st.multiselect("Choose dimensions to use", dimensions.keys())
 
 
-    # CHange metrics to only show params when selected, remove hint for metric, and check that a metric is selected for check dimension before allowing a data quality run.
+    # CHange tests to only show params when selected, remove hint for test, and check that a test is selected for check dimension before allowing a data quality run.
     # Iterate through each dimension
     for dimension in dimensions:
         if dimension in selected_dimensions:
             with st.expander(f"{dimension} Dimension", expanded=True):  
-                # Create intial row that each dimension needs, adds return_type, metrics, and weights to each dimension
+                # Create intial row that each dimension needs, adds return_type, tests, and weights to each dimension
                 components.generateFirstDimensionRow(dimension_dict=dimensions[dimension])
 
-                # Iterate through each metric that has metadata, parameters will be grouped together for each metric
-                for metric in dimensions[dimension]["metadata"]: # metric is of type MetricMetadata from metadata.py
-                    if metric.name in dimensions[dimension]["metrics"]:
+                # Iterate through each test that has metadata, parameters will be grouped together for each test
+                for test in dimensions[dimension]["metadata"]: # test is of type TestMetadata from metadata.py
+                    if test.name in dimensions[dimension]["tests"]:
                         try:
-                            components.generateDimensionRow(dimension_dict=dimensions[dimension], metric=metric.name, parameters=metric.parameters, df_columns=df.columns.tolist())
+                            components.generateDimensionRow(dimension_dict=dimensions[dimension], test=test.name, parameters=test.parameters, df_columns=df.columns.tolist())
                         except Exception as e:
-                            st.error(f"Error encountered when generating fields for the {metric.name} metric!")
+                            st.error(f"Error encountered when generating fields for the {test.name} test!")
                             st.error(e)
                     
     # Run Tests button
@@ -97,15 +97,15 @@ if uploaded_file is not None:
         # st.write(f"Running the following dimensions: {selected_dimensions}")
         output_logs = []
 
-        # Run each selected dimension by creating class instance and running selected metrics to get dimension scores
+        # Run each selected dimension by creating class instance and running selected tests to get dimension scores
         for dimension in selected_dimensions:
             dimension_dict = dimensions[dimension]
-
+            
             # Add checks to ensure parameters are entered correctly or apply defaults
-            for metric in dimension_dict["metadata"]: # metric is of type MetricMetadata from metadata.py
-                # Only check metrics that have been selected for the given dimension
-                if dimensions[dimension]["metrics"] == [] or metric.name in dimensions[dimension]["metrics"]:
-                    for parameter in metric.parameters: # parameter is of type ParameterMetadata from metadata.py
+            for test in dimension_dict["metadata"]: # test is of type TestMetadata from metadata.py
+                # Only check tests that have been selected for the given dimension
+                if dimensions[dimension]["tests"] == [] or test.name in dimensions[dimension]["tests"]:
+                    for parameter in test.parameters: # parameter is of type ParameterMetadata from metadata.py
                         if parameter.type == ParameterType.TEXT_INPUT: # Appy transformation into object type if possible
                             try:
                                 parameter_value = dimension_dict['parameters'][parameter.name].strip()
@@ -122,7 +122,7 @@ if uploaded_file is not None:
                                 st.error(f"Invalid {parameter.title} format provided, defaulting value to {parameter.default} for calculation.")
                                 dimension_dict['parameters'][parameter.name] = parameter.default
 
-                        # Due to format supported in dimension classes, data read must take place before passing to run metrics
+                        # Due to format supported in dimension classes, data read must take place before passing to run tests
                         elif parameter.type == ParameterType.FILE_UPLOAD: 
                             dataset_path = dimension_dict['parameters'][parameter.name]
                             try:
@@ -142,11 +142,21 @@ if uploaded_file is not None:
                             pairs = dimension_dict['parameters'][parameter.name]
                             dimension_dict['parameters'][parameter.name] = [ast.literal_eval(pair) for pair in pairs]
                 
-            # Instanciate class instance using generated parameter fields
-            dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, **dimension_dict["parameters"])
+            # Create parameter dictionary for each test (grouped by test name)
+            test_params = {}
+            for test_meta in dimension_dict["metadata"]:
+                test_name = test_meta.name
+                test_params[test_name] = {}
+                
+                for param in test_meta.parameters:
+                    param_name = param.name
+                    test_params[test_name][param_name] = dimension_dict["parameters"].get(param_name)
+                    
+            # Instanciate class instance using generated parameter fields        
+            dimension_tests = dimension_dict["instantiate"](dataset_path=df, return_type='dataset', uploaded_file_name=uploaded_file.name, test_params=test_params)
 
-            # Run all of the metrics if not specified dimensions[dimension]["metrics"]
-            scores, logs = dimension_tests.run_metrics(return_logs=True) if dimension_dict["metrics"] == [] else dimension_tests.run_metrics(dimension_dict["metrics"], return_logs=True)
+            # Run all of the tests if not specified dimensions[dimension]["tests"]
+            scores, logs = dimension_tests.run_tests(return_logs=True) if dimension_dict["tests"] == [] else dimension_tests.run_tests(dimension_dict["tests"], return_logs=True)
             output_logs.extend(logs)
 
             # Check if weights are valid, if not use default weights
@@ -165,7 +175,7 @@ if uploaded_file is not None:
     
     if final_grade != None:
         st.markdown(f"### Calculated Data Quality: {final_grade}") 
-        st.write("See output logs below for results from each metric.")
+        st.write("See output logs below for results from each test.")
 
         with st.expander("Output Logs"):
             merged_df = pd.concat(output_logs, ignore_index=True)

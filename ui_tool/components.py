@@ -1,5 +1,6 @@
 import sys  
 from pathlib import Path  
+from natsort import natsorted
   
 # Set path for local custom components 
 BASE_DIR = Path(__file__).resolve().parent  
@@ -18,18 +19,16 @@ dimension: The name of the given dimension.
 dimension_dict: The dictionary representing the given dimension.
 """
 def generateFirstDimensionRow(dimension_dict):
-    all_metrics = dimension_dict["all_metrics"]
+    all_tests = dimension_dict["all_tests"]
     col_1, col_2 = st.columns(2)
 
     with col_1:  
-        dimension_dict["metrics"] = st.multiselect("Metrics", all_metrics)
+        dimension_dict["tests"] = st.multiselect("Tests", natsorted(all_tests))
     with col_2:  
         weights = generateWeightsDict(dimension_dict["metrics"], dimension_dict.get("weights",{}))
-        dimension_dict["weights"] = st_weights(key=f"{all_metrics[0]}", placeholder="First select the metrics you wish to run.", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
-        # st.text_input("Weights", value="", 
-                                    # placeholder="e.g., {"+example_weights+"}", 
-                                    # help="If left empty, weighting will be equal. Weights must add up to 1.")
-        
+        dimension_dict["weights"] = st_weights(key=f"{all_tests[0]}", placeholder="First select the metrics you wish to run.", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
+
+ 
 def generateWeightsDict(keys, oldDict):
     newWeights = {}
     for key in keys:
@@ -44,7 +43,7 @@ def generateDimensionWeights(selected_dimensions):
     weights = generateWeightsDict(selected_dimensions, {})
     return st_weights(key=f"Dimensions", placeholder="First select the dimensions you wish to run.", label="Dimension Weights", value=weights, step=0.05, min=0, max=1.0 )
 
-def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetadata], df_columns):
+def generateDimensionRow(dimension_dict, test, parameters: list[ParameterMetadata], df_columns):
     if len(parameters) == 0:
         return
 
@@ -93,7 +92,7 @@ def generateDimensionRow(dimension_dict, metric, parameters: list[ParameterMetad
     # If more parameters are left to generate, do recursive call otherwise terminate
     numOfParamUsed = numOfColumns if not doubleColumn else numOfColumns + 1
     if len(parameters) > numOfParamUsed:
-        generateDimensionRow(dimension_dict, metric, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
+        generateDimensionRow(dimension_dict, test=test, parameters=parameters[numOfParamUsed:], df_columns=df_columns)
     else:
         return
 
@@ -115,7 +114,7 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
             return options[selectbox_value] if isinstance(options, dict) and selectbox_value in options else selectbox_value
         case ParameterType.DECIMAL:
             return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
-        case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running metrics
+        case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running tests
             return st.text_input(parameter.title, value=parameter.value, placeholder=parameter.placeholder, help=parameter.hint)
         case ParameterType.CHECKBOX:
             return st.checkbox(parameter.title, value=parameter.value, help=parameter.hint)
