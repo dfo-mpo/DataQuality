@@ -39,25 +39,27 @@ class Interdependency:
             df = df.drop(columns=['Comment']) 
         elif 'Comments' in df.columns:
             df = df.drop(columns=['Comments'])
-        
+
+        # Convert timestamp columns to int for computational purposes (formatted as yyyymmdd)
+        for col in df.columns:
+            if pd.api.types.is_datetime64_any_dtype(df[col]):
+                df[col] = df[col].dt.strftime('%Y%m%d').astype('Int64')
+                
         # Number of non-sensitive features
         n_non_sensitive = len(df.columns) - len(self.i1_sensitive_columns)
     
         # Computes correlation coeff of all variables in dataset 
-        corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True)['corr']
+        corrs = associations(df, nom_nom_assoc='cramer', num_num_assoc='pearson', compute_only=True, cramers_v_bias_correction=False)['corr']
         corrs_thr = utils.filter_corrs(corrs, self.i1_threshold, subset = self.i1_sensitive_columns)
     
         # Compute proportion that exceeds threshold for each sensitive column
         corrs_subset = corrs[self.i1_sensitive_columns].drop(self.i1_sensitive_columns)
         for column in self.i1_sensitive_columns:
-            all_interdependency_scores[column] = sum(1 for corr in corrs_subset[column] if corr > self.i1_threshold) / n_non_sensitive
+            all_interdependency_scores[column] = 1 - (sum(1 for corr in corrs_subset[column] if corr > self.i1_threshold) / n_non_sensitive)
         
         # Compute average score 
         overall_interdependency_score = sum(all_interdependency_scores.values()) / len(all_interdependency_scores)
-        
-        # may want to use for one line summary?
-        summary = f"Found {len(corrs_thr)} feature pair(s) to sensitive attribute {self.i1_sensitive_columns} with correlation coefficient greater than defined threshold ({self.i1_threshold})"
-
+  
         # add conditional return logic
         if self.return_type == "score":
             return overall_interdependency_score, None
