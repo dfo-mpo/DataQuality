@@ -86,21 +86,23 @@ const svgStyles = css({
 });
 
 export default function Input({ initialValue, step, decimals, onChange, min, max }: InputProps) {
-    const [value, setValue] = useState(initialValue);
-
-    // Clamp a weight between specified min and max. If not provided then all numbers are allowed
-    const clamp = (n: number) => Math.max(min ?? -Infinity, Math.min(max ?? Infinity, n));
-
-    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const str = e.target.value.trim(); // it's a string
-        // if (str === "") return; // ignore empty clears in a controlled input
-        const n = Number(str);
-        if (!Number.isNaN(n)) {
-            const clamped = clamp(n);
-            setValue(clamped);
-            onChange(clamp(clamped));
-        }
-    };
+    const [value, setValue] = useState(String(initialValue));  
+  
+    const clamp = (n: number) =>  
+      Math.max(min ?? -Infinity, Math.min(max ?? Infinity, n));  
+      
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {  
+      setValue(e.target.value); // always store string  
+    };  
+      
+    const handleBlur = () => {  
+      const n = Number(value);  
+      if (!Number.isNaN(n)) {  
+        const clamped = clamp(n);  
+        setValue(String(clamped)); // normalize (removes "01")  
+        onChange(clamped);  
+      }  
+    }; 
 
     // Apply change in step
     const onStep = (newValue: number) => {
@@ -109,20 +111,20 @@ export default function Input({ initialValue, step, decimals, onChange, min, max
         // Clip number to prevent floating point error
         clamped = Number(clamped.toFixed(decimals));
 
-        setValue(clamped);
+        setValue(String(clamped));
         onChange(clamp(clamped));
     };
 
     // Generate number input feild with '-' and '+' buttons
     return (
         <div className={inputContainerStyles}>
-            <input type="number" className={inputStyles} value={value} onChange={handleInputChange}/>
-            <Button onClick={() => onStep(value - step)}>
+            <input type="number" className={inputStyles} value={value} onChange={handleInputChange} onBlur={handleBlur}/>
+            <Button onClick={() => onStep(Number(value) - step)}>
                 <svg viewBox="0 0 8 8" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit" className={svgStyles}>
                     <path d="M0 3v2h8V3H0z"></path>
                 </svg>
             </Button>
-            <Button onClick={() => onStep(value + step)}>
+            <Button onClick={() => onStep(Number(value) + step)}>
                 <svg viewBox="0 0 8 8" aria-hidden="true" focusable="false" fill="currentColor" xmlns="http://www.w3.org/2000/svg" color="inherit" className={svgStyles}>
                     <path d="M3 0v3H0v2h3v3h2V5h3V3H5V0H3z"></path>
                 </svg>

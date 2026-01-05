@@ -133,8 +133,8 @@ export const WeightsInput = ({
         :
           <div className={totalDisplay}>
             <p>Total</p>
-            <p className={totalWeight === 1.0 ? '' : redText}>
-              {totalWeight === 1.0 ? totalWeight : `${totalWeight}; Weights do not add up to 1.0, using default weights instead!`}
+            <p className={totalWeight === max ? '' : redText}>
+              {totalWeight === max ? totalWeight : `${totalWeight}; Weights do not add up to ${max}, using default weights instead!`}
             </p>
           </div>
         }
