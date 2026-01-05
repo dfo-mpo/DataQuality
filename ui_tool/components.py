@@ -25,10 +25,10 @@ def generateFirstDimensionRow(dimension_dict):
     with col_1:  
         dimension_dict["tests"] = st.multiselect("Tests", natsorted(all_tests))
     with col_2:  
-        weights = generateWeightsDict(dimension_dict["metrics"], dimension_dict.get("weights",{}))
+        weights = generateWeightsDict(dimension_dict["tests"], dimension_dict.get("weights",{}))
         dimension_dict["weights"] = st_weights(key=f"{all_tests[0]}", placeholder="First select the metrics you wish to run.", label="Weights", value=weights, step=0.05, min=0, max=1.0 )
 
- 
+
 def generateWeightsDict(keys, oldDict):
     newWeights = {}
     for key in keys:

@@ -163,8 +163,8 @@ if uploaded_file is not None:
             weights, valid = are_weights_valid(dimension_dict["weights"], scores)
             if not valid:
                 st.error(f'Weights entered for {dimension} are not valid, using defualt weights intead.')
-            accessibility_score = calculate_dimension_score(dimension, scores=scores, weights=weights)
-            DIMENSION_SCORES.append(accessibility_score)
+            dimension_score = calculate_dimension_score(dimension, scores=scores, weights=weights)
+            DIMENSION_SCORES.append(dimension_score)
         
         # Calculate final grade using dimension outputs
         # First check if weights are valid, if not use default weights
