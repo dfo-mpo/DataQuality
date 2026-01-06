@@ -1,0 +1,9 @@
+var1,var2,corr_coeff,features
+IntStatus.Year,IntStatus.Status,0.9999999999999999,IntStatus.Status/IntStatus.Year
+Recruits_Total,Escapement_Wild,0.6900655593423543,Escapement_Wild/Recruits_Total
+Contact,Escapement_Total,0.6708203932499367,Contact/Escapement_Total
+Escapement_Wild,CU_ID,0.6236095644623234,CU_ID/Escapement_Wild
+Escapement_Total,Escapement_Wild,0.6236095644623234,Escapement_Total/Escapement_Wild
+IntStatus.Status,Escapement_Wild,0.5714285714285713,Escapement_Wild/IntStatus.Status
+IntStatus.Year,Escapement_Wild,0.5714285714285713,Escapement_Wild/IntStatus.Year
+Recruits_Total,Recruits_Wild,0.5163977794943224,Recruits_Total/Recruits_Wild
