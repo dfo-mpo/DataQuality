@@ -164,6 +164,6 @@ def create_metadata():
     # Define each parameter needed for test, use ParameterType when defining type
     c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT, default=[])
     c1_metadata.add_parameter('c1_threshold', 'C1 Threshold', ParameterType.DECIMAL, value='0.91', step = 0.01)
-    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"], hint="Words filtered for C1 test simularity calculations")
+    c1_metadata.add_parameter('c1_stop_words', 'C1 Stop Words', ParameterType.STRING_LIST, value=["the", "and"], suggestions=["the", "and"])
     
     return c1_metadata 
