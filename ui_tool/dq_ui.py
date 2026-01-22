@@ -137,7 +137,7 @@ if uploaded_file is not None:
                             if dimension_dict['parameters'][parameter.name] == []:
                                 dimension_dict['parameters'][parameter.name] = parameter.default
 
-                        # Need to convert stringified duples into objects within the list
+                        # Need to convert stringified tuples into objects within the list
                         elif parameter.type == ParameterType.PAIRS:
                             pairs = dimension_dict['parameters'][parameter.name]
                             dimension_dict['parameters'][parameter.name] = [ast.literal_eval(pair) for pair in pairs]

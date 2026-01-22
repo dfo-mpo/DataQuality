@@ -57,7 +57,7 @@ Add a new test or customize an existing one by copying the test template and fil
    - Set `self.selected_columns` (use `None` if your test does not specify specific columns).
    - Implement your test logic in `run_test()`.
    - **Optional**: Define test metadata and parameter types in `create_metadata()` to run your test in the **UI tool**. Skip this step if using **only the notebook**.
-        - Set each parameter's type using `ParameterType.[TYPE]` (see available types [here](TODO:add-link)).
+        - Set each parameter's type using `ParameterType.[TYPE]` (see available types [here](ui_tool/PARAMETER_TYPES.md)).
 5. **Import any required operation modules** from [utils/](/utils) at the top of your test file (e.g., `from utils import item_operations, column_operations, table_operations`).
    - See [Operations](utils/README.md) for a list of available operations.
    - See [Creating Custom Operations](utils/README.md#Creating-Custom-Operations) to add custom operations.

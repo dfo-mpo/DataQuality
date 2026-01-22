@@ -103,7 +103,7 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
             # If value is not provided, use provided dataset columns as select options
             options = parameter.value if parameter.value else df_columns
 
-            return st.multiselect(parameter.title, options=options, default=[], help=parameter.hint)
+            return st.multiselect(parameter.title, options=options, default=parameter.default, help=parameter.hint)
         case ParameterType.SINGLE_SELECT:
             # If value is not provided, use provided dataset columns as select options
             options = parameter.value if parameter.value else df_columns
@@ -113,20 +113,22 @@ def generateParameterField(parameter: ParameterMetadata, df_columns: list):
             selectbox_value =  st.selectbox(parameter.title, placeholder=parameter.placeholder, options=options, index=parameter.index, accept_new_options=parameter.accept_new_options, help=parameter.hint)
             return options[selectbox_value] if isinstance(options, dict) and selectbox_value in options else selectbox_value
         case ParameterType.DECIMAL:
-            return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, help=parameter.hint) 
+            return st.number_input(parameter.title, value=float(parameter.value), step=parameter.step, min_value=parameter.min, max_value=parameter.max, help=parameter.hint) 
         case ParameterType.TEXT_INPUT | ParameterType.STRING: # Difference between the 2 is when sanitizing fields before running tests
-            return st.text_input(parameter.title, value=parameter.value, placeholder=parameter.placeholder, help=parameter.hint)
+            return st.text_input(parameter.title, value=parameter.value, placeholder=parameter.placeholder, max_chars=parameter.max, help=parameter.hint)
         case ParameterType.CHECKBOX:
             return st.checkbox(parameter.title, value=parameter.value, help=parameter.hint)
         case ParameterType.FILE_UPLOAD:
             return st.file_uploader(parameter.title, type=["csv", "xlsx"], help=parameter.hint)
         case ParameterType.STRING_LIST:
-            return st_tags(label=parameter.title, text='Press enter to add more', value=parameter.value, suggestions=parameter.suggestions)
+            text = parameter.placeholder if parameter.placeholder else 'Press enter to add more'
+            return st_tags(label=parameter.title, text=text, value=parameter.value, suggestions=parameter.suggestions)
         case ParameterType.PAIRS:
             suggestions = parameter.suggestions if parameter.suggestions != [] else df_columns
-            return st_pairs(label=parameter.title, text='Enter column name', value=parameter.value, suggestions=suggestions)
-        case ParameterType.WEIGHTS: # TODO: update with new feilds needed
-            return st_weights(label=parameter.title, text='Enter column name', value=parameter.value)
+            text = parameter.placeholder if parameter.placeholder else 'Enter column name'
+            return st_pairs(label=parameter.title, text=text, value=parameter.value, suggestions=suggestions)
+        case ParameterType.WEIGHTS:
+            return st_weights(label=parameter.title, placeholder=parameter.placeholder, value=parameter.value, step=parameter.step, min=parameter.min, max=parameter.max)
         # Fall through if invalid ParameterType found
         case _:
             st.error("None valid ParameterType found when generating fields from dimension class metadata.")

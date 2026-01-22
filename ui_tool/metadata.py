@@ -29,9 +29,9 @@ class TestMetadata:
         self.parameters = []
 
     # Creates a new ParameterMetadata instance and appends it to the parameters list
-    def add_parameter(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, hint = None):
+    def add_parameter(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, min = None, max = None, hint = None):
 
-        self.parameters.append(ParameterMetadata(name, title, type, value, default, placeholder, index, accept_new_options, suggestions, step, hint))
+        self.parameters.append(ParameterMetadata(name, title, type, value, default, placeholder, index, accept_new_options, suggestions, step, min, max, hint))
 
 
 """ Class to represent the properties of a parameter. Used by the UI tool to generate parameter input boxes/feilds.
@@ -47,18 +47,22 @@ index: If type is SINGLE_SELECT, it is the index of the preselected option. Defa
 accept_new_options: If type is SINGLE_SELECT, allows a user to type in a new option when set to True.
 suggestions: List of autofill options for string inputs for ParameterTypes STRING_LIST and PAIRS. For PAIRS default value will use dataset columns unless default is overwritten with any list or None.
 step: If type is Decimal, step is the increment/decrement amounts when the arrow keys are used to change the value.
+min: The minimum amount a number input can go too (for DECIMAL and WEIGHTS).
+max: The highest amount a number input can go too (for DECIMAL and WEIGHTS). Also the max number of characters in a string input (STRING and TEXT_INPUT).
 hint: Helper message that can provide more context to how the user should enter this parameter value (not available for ParameterTypes STRING_LIST and PAIRS).
 """
 class ParameterMetadata:
-    def __init__(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, hint = None):
+    def __init__(self, name, title, type: ParameterType, value = "", default = None, placeholder = None, index = None, accept_new_options = False, suggestions = [], step = 0.01, min = None, max = None, hint = None):
         self.name = name
         self.title = title
         self.type = type
-        self.value = value
+        self.value = [] if ParameterType.PAIRS and value=="" else value
         self.default = default
         self.placeholder = placeholder
         self.index = index
         self.accept_new_options = accept_new_options
         self.suggestions = suggestions
         self.step = step
+        self.min = min
+        self.max = max
         self.hint = hint

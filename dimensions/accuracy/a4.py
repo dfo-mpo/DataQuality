@@ -78,6 +78,6 @@ def create_metadata():
     # Define instance for test
     a4_metadata = TestMetadata(dimension, TEST)
     # Define each parameter needed for test, use ParameterType when defining type
-    a4_metadata.add_parameter('a4_column_pairs', 'A4 Column Pairs', ParameterType.PAIRS, value=[], hint="Pairs of related timestamp columns used from the dataset. Use format in placeholder replacing text with names of columns from your uploaded dataset.")
+    a4_metadata.add_parameter('a4_column_pairs', 'A4 Column Pairs', ParameterType.PAIRS, value=[])
     
     return a4_metadata 
