@@ -4,7 +4,7 @@ This page provides an in-depth overview of the data quality tests, along with va
 To compute the final data quality grade for a given dataset, weights can be assigned to each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
-| `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `{'Accessibility': 0.3,'Consistency': 0.4,'Uniqueness': 0.3}` |
+| `Dimension Weights` | Weights assigned to each dimension. By default, all dimensions are weighted equally. All weights must add up to 1. | `Accessibility` `0.3     - +`<br> `  Consistency  ` `0.4     - +`<br> `  Uniqueness   ` `0.3     - +` |
 
 ## Tests 
 Tests are used to determine how well a given dataset satisfies the given dimension. When these tests evaluate similar aspects of data quality, the framework conceptually groups them as *metrics*. Each test returns a final score and can optionally generate a CSV file containing a subset of the data that is non-compliant. This is used to create a one-sentence summary in the output report, giving more insights into how the dataset produced the score for the given test. 
@@ -15,7 +15,7 @@ The following variables are generic and can be defined for each dimension:
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `Tests` | Tests to run within a dimension. By default, all tests are run. | `A1` `A2` |
-| `Weights` | Weights assigned to tests within a dimension. By default, all tests are weighted equally. Weights must add up to 1. | `{'A1': 0.3,'A2': 0.7}` |
+| `Weights` | Weights assigned to tests within a dimension. By default, all tests are weighted equally. Weights must add up to 1. | `A1` `0.3     - +`<br>  `A2` `0.7     - +`|
 
 Additional variables specific to each test will be described in their respective sections below.
 
@@ -141,7 +141,7 @@ A record is flagged as inconsistent if none of its similarity scores to referenc
 |------------------------|-----------------------------------------------|-----------------|
 | `C2 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
 | `C2 Stop Words` | Common word(s) to exclude from similarity calculations. Default is `activity`. | `activity` |
-| `Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
+| `C2 Reference Dataset File` | File containing reference values for comparison (CSV, XLSX). | `reference_data.csv` |
 | `C2 Column Mapping` | Mapping of test column(s) to reference column(s) for comparison. | `{'col1':'ref_col1','col2':'ref_col2'}` |
 
 #### Consistency Type 3 (C3)
@@ -164,7 +164,7 @@ A record is flagged as inconsistent if its similarity to any official province o
 | `C3 Threshold` | Similarity score threshold for flagging inconsistency. Default is `0.91`. | `0.91` |
 
 #### Consistency Type 4 (C4)
-C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. The expected format must be provided as a Python datetime format specifier (e.g., %Y%m%d represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
+C4 checks whether date-time values in selected columns follow a specified format, such as the standard ISO 8601 format (YYYY-MM-DD HH:MM:SS) or any other format appropriate for the dataset. For custom date-time formats, they must be provided as a Python date-time format specifier (e.g., `%Y%m%d` represents YYYYMMDD). This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
 
 A record is flagged as inconsistent if it does not match the specified date-time format or contains out of bounds values, such as a month greater than 12 or a day outside the valid range. 
  
@@ -172,7 +172,9 @@ A record is flagged as inconsistent if it does not match the specified date-time
 | Variable               | Description                                   | Example         |
 |------------------------|-----------------------------------------------|-----------------|
 | `C4 Column Names` | Column(s) to test for inconsistent date-time formatting. | `col1` `col2` |
-| `C4 Format` | Python datetime format specifier to compare entries against. Default is `%Y-%m-%d %H:%M:%S`. | `%Y-%m-%d %H:%M:%S` |
+| `C4 Format` | Date-time format to compare entries against. For custom formats, enter a Python date-time format specifier (e.g., `%Y%m%d`). | `2001-03-14 13:30:55 (YYYY-MM-DD HH:MM:SS)` |
+
+For a full list of format codes, refer to https://docs.python.org/3.11/library/datetime.html?utm_source=chatgpt.com#format-codes. 
 
 #### Consistency Type 5 (C5) 
 C5 verifies that geographic coordinates follow Decimal Degrees (DD) formatting and represent valild latitude and longitude values. Users can optionally restrict validation to coordinates that fall within DFO's administrative Pacific Region. This test can be applied to one or more columns at the same time, with scores averaged across selected columns.
