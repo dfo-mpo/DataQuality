@@ -16,10 +16,11 @@ logging_path: path to store csv of what test used to calculate score, if set to 
 uploaded_file_name: stores the name of the file uploaded when using the UI tool.
 c2_column_mapping: mapping of columns to evaluate and reference columns for each one in the C2 test. The pattern for comparison is 'dataset column' : 'reference column'.
 c2_threshold: threshold for consistency score that is acceptable for C2 test.
-ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 test.
+c2_stop_words: Words filtered for C2 test simularity calculations, purpose is to remove common words and focus on more meaningful words in the text that can better represent the content and context.
+c2_ref_dataset_path: Reference dataset that selected dataset columns are compared to in C2 test.
 """
 class Test:
-    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=1.00, c2_stop_words=["activity"], ref_dataset_path=None, threshold=None, selected_columns=None):
+    def __init__(self, dataset_path, return_type="score", logging_path=None, uploaded_file_name=None, c2_column_mapping=[], c2_threshold=1.00, c2_stop_words=["activity"], c2_ref_dataset_path=None, threshold=None, selected_columns=None):
         self.dataset_path = dataset_path  
         self.return_type = return_type
         self.logging_path = logging_path
@@ -28,7 +29,7 @@ class Test:
         self.c2_column_mapping = c2_column_mapping
         self.c2_threshold = c2_threshold
         self.c2_stop_words = c2_stop_words
-        self.ref_dataset_path = ref_dataset_path
+        self.c2_ref_dataset_path = c2_ref_dataset_path
 
         self.threshold = self.c2_threshold
         self.selected_columns = self.c2_column_mapping 
@@ -41,8 +42,8 @@ class Test:
         df = core_operations.read_data(self.dataset_path)
 
         # Initialize ref_df if a ref dataset is provided
-        if self.ref_dataset_path is not None:
-            df_ref = core_operations.read_data(self.ref_dataset_path)
+        if self.c2_ref_dataset_path is not None:
+            df_ref = core_operations.read_data(self.c2_ref_dataset_path)
             ref_data = True  # Flag to indicate we are using a ref dataset
         else:
             ref_data = False  # No ref dataset, compare within the same dataset
@@ -95,7 +96,7 @@ def create_metadata():
     # Define each parameter needed for test, use ParameterType when defining type
     c2_metadata.add_parameter('c2_threshold', 'C2 Threshold', ParameterType.DECIMAL, value='1.00', step = 0.01)
     c2_metadata.add_parameter('c2_stop_words', 'C2 Stop Words', ParameterType.STRING_LIST, value=["activity"], suggestions=["activity"])
-    c2_metadata.add_parameter('ref_dataset_path', 'C2 Reference Dataset File', ParameterType.FILE_UPLOAD)
+    c2_metadata.add_parameter('c2_ref_dataset_path', 'C2 Reference Dataset File', ParameterType.FILE_UPLOAD)
     c2_metadata.add_parameter('c2_column_mapping', 'C2 Column Mapping', ParameterType.TEXT_INPUT, placeholder="e.g., {'Column1': 'Reference1', 'Column2': 'Reference2'}")
     
     return c2_metadata 
