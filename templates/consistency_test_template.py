@@ -58,12 +58,47 @@ def create_metadata():
     dimension = "Consistency"
 
     # TODO: Define instance for test
-    # Example:
-    # c#_metadata = TestMetadata(dimension, TEST)
+    # IMPORTANT:
+    # - Replace '#' with the numeric part of TEST
+    # - Variable name MUST be lowercase and reused throughout this function
+    #
+    # Example (for TEST = "C1"):
+    # c1_metadata = TestMetadata(dimension, TEST)
+    c#_metadata = TestMetadata(dimension, TEST)
     
-    # TODO: Define each parameter needed for test, use ParameterType when defining type
+    # TODO: Define each TEST-SPECIFIC parameter needed for this test
+    # RULES:
+    # - Add ALL test-specific parameters defined in Test.__init__()
+    # - DO NOT add 'threshold' or 'selected_columns'
+    # - Parameter name MUST exactly match the __init__ argument name
+    # - Each add_parameter call MUST include at least:
+    #     (name, title, ParameterType)
+    # - Additional arguments (value, default, placeholder, hint, etc.)
+    #   are OPTIONAL and should only be included if needed for the chosen ParameterType
+    #
+    # ------------------------------------------------------------------
+    # ParameterType reference (choose ONE per parameter):
+    #
+    # MULTI_SELECT   -> list of selectable options (multiple allowed)
+    # SINGLE_SELECT  -> list of selectable options (single choice)
+    # DECIMAL        -> numeric input (int or float)
+    # STRING         -> single-line text input
+    # TEXT_INPUT     -> structured or object-like text input
+    # CHECKBOX       -> boolean input (true / false)
+    # FILE_UPLOAD    -> CSV / XLSX file upload (returns DataFrame)
+    # STRING_LIST    -> list of user-defined strings
+    # PAIRS          -> list of user-defined tuple pairs
+    # WEIGHTS        -> weighted numeric inputs (dict[str, float])
+    #
+    # Column parameters:
+    # - Use SINGLE_SELECT for a single column
+    # - Use MULTI_SELECT for multiple columns
+    #
+    # Use the simplest ParameterType that matches the parameter's intent.
+    # ------------------------------------------------------------------
+    #
     # Example:
-    # c#_metadata.add_parameter('c#_column_names', 'C# Column Names', ParameterType.MULTI_SELECT)
+    # c1_metadata.add_parameter('c1_column_names', 'C1 Column Names', ParameterType.MULTI_SELECT)
 
     # TODO: Replace "c#" with the test name, e.g., "c1"
     return c#_metadata 

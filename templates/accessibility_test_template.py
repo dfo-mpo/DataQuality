@@ -57,12 +57,47 @@ def create_metadata():
     dimension = "Accessibility"
 
     # TODO: Define instance for test
-    # Example:
-    # s#_metadata = TestMetadata(dimension, TEST)
+    # IMPORTANT:
+    # - Replace '#' with the numeric part of TEST
+    # - Variable name MUST be lowercase and reused throughout this function
+    #
+    # Example (for TEST = "S1"):
+    # s1_metadata = TestMetadata(dimension, TEST)
+    s#_metadata = TestMetadata(dimension, TEST)
     
-    # TODO: Define each parameter needed for test, use ParameterType when defining type
+    # TODO: Define each TEST-SPECIFIC parameter needed for this test
+    # RULES:
+    # - Add ALL test-specific parameters defined in Test.__init__()
+    # - DO NOT add 'threshold' or 'selected_columns'
+    # - Parameter name MUST exactly match the __init__ argument name
+    # - Each add_parameter call MUST include at least:
+    #     (name, title, ParameterType)
+    # - Additional arguments (value, default, placeholder, hint, etc.)
+    #   are OPTIONAL and should only be included if needed for the chosen ParameterType
+    #
+    # ------------------------------------------------------------------
+    # ParameterType reference (choose ONE per parameter):
+    #
+    # MULTI_SELECT   -> list of selectable options (multiple allowed)
+    # SINGLE_SELECT  -> list of selectable options (single choice)
+    # DECIMAL        -> numeric input (int or float)
+    # STRING         -> single-line text input
+    # TEXT_INPUT     -> structured or object-like text input
+    # CHECKBOX       -> boolean input (true / false)
+    # FILE_UPLOAD    -> CSV / XLSX file upload (returns DataFrame)
+    # STRING_LIST    -> list of user-defined strings
+    # PAIRS          -> list of user-defined tuple pairs
+    # WEIGHTS        -> weighted numeric inputs (dict[str, float])
+    #
+    # Column parameters:
+    # - Use SINGLE_SELECT for a single column
+    # - Use MULTI_SELECT for multiple columns
+    #
+    # Use the simplest ParameterType that matches the parameter's intent.
+    # ------------------------------------------------------------------
+    #
     # Example:
-    # s#_metadata.add_parameter('s#_column_names', 'S# Column Names', ParameterType.MULTI_SELECT)
+    # s1_metadata.add_parameter('s1_column_names', 'S1 Column Names', ParameterType.MULTI_SELECT)
 
     # TODO: Replace "s#" with the test name, e.g., "s1"
     return s#_metadata 
