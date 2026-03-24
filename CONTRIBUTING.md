@@ -2,7 +2,7 @@
 Thank you for considering contributing! Whether you are adding a new test or tailoring existing ones to your data and validation needs, your contributions help make the framework more flexible, robust, and useful for a wide range of datasets.
 
 ## Getting Started
-Before contributing, ensure you have forked the repository and cloned it locally. 
+Before contributing, ensure your environment is set up as described in [Getting Started](../README#GettingStarted.md).
 
 ### Basic Workflow
 1. **Create a new branch**
@@ -11,21 +11,35 @@ Before contributing, ensure you have forked the repository and cloned it locally
    ```
    git checkout -b branch_name
    ```
-2. **Make your changes** following the guidelines in [Adding New Tests](#Adding-New-Tests)
-3. **Add your changes** (only add the files you want included in the pull request)
+2. **Install required libraries**
+
+   In a terminal, run:
+   ```  
+   pip install -r requirements.txt
+   ```  
+3. **Create a test** by following the steps in [Adding New Tests](#Adding-New-Tests)
+4. **Verify your tests** work as expected by following [Testing your Changes](#Testing-Your-Changes)
+   
+    **Note:** If you are only testing locally, you can stop here.
+    The remaining steps are only required if you want to contribute your test to the framework.
+
+    
+5. **Stage your changes**
+
+   Only add the files you want included in the pull request.
 
    In a terminal at the project root:
    ```
-   git add x#.py # e.g., git add a1.py
+   git add dimensions/<dimension>/x#.py # e.g., git add dimensions/accuracy/a1.py
    ```
-4. **Commit and push your changes**
+6. **Commit and push your changes**
 
     In a terminal at the project root:
     ```
     git commit -m "Added new test X# for [dimension]"
     git push -u origin branch_name
     ```   
-5. **Open a pull request** to merge your changes into the main repository
+7. **Open a pull request** to merge your changes into the main repository
 
    Describe the test and include examples if helpful.
    
@@ -36,7 +50,7 @@ The framework organizes tests into dimensions, where tests that evaluate similar
 
 ### Files in each Dimension Folder
 - `dimension_reference.py`: Manages and loads all tests in a dimension, collects their metadata, and provides `run_tests()` to execute selected or all tests with their specific parameters.
-- Test file (e.g., `a1.py`, `c2.py`): Defines a single tests's parameters, logic, and metadata. Each test returns a score and optionally a CSV used for reporting.
+- Test file (e.g., `a1.py`, `c2.py`): Defines a single test's parameters, logic, and metadata. Each test returns a score and optionally a CSV used for reporting.
 - `test_template.py`: Provides a template for contributors to add a new test, including placeholders for parameters, logic, and metadata. 
 
 ## Adding New Tests
@@ -66,14 +80,40 @@ Add a new test or customize an existing one by copying the test template and fil
 ## Testing your Changes
 
 ### Testing Your Test in the Notebook
-Before re-running the [notebook](run_tests/Data%20Quality%20Complete.ipynb):
-1. **Restart the kernel**
-   
-   Go to **Kernel** (top lefthand corner) > **Restart Kernel**
-2. **Add your new test** under its dimension in the notebook:
-   - Set or update any test-specific parameters.
-   - Include your test in the `run_tests()` list if not running all tests.
-   - Adjust weights if your test requires custom weighting.
+1. **Open the notebook**
+
+    Open the [Data Quality Complete](Data%20Quality%20Complete.ipynb) notebook and choose your dataset file (CSV or XLSX):
+    - In **Setup**, set `DATA_FILE_PATH` in the last code cell.
+    - Dataset requirements:
+        - The data must be on the **first sheet** in the Excel document.  
+        - The **first row** must be the column names.  
+        - The test won't run if the Excel file is open.
+
+2. **Register your new test** under its dimension in the notebook:
+   - Set test-specific parameters in the `test_params` dictionary.
+        - These should match the parameters defined in the `__init__` header in your template file.
+   - Set `run_tests()` to include only your test.
+        - Example: `run_tests(['C3'])`
+
+3. **Restart the kernel**
+
+    Go to **Kernel** (top lefthand corner) > **Restart Kernel**
+
+4. **Run the required sections**
+
+    Run a selected cell using **Shift+Enter** or go to **Run** (top lefthand corner) > **Run Selected Cell**.
+    
+    Run:
+    - **Setup** section
+    - Your test's **dimension** section
+    - **Determine Overall Data Quality** section
+  
+5. **View Results**
+    - For the calculated Data Quality, see the output at the last cell in the notebook.  
+    - For individual test and dimension scores, see the output below each code cell for the given dimension.
+
+#### Run All Tests
+To run all tests in the framework (including your new test), see [Run Tests with the Notebook](https://github.com/dfo-mpo/DataQuality/blob/main/run_tests/README.md#run-tests-with-the-notebook) in the main repository.
 
 ### Testing Your Test in the UI Tool
 Before re-launching the UI tool:
@@ -85,3 +125,27 @@ Before re-launching the UI tool:
    ```
    streamlit run ui_tool/dq_ui.py
    ```
+
+
+## FAQ 
+This FAQ is designed to quickly resolve the most common contributor issues.
+
+**Q1: My test is not showing up in the notebook**
+- Ensure your test file is in the correct folder under `dimensions/<dimension>/`.
+- Check the file name follows the naming convention (e.g., `a1.py`, `c3.py`).
+- Restart the notebook kernel after adding a new test.
+
+**Q2: My test is not running or failing**
+- Ensure your test is included in `run_tests()`.
+    - Example: `run_tests(['C3'])` to run a single test.
+- Check that the `test_params` dictionary matches the parameters defined in your test’s `__init__` method. 
+
+**Q3: I’m getting import or module errors**
+- From the project root, confirm all required libraries are installed:
+  ```
+  pip install -r requirements.txt
+  ```
+- Ensure your environment meets the [prerequisites](CONTRIBUTING.md#Prerequisites):
+    - Python 3.10 or later
+    - Git installed
+    - Jupyter Notebook or JupyterLab installed

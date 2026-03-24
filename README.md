@@ -23,6 +23,13 @@ For full details on each test, see the [Detailed Tests](run_tests/DETAILED_TESTS
 ## Getting Started
 Set up the repository and run metrics.
 
+### Prerequisites
+- Python 3.10 or later. See [instructions](https://www.python.org/downloads/).
+- Git. See [instructions](https://git-scm.com/install/)
+- Jupyter Notebook or Jupyterlab. See [instructions](https://jupyter.org/install).
+
+### Clone the Repository
+
 1. **Fork the repository and clone it locally**
 
     In a terminal, run:
