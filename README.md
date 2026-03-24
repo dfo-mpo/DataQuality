@@ -1,9 +1,9 @@
 # Data Quality Test Generator
-The Data Quality Test Generator is a no-code UI tool that generates Python-based data quality tests for the Data Quality Framework. 
+The Data Quality Test Generator is a no-code tool that generates Python-based data quality tests for the Data Quality Framework. 
 
-It creates a completed test template based on user input, allowing contributors to define new tests or tailor existing ones to their dataset without manually writing code. The generated template can be downloaded and added to a local clone of the Data Quality Framework repository and run using the framework notebook.
+It creates a completed test template based on user input, allowing contributors to define new tests or tailor existing ones to their dataset without manually writing code. The generated template can be downloaded and added to a local clone of the Data Quality Framework repository and run using the framework notebook or UI tool.
 
-For instructions on using the tool, see the [Using the UI Tool](#Using-the-UI-Tool).
+For instructions on using the generator, see the [Using the Test Generator](#Using-the-Test-Generator).
 
 
 ## Features
@@ -14,7 +14,7 @@ The generator allows users to:
 - Download or copy the generated template 
 
 ## Dimensions
-This tool supports the 8 dimensions used in the Data Quailty Framework:
+This tool supports the 8 dimensions used in the Data Quality Framework:
 - Accessibility
 - Accuracy
 - Completeness
@@ -26,14 +26,14 @@ This tool supports the 8 dimensions used in the Data Quailty Framework:
 
 For examples of existing tests in the framework, see the [Detailed Tests](https://github.com/dfo-mpo/DataQuality/blob/main/run_tests/DETAILED_TESTS.md) page.
 
-## Using the UI Tool
+## Using the Test Generator
 Open the tool: [Link to be added once deployed]
 
 ### Generate a Filled Test Template
 
 1. **Select** a data quality dimension from the **dropdown**.
 2. **Describe** the test, including:
-    - Whether test applies to one column, multiple, or the whole dataset
+    - Whether the test applies to one column, multiple columns, or the entire dataset
     - Edge cases or special conditions
     - Scoring logic *(e.g., proportion of non-null values in a column)*
 3. Click the **up arrow** button to generate code.
@@ -61,10 +61,10 @@ For more details, see:
 **Important:** The generator uses an AI model and may make mistakes. Always review the generated code to ensure correct naming conventions, parameters, and test logic.
 
 ### Running the Test
-Once your test is added to the framework repository, run it using the framework notebook.
+Once your test is added to the framework repository, run it using the framework [notebook](#run-a-single-test-notebook) or [UI tool](#run-a-single-test-ui-tool).
 
-#### Run a Single Test
-This workflow is intended for running and validating your newly generated test.
+#### Run a Single Test (Notebook)
+This workflow is intended for running and validating your newly generated test within the notebook.
 
 1. **Install required libraries**
 
@@ -103,6 +103,26 @@ This workflow is intended for running and validating your newly generated test.
 6. **View Results**
     - For the calculated Data Quality, see the output at the last cell in the notebook.  
     - For individual test and dimension scores, see the output below each code cell for the given dimension.
+    - Confirm the test runs and behaves as expected.
 
-#### Run All Tests
-To run all tests in the framework (including your new test), see [Run Tests with the Notebook](https://github.com/dfo-mpo/DataQuality/blob/main/run_tests/README.md#run-tests-with-the-notebook) in the main repository.
+#### Run a Single Test (UI Tool)
+This workflow is intended for running and validating your newly generated test through the UI tool.
+
+Before re-launching the UI tool:
+1. **Ensure** `create_metadata()` **is updated** with test metadata and parameter types.
+2. **Stop any previous UI session**
+   
+    In a terminal running the UI, press **CTRL + C**
+3. **Re-launch the UI tool**:
+   ```
+   streamlit run ui_tool/dq_ui.py
+   ```
+4. **Run Test in the UI**
+
+    - Choose your dataset file (CSV or XLSX).
+    - Select the dimension and your new test to run.
+    - Enter any required fields and press **Calculate Data Quality**.
+
+5. **View Results**
+    - For the calculated Data Quality and individual test scores, see the output log under **Calculated Data Quality:**.
+    - Confirm the test runs and behaves as expected.
